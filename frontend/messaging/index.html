@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RESQ — Messages</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --red: #FF1F1F; --amber: #FFAA00; --green: #00E676; --blue: #2979FF;
+    --white: #F5F5F0; --black: #0A0A0A; --gray: #141414;
+    --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
+  }
+  html, body { height: 100%; background: #080808; display: flex; align-items: center; justify-content: center; font-family: 'Barlow', sans-serif; }
+  .phone {
+    width: 390px; height: 844px; background: var(--black);
+    border-radius: 44px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; flex-shrink: 0; }
+  .time { font-size: 13px; font-weight: 600; color: var(--white); }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .status-icons svg { width: 15px; height: 15px; fill: var(--white); }
+
+  .header { padding: 4px 24px 12px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .back-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--gray2); display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; }
+  .back-btn svg { width: 18px; height: 18px; fill: var(--white); }
+  .header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; color: var(--white); letter-spacing: 2px; }
+  .header-title span { color: var(--blue); }
+  .compose-btn { margin-left: auto; width: 36px; height: 36px; border-radius: 10px; background: var(--blue); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .compose-btn svg { width: 18px; height: 18px; fill: white; }
+
+  /* Tabs */
+  .tabs { display: flex; padding: 0 16px 12px; gap: 6px; flex-shrink: 0; }
+  .tab {
+    flex: 1; padding: 8px 4px; border-radius: 10px;
+    font-size: 12px; font-weight: 600; text-align: center; cursor: pointer;
+    border: 1px solid var(--gray3); color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .tab.active { background: var(--blue); border-color: var(--blue); color: white; }
+
+  /* Mesh badge */
+  .mesh-badge {
+    margin: 0 16px 12px;
+    background: rgba(41,121,255,0.08); border: 1px solid rgba(41,121,255,0.2);
+    border-radius: 12px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  .mesh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.5s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .mesh-text { font-size: 11px; color: var(--blue); font-weight: 500; }
+  .mesh-text span { color: var(--text-muted); font-weight: 400; }
+
+  /* Chat list */
+  .chat-list { flex: 1; overflow-y: auto; padding: 0 16px 140px; scrollbar-width: none; }
+  .chat-list::-webkit-scrollbar { display: none; }
+
+  .chat-group-label { font-size: 10px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin: 8px 0 8px; }
+
+  .chat-item {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 16px; padding: 14px; margin-bottom: 8px;
+    display: flex; gap: 12px; align-items: flex-start;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .chat-item:hover { background: var(--gray3); }
+  .chat-item.unread { border-color: rgba(41,121,255,0.3); }
+  .chat-item.emergency { border-color: rgba(255,31,31,0.4); background: rgba(255,31,31,0.05); }
+
+  .chat-avatar {
+    width: 44px; height: 44px; border-radius: 13px;
+    background: var(--gray3); display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; color: var(--white);
+    flex-shrink: 0; position: relative;
+  }
+  .chat-avatar.group { font-size: 20px; }
+  .online-indicator {
+    position: absolute; bottom: -2px; right: -2px;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--green); border: 2px solid var(--black);
+  }
+
+  .chat-body { flex: 1; min-width: 0; }
+  .chat-name { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+  .chat-badge {
+    font-size: 9px; padding: 2px 6px; border-radius: 4px;
+    font-weight: 700; letter-spacing: 0.5px;
+  }
+  .chat-badge.emergency { background: rgba(255,31,31,0.2); color: var(--red); }
+  .chat-badge.broadcast { background: rgba(255,170,0,0.2); color: var(--amber); }
+  .chat-badge.mesh { background: rgba(41,121,255,0.2); color: var(--blue); }
+  .chat-preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-preview.unread { color: var(--white); font-weight: 500; }
+
+  .chat-meta { text-align: right; flex-shrink: 0; }
+  .chat-time { font-size: 10px; color: var(--text-muted); }
+  .unread-count {
+    display: inline-block; min-width: 20px; height: 20px;
+    background: var(--blue); border-radius: 10px; padding: 0 6px;
+    font-size: 10px; font-weight: 700; color: white;
+    text-align: center; line-height: 20px; margin-top: 4px;
+  }
+  .unread-count.red { background: var(--red); }
+  .delivery-icon { font-size: 12px; margin-top: 4px; }
+
+  /* Compose area */
+  .compose-area {
+    position: absolute; bottom: 76px; left: 0; right: 0;
+    background: rgba(10,10,10,0.95); backdrop-filter: blur(20px);
+    border-top: 1px solid var(--gray3); padding: 10px 16px;
+    display: flex; gap: 10px; align-items: flex-end;
+    z-index: 15;
+  }
+  .compose-input {
+    flex: 1; background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 14px; padding: 10px 14px;
+    color: var(--white); font-family: 'Barlow', sans-serif; font-size: 14px;
+    outline: none; resize: none; min-height: 42px; max-height: 100px;
+  }
+  .compose-input::placeholder { color: var(--text-muted); }
+  .send-btn {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: var(--blue); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .send-btn svg { width: 20px; height: 20px; fill: white; }
+  .attach-btn {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: var(--gray2); border: 1px solid var(--gray3); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .attach-btn svg { width: 20px; height: 20px; fill: var(--text-muted); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 76px; background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(20px); border-top: 1px solid var(--gray3);
+    display: flex; align-items: center; justify-content: space-around;
+    padding-bottom: 8px; z-index: 20;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
+  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
+  .nav-label { font-size: 10px; color: var(--text-muted); }
+  .nav-item.active svg { fill: var(--red); }
+  .nav-item.active .nav-label { color: var(--red); }
+
+  /* Chat Full View Overlay */
+  .chat-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--black); z-index: 50;
+    display: flex; flex-direction: column;
+    transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .chat-overlay.open { transform: translateX(0); }
+  
+  .chat-overlay-header {
+    padding: 44px 16px 12px; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--gray3);
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .chat-back {
+    width: 36px; height: 36px; border-radius: 10px; background: var(--gray2); border: 1px solid var(--gray3);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s;
+  }
+  .chat-back:active { transform: scale(0.95); }
+  .chat-back svg { width: 18px; height: 18px; fill: white; }
+  
+  .chat-header-avatar {
+    width: 40px; height: 40px; border-radius: 12px; background: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: white;
+  }
+  .chat-header-info { flex: 1; min-width: 0; }
+  .chat-header-name { font-size: 16px; font-weight: 700; color: white; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-header-status { font-size: 11px; color: var(--green); display: flex; align-items: center; gap: 4px; font-weight: 500;}
+  .chat-header-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; }
+  
+  .chat-messages-area {
+    flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px;
+    scrollbar-width: none;
+  }
+  .chat-messages-area::-webkit-scrollbar { display: none; }
+  
+  .msg-bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.4; color: white; }
+  .msg-bubble.received { background: var(--gray2); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--gray3); }
+  .msg-bubble.sent { background: var(--blue); align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(41,121,255,0.2); }
+  .msg-time { font-size: 10px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px; display: block; }
+
+  .chat-overlay-compose {
+    padding: 10px 16px 20px; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px);
+    border-top: 1px solid var(--gray3); display: flex; align-items: flex-end; gap: 10px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 6l5 5 6-7 6 7 5-5V4H1z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M22 11h2v3h-2z"/></svg>
+    </div>
+  </div>
+  <div class="header">
+    <a href="../dashboard/index.html" class="back-btn">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </a>
+    <div class="header-title" data-i18n="mesh_chat">MESH <span>CHAT</span></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this)" data-i18n="tab_all">All (7)</div>
+    <div class="tab" onclick="switchTab(this)" data-i18n="tab_groups">Groups</div>
+    <div class="tab" onclick="switchTab(this)" data-i18n="tab_broadcast">Broadcast</div>
+    <div class="tab" onclick="switchTab(this)" data-i18n="tab_direct">Direct</div>
+  </div>
+
+  <div class="mesh-badge">
+    <div class="mesh-dot"></div>
+    <div class="mesh-text"><span data-i18n="chat_offline_badge">Offline Mesh Active · 12 nodes ·</span> <span data-i18n="chat_offline_span">Msgs route without internet</span></div>
+  </div>
+
+  <div class="chat-list">
+    <div class="chat-group-label">🚨 Emergency</div>
+
+    <div class="chat-item emergency" onclick="openConversation('msg_broadcast', '📡', 'msg_emerg_prev2')">
+      <div class="chat-avatar group">📡</div>
+      <div class="chat-body">
+        <div class="chat-name"><span data-i18n="msg_broadcast">ZONE B BROADCAST</span> <span class="chat-badge emergency">EMERGENCY</span></div>
+        <div class="chat-preview unread" data-i18n="msg_emerg_prev2">⚠ Road 4 blocked — use alt route Park Ave N to shelter</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">4m</div>
+        <div class="unread-count red">!</div>
+      </div>
+    </div>
+
+    <div class="chat-group-label">Groups</div>
+
+    <div class="chat-item unread" onclick="openConversation('map_shelter_title', '🏫', 'msg_maria_preview')">
+      <div class="chat-avatar group">🏫</div>
+      <div class="chat-body">
+        <div class="chat-name">High School Shelter <span class="chat-badge broadcast">SHELTER</span></div>
+        <div class="chat-preview unread" data-i18n="msg_maria_preview">Maria: We have 60 people here, need more water...</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">11m</div>
+        <div class="unread-count">5</div>
+      </div>
+    </div>
+
+    <div class="chat-item" onclick="openConversation('Block 14 Neighbors', '🏘️', 'msg_david')">
+      <div class="chat-avatar group">🏘️</div>
+      <div class="chat-body">
+        <div class="chat-name">Block 14 Neighbors <span class="chat-badge mesh">MESH</span></div>
+        <div class="chat-preview" data-i18n="msg_david">David: Anyone seen the Johnsons? They didn't show up</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">23m</div>
+        <div class="delivery-icon">✓✓</div>
+      </div>
+    </div>
+
+    <div class="chat-group-label">Direct Messages</div>
+
+    <div class="chat-item unread" onclick="openConversation('msg_james', 'JK', 'msg_james_preview')">
+      <div class="chat-avatar">JK<div class="online-indicator"></div></div>
+      <div class="chat-body">
+        <div class="chat-name" data-i18n="msg_james">James Kim</div>
+        <div class="chat-preview unread" data-i18n="msg_james_preview">Anyone have insulin? Urgent for elderly neighbor</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">22m</div>
+        <div class="unread-count">1</div>
+      </div>
+    </div>
+
+    <div class="chat-item" onclick="openConversation('msg_maria', 'MR', 'msg_maria2')">
+      <div class="chat-avatar">MR</div>
+      <div class="chat-body">
+        <div class="chat-name" data-i18n="msg_maria">Maria Rodriguez</div>
+        <div class="chat-preview" data-i18n="msg_maria2">Already at shelter, 2nd floor is dry. Come fast</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">35m</div>
+        <div class="delivery-icon">✓✓</div>
+      </div>
+    </div>
+
+    <div class="chat-item" onclick="openConversation('Raj Patel', 'RP', 'msg_raj')">
+      <div class="chat-avatar">RP</div>
+      <div class="chat-body">
+        <div class="chat-name">Raj Patel</div>
+        <div class="chat-preview" data-i18n="msg_raj">My family is safe. Heading north on Elm</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">52m</div>
+        <div class="delivery-icon">✓</div>
+      </div>
+    </div>
+
+    <div class="chat-item" onclick="openConversation('Amy Wong', 'AW', 'msg_amy')">
+      <div class="chat-avatar">AW</div>
+      <div class="chat-body">
+        <div class="chat-name">Amy Wong</div>
+        <div class="chat-preview" data-i18n="msg_amy">You: I have first aid supplies if needed</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">1h</div>
+        <div class="delivery-icon">✓✓</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="compose-area">
+    <div class="attach-btn">
+      <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+    </div>
+    <textarea class="compose-input" data-i18n-placeholder="msg_placeholder" placeholder="Send via mesh network…" rows="1"></textarea>
+    <button class="send-btn">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="../dashboard/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span class="nav-label" data-i18n="nav_home">Home</span>
+    </a>
+    <a href="../messaging/index.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+      <span class="nav-label" data-i18n="nav_messages">Messages</span>
+    </a>
+    <a href="../map/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <span class="nav-label" data-i18n="nav_map">Map</span>
+    </a>
+    <a href="../resources/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+      <span class="nav-label" data-i18n="nav_resources">Resources</span>
+    </a>
+    <a href="../settings/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
+      <span class="nav-label" data-i18n="nav_settings">Settings</span>
+    </a>
+  </div>
+
+  <!-- Chat Overlay -->
+  <div class="chat-overlay" id="chatOverlay">
+    <div class="chat-overlay-header">
+      <div class="chat-back" onclick="closeConversation()">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </div>
+      <div class="chat-header-avatar" id="convAvatar">JK</div>
+      <div class="chat-header-info">
+        <div class="chat-header-name" id="convName">James Kim</div>
+        <div class="chat-header-status"><div class="dot"></div> Connected · Mesh</div>
+      </div>
+    </div>
+    
+    <div class="chat-messages-area" id="convMessages">
+      <!-- Bubbles injected by JS -->
+    </div>
+    
+    <div class="chat-overlay-compose">
+      <div class="attach-btn" style="background:var(--gray2); border-color:var(--gray3);">
+        <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
+      </div>
+      <input type="text" class="compose-input" id="overlayInput" placeholder="Message..." style="border-radius:20px; height:42px; min-height:42px;" onkeypress="if(event.key === 'Enter') sendOverlayMsg()">
+      <button class="send-btn" onclick="sendOverlayMsg()">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+
+</div>
+<script>
+  function switchTab(el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function openConversation(nameKey, avatar, msgTextKey) {
+    document.getElementById('convName').innerText = t(nameKey);
+    document.getElementById('convAvatar').innerText = avatar;
+    
+    if(avatar.includes('📡') || avatar.includes('🏫') || avatar.includes('🏘️')) {
+        document.getElementById('convAvatar').style.background = 'var(--red)';
+    } else {
+        document.getElementById('convAvatar').style.background = 'var(--blue)';
+    }
+
+    document.getElementById('convMessages').innerHTML = `
+      <div class="msg-bubble received">
+        ${t(msgTextKey)}
+        <span class="msg-time">Just now</span>
+      </div>
+    `;
+    
+    document.getElementById('chatOverlay').classList.add('open');
+  }
+  
+  function closeConversation() {
+    document.getElementById('chatOverlay').classList.remove('open');
+  }
+  
+  function sendOverlayMsg() {
+    const input = document.getElementById('overlayInput');
+    const text = input.value.trim();
+    if(text) {
+      const area = document.getElementById('convMessages');
+      area.innerHTML += `<div class="msg-bubble sent">${text}<span class="msg-time">Just now</span></div>`;
+      area.scrollTop = area.scrollHeight;
+      input.value = '';
+    }
+  }
+</script>
+<script src="../i18n.js"></script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RESQ — Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --red: #FF1F1F; --amber: #FFAA00; --green: #00E676; --blue: #2979FF;
+    --white: #F5F5F0; --black: #0A0A0A; --gray: #141414;
+    --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
+  }
+  html, body { height: 100%; background: #080808; display: flex; align-items: center; justify-content: center; font-family: 'Barlow', sans-serif; }
+  .phone {
+    width: 390px; height: 844px; background: var(--black);
+    border-radius: 44px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; flex-shrink: 0; }
+  .time { font-size: 13px; font-weight: 600; color: var(--white); }
+  .status-icons { display: flex; gap: 5px; }
+  .status-icons svg { width: 15px; height: 15px; fill: var(--white); }
+  .header { padding: 4px 24px 16px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .back-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--gray2); display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; }
+  .back-btn svg { width: 18px; height: 18px; fill: var(--white); }
+  .header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; color: var(--white); letter-spacing: 2px; }
+
+  .scroll-area { flex: 1; overflow-y: auto; padding: 0 16px; scrollbar-width: none; }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* Profile card */
+  .profile-card {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 20px; padding: 18px;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 14px;
+  }
+  .profile-avatar {
+    width: 60px; height: 60px; border-radius: 16px;
+    background: linear-gradient(135deg, var(--red), #880000);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700;
+    color: white; flex-shrink: 0; position: relative;
+  }
+  .profile-online {
+    position: absolute; bottom: -2px; right: -2px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--green); border: 3px solid var(--black);
+  }
+
+  .profile-name { font-size: 17px; font-weight: 700; color: var(--white); }
+  .profile-id { font-size: 11px; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.5px; }
+  .profile-role {
+    display: inline-block; margin-top: 6px;
+    padding: 3px 10px; border-radius: 6px;
+    background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.2);
+    font-size: 10px; font-weight: 600; color: var(--green); letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .profile-edit { margin-left: auto; cursor: pointer; }
+  .profile-edit svg { width: 18px; height: 18px; fill: var(--text-muted); }
+
+  /* Network card */
+  .network-card {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 20px; padding: 16px;
+    margin-bottom: 14px;
+  }
+  .net-title { font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+  .net-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray3); }
+  .net-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .net-label { display: flex; align-items: center; gap: 8px; }
+  .net-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .net-dot.green { background: var(--green); animation: blink 2s step-end infinite; }
+  .net-dot.amber { background: var(--amber); }
+  .net-dot.red { background: var(--red); }
+  @keyframes blink { 50% { opacity: 0.3; } }
+  .net-name { font-size: 13px; font-weight: 500; color: var(--white); }
+  .net-value { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+  .net-value.green { color: var(--green); }
+  .net-value.amber { color: var(--amber); }
+
+  /* Toggle groups */
+  .settings-group {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 18px; margin-bottom: 12px; overflow: hidden;
+  }
+  .settings-group-title {
+    padding: 10px 16px; font-size: 10px; letter-spacing: 2px; color: var(--text-muted);
+    text-transform: uppercase; border-bottom: 1px solid var(--gray3);
+    background: rgba(255,255,255,0.02);
+  }
+  .setting-row {
+    display: flex; align-items: center; padding: 14px 16px;
+    border-bottom: 1px solid var(--gray3); gap: 12px;
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .setting-icon.red { background: rgba(255,31,31,0.1); }
+  .setting-icon.blue { background: rgba(41,121,255,0.1); }
+  .setting-icon.green { background: rgba(0,230,118,0.1); }
+  .setting-icon.amber { background: rgba(255,170,0,0.1); }
+  .setting-info { flex: 1; }
+  .setting-name { font-size: 14px; font-weight: 500; color: var(--white); }
+  .setting-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  /* Toggle switch */
+  .toggle { width: 46px; height: 26px; position: relative; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute; inset: 0; border-radius: 13px;
+    background: var(--gray3); cursor: pointer; transition: background 0.3s;
+  }
+  .toggle-track::after {
+    content: ''; position: absolute; left: 3px; top: 3px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: white; transition: transform 0.3s;
+  }
+  .toggle input:checked + .toggle-track { background: var(--green); }
+  .toggle input:checked + .toggle-track::after { transform: translateX(20px); }
+
+  /* Select dropdown */
+  .select-wrapper { position: relative; display: flex; align-items: center; }
+  .language-select {
+    appearance: none; background: var(--gray3); border: 1px solid rgba(255,255,255,0.1); /* style dropdown */
+    color: var(--white); padding: 8px 30px 8px 12px; border-radius: 10px; font-size: 13px;
+    font-family: 'Barlow', sans-serif; font-weight: 600; cursor: pointer; outline: none;
+  }
+  .language-select option { background: var(--gray2); color: white; }
+  .select-wrapper svg {
+    position: absolute; right: 8px; width: 18px; height: 18px; fill: var(--text-muted); pointer-events: none;
+  }
+
+  /* Battery card */
+  .battery-card {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 18px; padding: 16px; margin-bottom: 14px;
+  }
+  .bat-title { font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+  .bat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .bat-label { font-size: 12px; color: var(--text-muted); width: 100px; flex-shrink: 0; }
+  .bat-track { flex: 1; height: 6px; background: var(--gray3); border-radius: 3px; overflow: hidden; }
+  .bat-fill { height: 100%; border-radius: 3px; }
+  .bat-fill.green { background: var(--green); }
+  .bat-fill.amber { background: var(--amber); }
+  .bat-val { font-size: 12px; font-weight: 600; color: var(--white); width: 34px; text-align: right; }
+
+  .version-text { text-align: center; font-size: 11px; color: var(--text-muted); margin: 12px 0 80px; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 76px; background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(20px); border-top: 1px solid var(--gray3);
+    display: flex; align-items: center; justify-content: space-around;
+    padding-bottom: 8px; z-index: 20;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
+  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
+  .nav-label { font-size: 10px; color: var(--text-muted); }
+  .nav-item.active svg { fill: var(--red); }
+  .nav-item.active .nav-label { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 6l5 5 6-7 6 7 5-5V4H1z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M22 11h2v3h-2z"/></svg>
+    </div>
+  </div>
+  <div class="header">
+    <a href="../dashboard/index.html" class="back-btn">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </a>
+    <div class="header-title" data-i18n="settings">SETTINGS</div>
+  </div>
+
+  <div class="scroll-area">
+    <!-- Profile -->
+    <div class="profile-card">
+      <div class="profile-avatar">YO<div class="profile-online"></div></div>
+      <div class="profile-info">
+        <div class="profile-name" data-i18n="your_profile">Your Profile</div>
+        <div class="profile-id">Node ID: RESQ-7F3A-K9 · Zone B</div>
+        <span class="profile-role" data-i18n="first_responder">First Responder</span>
+      </div>
+      <div class="profile-edit">
+        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+      </div>
+    </div>
+
+    <!-- Network status -->
+    <div class="network-card">
+      <div class="net-title" data-i18n="network_status">Network Status</div>
+      <div class="net-row">
+        <div class="net-label"><div class="net-dot green"></div><span class="net-name" data-i18n="mesh_network">Mesh Network</span></div>
+        <span class="net-value green">ACTIVE · 12 nodes</span>
+      </div>
+      <div class="net-row">
+        <div class="net-label"><div class="net-dot red"></div><span class="net-name">Internet / Cellular</span></div>
+        <span class="net-value" style="color:var(--red)">OFFLINE</span>
+      </div>
+      <div class="net-row">
+        <div class="net-label"><div class="net-dot green"></div><span class="net-name">Bluetooth</span></div>
+        <span class="net-value green">ON · 2.4km range</span>
+      </div>
+      <div class="net-row">
+        <div class="net-label"><div class="net-dot amber"></div><span class="net-name">WiFi Direct</span></div>
+        <span class="net-value amber">Scanning…</span>
+      </div>
+      <div class="net-row">
+        <div class="net-label"><div class="net-dot green"></div><span class="net-name">GPS Location</span></div>
+        <span class="net-value green">±4m accuracy</span>
+      </div>
+    </div>
+
+    <!-- Preferences Settings -->
+    <div class="settings-group">
+      <div class="settings-group-title" data-i18n="preferences">Preferences</div>
+      <div class="setting-row">
+        <div class="setting-icon blue">🌐</div>
+        <div class="setting-info">
+          <div class="setting-name" data-i18n="app_language">App Language</div>
+          <div class="setting-sub" data-i18n="select_language">Select local language</div>
+        </div>
+        <div class="select-wrapper">
+          <select class="language-select" id="langSelect" onchange="changeLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="te">Telugu (తెలుగు)</option>
+            <option value="hi">Hindi (हिंदी)</option>
+            <option value="kn">Kannada (ಕನ್ನಡ)</option>
+            <option value="ta">Tamil (தமிழ்)</option>
+            <option value="ml">Malayalam (മലയാളം)</option>
+          </select>
+          <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Emergency settings -->
+    <div class="settings-group">
+      <div class="settings-group-title" data-i18n="emergency">Emergency</div>
+      <div class="setting-row">
+        <div class="setting-icon red">🚨</div>
+        <div class="setting-info">
+          <div class="setting-name" data-i18n="auto_sos">Auto-SOS on Impact</div>
+          <div class="setting-sub" data-i18n="auto_sos_desc">Detect falls & send SOS automatically</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-icon red">📣</div>
+        <div class="setting-info">
+          <div class="setting-name">Emergency Broadcast</div>
+          <div class="setting-sub">Receive zone-wide alerts</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-icon amber">🔔</div>
+        <div class="setting-info">
+          <div class="setting-name">Vibration Alerts</div>
+          <div class="setting-sub">Haptic feedback for alerts</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+      </div>
+    </div>
+
+    <!-- Mesh settings -->
+    <div class="settings-group">
+      <div class="settings-group-title">Mesh Network</div>
+      <div class="setting-row">
+        <div class="setting-icon blue">📡</div>
+        <div class="setting-info">
+          <div class="setting-name">Relay Mode</div>
+          <div class="setting-sub">Forward messages for others</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-icon blue">🔒</div>
+        <div class="setting-info">
+          <div class="setting-name">End-to-End Encryption</div>
+          <div class="setting-sub">Encrypt all mesh messages</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-icon green">📍</div>
+        <div class="setting-info">
+          <div class="setting-name">Share Location</div>
+          <div class="setting-sub">Broadcast GPS to mesh</div>
+        </div>
+        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-icon amber">⚡</div>
+        <div class="setting-info">
+          <div class="setting-name">Power Save Mode</div>
+          <div class="setting-sub">Reduce mesh ping rate</div>
+        </div>
+        <label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+      </div>
+    </div>
+
+    <!-- Battery -->
+    <div class="battery-card">
+      <div class="bat-title">System Power</div>
+      <div class="bat-row">
+        <span class="bat-label">Device</span>
+        <div class="bat-track"><div class="bat-fill green" style="width:94%"></div></div>
+        <span class="bat-val">94%</span>
+      </div>
+      <div class="bat-row">
+        <span class="bat-label">Mesh Radio</span>
+        <div class="bat-track"><div class="bat-fill amber" style="width:45%"></div></div>
+        <span class="bat-val">45%</span>
+      </div>
+      <div class="bat-row">
+        <span class="bat-label">GPS Module</span>
+        <div class="bat-track"><div class="bat-fill green" style="width:87%"></div></div>
+        <span class="bat-val">87%</span>
+      </div>
+    </div>
+
+    <div class="version-text">RESQ v2.1.0 · Build 20250313 · Offline Mode</div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="../dashboard/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span class="nav-label" data-i18n="nav_home">Home</span>
+    </a>
+    <a href="../messaging/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+      <span class="nav-label" data-i18n="nav_messages">Messages</span>
+    </a>
+    <a href="../map/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <span class="nav-label" data-i18n="nav_map">Map</span>
+    </a>
+    <a href="../resources/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+      <span class="nav-label" data-i18n="nav_resources">Resources</span>
+    </a>
+    <a href="../settings/index.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
+      <span class="nav-label" data-i18n="nav_settings">Settings</span>
+    </a>
+  </div>
+</div>
+
+<script src="../i18n.js"></script>
+</body>
+</html>

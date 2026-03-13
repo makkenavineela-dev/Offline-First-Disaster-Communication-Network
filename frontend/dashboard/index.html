@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RESQ — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --red: #FF1F1F; --red-dark: #CC0000; --amber: #FFAA00; --green: #00E676;
+    --white: #F5F5F0; --black: #0A0A0A; --gray: #141414; --gray2: #1E1E1E;
+    --gray3: #2A2A2A; --text-muted: #666; --blue: #2979FF;
+  }
+  html, body { height: 100%; background: #080808; display: flex; align-items: center; justify-content: center; font-family: 'Barlow', sans-serif; }
+  .phone {
+    width: 390px; height: 844px; background: var(--black);
+    border-radius: 44px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  /* Status bar */
+  .status-bar {
+    height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; flex-shrink: 0; z-index: 10;
+  }
+  .time { font-size: 13px; font-weight: 600; color: var(--white); }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .status-icons svg { width: 15px; height: 15px; fill: var(--white); opacity: 0.9; }
+
+  /* Header */
+  .header {
+    padding: 6px 24px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .header-left {}
+  .greeting { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 900; color: var(--white); letter-spacing: 2px;
+  }
+  .header-title span { color: var(--red); }
+  .notif-btn {
+    width: 42px; height: 42px; border-radius: 12px;
+    background: var(--gray2); border: 1px solid var(--gray3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+  }
+  .notif-btn svg { width: 20px; height: 20px; fill: var(--white); }
+  .notif-dot {
+    position: absolute; top: 8px; right: 8px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--red); border: 2px solid var(--black);
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Alert Banner */
+  .alert-banner {
+    margin: 0 16px 16px;
+    background: linear-gradient(135deg, rgba(255,31,31,0.15), rgba(255,31,31,0.05));
+    border: 1px solid rgba(255,31,31,0.4);
+    border-radius: 16px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+    animation: alertPulse 2s ease-in-out infinite;
+    cursor: pointer;
+  }
+  @keyframes alertPulse {
+    0%,100% { border-color: rgba(255,31,31,0.4); }
+    50% { border-color: rgba(255,31,31,0.8); box-shadow: 0 0 20px rgba(255,31,31,0.15); }
+  }
+  .alert-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--red); display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .alert-icon svg { width: 20px; height: 20px; fill: white; }
+  .alert-text {}
+  .alert-title { font-size: 13px; font-weight: 600; color: var(--red); }
+  .alert-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .alert-time { margin-left: auto; font-size: 11px; color: var(--text-muted); }
+
+  /* Scroll area */
+  .scroll-area {
+    flex: 1; overflow-y: auto; padding: 0 16px;
+    scrollbar-width: none;
+  }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* Mesh Status Card */
+  .mesh-card {
+    background: var(--gray);
+    border: 1px solid var(--gray3);
+    border-radius: 20px; padding: 18px;
+    margin-bottom: 14px; position: relative; overflow: hidden;
+  }
+  .mesh-card::before {
+    content: ''; position: absolute;
+    top: -40px; right: -40px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(0,230,118,0.08) 0%, transparent 70%);
+  }
+  .mesh-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .mesh-label { font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
+  .mesh-status {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.2);
+    border-radius: 100px; padding: 4px 10px;
+  }
+  .mesh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 1.5s step-end infinite; }
+  .mesh-status-text { font-size: 10px; font-weight: 600; color: var(--green); letter-spacing: 1px; }
+  .mesh-stats { display: flex; gap: 0; }
+  .mesh-stat { flex: 1; text-align: center; }
+  .mesh-stat:not(:last-child) { border-right: 1px solid var(--gray3); }
+  .mesh-stat-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 700; color: var(--white);
+  }
+  .mesh-stat-val.green { color: var(--green); }
+  .mesh-stat-val.amber { color: var(--amber); }
+  .mesh-stat-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Quick Actions */
+  .section-label {
+    font-size: 11px; letter-spacing: 2px; color: var(--text-muted);
+    text-transform: uppercase; margin-bottom: 12px; margin-top: 4px;
+  }
+  .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .action-card {
+    border-radius: 18px; padding: 18px 16px;
+    cursor: pointer; text-decoration: none;
+    transition: transform 0.15s;
+    display: flex; flex-direction: column; gap: 10px;
+    position: relative; overflow: hidden;
+    border: 1px solid transparent;
+  }
+  .action-card:active { transform: scale(0.97); }
+  .action-card.sos {
+    background: linear-gradient(135deg, #FF1F1F, #CC0000);
+    box-shadow: 0 8px 24px rgba(255,31,31,0.3);
+    grid-column: span 2;
+    flex-direction: row; align-items: center;
+    padding: 20px 20px;
+  }
+  .action-card.sos::before {
+    content: ''; position: absolute; top: -20px; right: -20px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+  }
+  .action-card.msg { background: var(--gray2); border-color: var(--gray3); }
+  .action-card.map { background: var(--gray2); border-color: var(--gray3); }
+  .action-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .action-icon svg { width: 22px; height: 22px; fill: white; }
+  .action-card.sos .action-icon { background: rgba(255,255,255,0.2); }
+  .action-card.msg .action-icon { background: rgba(41,121,255,0.2); }
+  .action-card.map .action-icon { background: rgba(255,170,0,0.2); }
+  .action-text {}
+  .action-title { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: white; letter-spacing: 1px; }
+  .action-card.sos .action-title { font-size: 22px; letter-spacing: 3px; }
+  .action-sub { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+  .sos-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.2);
+    border-radius: 8px; padding: 4px 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700; color: white;
+    letter-spacing: 1px;
+  }
+
+  /* Resource quick */
+  .resource-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .res-card {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 14px; padding: 12px;
+    cursor: pointer; text-decoration: none;
+    transition: transform 0.15s;
+  }
+  .res-card:active { transform: scale(0.95); }
+  .res-icon { font-size: 20px; margin-bottom: 6px; }
+  .res-name { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+  .res-val { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; color: var(--white); }
+  .res-val.low { color: var(--red); }
+  .res-val.mid { color: var(--amber); }
+  .res-val.ok { color: var(--green); }
+
+  /* Recent Messages */
+  .msg-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 80px; }
+  .msg-item {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 14px; padding: 12px 14px;
+    display: flex; gap: 10px; align-items: flex-start;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.15s;
+  }
+  .msg-item:hover { background: var(--gray3); }
+  .msg-avatar {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--gray3); display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; color: var(--white);
+    flex-shrink: 0;
+  }
+  .msg-avatar.emergency { background: rgba(255,31,31,0.2); color: var(--red); }
+  .msg-body { flex: 1; min-width: 0; }
+  .msg-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .msg-preview { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .msg-meta { text-align: right; flex-shrink: 0; }
+  .msg-time { font-size: 10px; color: var(--text-muted); }
+  .msg-badge {
+    display: inline-block; min-width: 18px; height: 18px;
+    background: var(--red); border-radius: 9px; padding: 0 5px;
+    font-size: 10px; font-weight: 700; color: white;
+    text-align: center; line-height: 18px; margin-top: 4px;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 76px; background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--gray3);
+    display: flex; align-items: center; justify-content: space-around;
+    padding-bottom: 8px;
+    z-index: 20;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    cursor: pointer; text-decoration: none; flex: 1;
+    padding: 8px 0;
+  }
+  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); transition: fill 0.15s; }
+  .nav-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; transition: color 0.15s; }
+  .nav-item.active svg { fill: var(--red); }
+  .nav-item.active .nav-label { color: var(--red); }
+
+  /* Help Center JS/CSS */
+  .help-fab {
+    position: absolute; bottom: 90px; right: 20px;
+    width: 50px; height: 50px; border-radius: 25px;
+    background: var(--blue); box-shadow: 0 4px 15px rgba(41,121,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 15; transition: transform 0.2s;
+  }
+  .help-fab:active { transform: scale(0.95); }
+  .help-fab svg { width: 24px; height: 24px; fill: white; }
+
+  .help-modal {
+    position: absolute; bottom: 0; left: 0; right: 0; top: 0;
+    background: rgba(0,0,0,0.8); z-index: 40;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .help-modal.open { opacity: 1; pointer-events: auto; }
+  .help-chat {
+    background: #111; height: 75%; border-radius: 30px 30px 0 0;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateY(100%); transition: transform 0.3s; padding-bottom: 20px;
+  }
+  .help-modal.open .help-chat { transform: translateY(0); }
+  .chat-header {
+    padding: 20px 24px 16px; background: var(--gray2); border-bottom: 1px solid var(--gray3);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .chat-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; color: white; letter-spacing: 1px; }
+  .close-chat { width: 32px; height: 32px; border-radius: 16px; background: var(--gray3); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .close-chat svg { width: 14px; height: 14px; fill: white; }
+  .chat-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; scrollbar-width: none; }
+  .chat-body::-webkit-scrollbar { display: none; }
+  .chat-msg { max-width: 85%; padding: 12px 16px; border-radius: 18px; font-size: 13px; line-height: 1.5; word-wrap: break-word;}
+  .chat-msg.bot { background: var(--gray3); color: var(--white); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #333; }
+  .chat-msg.user { background: var(--blue); color: var(--white); align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(41,121,255,0.2); }
+  .chat-input-area {
+    padding: 12px 16px; background: var(--gray2); border-top: 1px solid var(--gray3);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .quick-replies { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .quick-replies::-webkit-scrollbar { display: none; }
+  .quick-reply {
+    background: rgba(41,121,255,0.1); border: 1px solid rgba(41,121,255,0.4); color: #82b1ff;
+    padding: 8px 14px; border-radius: 100px; font-size: 12px; white-space: nowrap; cursor: pointer;
+    font-weight: 500;
+  }
+  .chat-row { display: flex; gap: 8px; align-items: center; }
+  .chat-input {
+    flex: 1; background: var(--black); border: 1px solid var(--gray3); border-radius: 24px;
+    padding: 12px 18px; color: white; font-family: 'Barlow', sans-serif; font-size: 14px;
+    outline: none;
+  }
+  .chat-input::placeholder { color: var(--text-muted); }
+  .chat-send {
+    width: 44px; height: 44px; border-radius: 22px; background: var(--blue);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    flex-shrink: 0; box-shadow: 0 2px 10px rgba(41,121,255,0.3);
+  }
+  .chat-send svg { width: 18px; height: 18px; fill: white; margin-left: 3px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 6l5 5 6-7 6 7 5-5V4H1z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M22 11h2v3h-2z"/></svg>
+    </div>
+  </div>
+  <div class="header">
+    <div class="header-left">
+      <div class="greeting" data-i18n="good_morning">Good morning</div>
+      <div class="header-title" data-i18n="dashboard_title">RE<span>S</span>Q</div>
+    </div>
+  </div>
+
+  <div class="alert-banner">
+    <div class="alert-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2V10z"/></svg>
+    </div>
+    <div class="alert-text">
+      <div class="alert-title" data-i18n="alert_title">⚡ EARTHQUAKE ALERT — Magnitude 5.8</div>
+      <div class="alert-sub" data-i18n="alert_sub">3.2km from your location · Zone B</div>
+    </div>
+    <div class="alert-time">2m ago</div>
+  </div>
+
+  <div class="scroll-area">
+    <!-- Mesh Status -->
+    <div class="mesh-card">
+      <div class="mesh-top">
+        <span class="mesh-label" data-i18n="mesh_network">Mesh Network</span>
+        <div class="mesh-status">
+          <div class="mesh-dot"></div>
+          <span class="mesh-status-text" data-i18n="mesh_connected">CONNECTED</span>
+        </div>
+      </div>
+      <div class="mesh-stats">
+        <div class="mesh-stat">
+          <div class="mesh-stat-val green">12</div>
+          <div class="mesh-stat-label" data-i18n="mesh_nodes">Nodes</div>
+        </div>
+        <div class="mesh-stat">
+          <div class="mesh-stat-val">2.4km</div>
+          <div class="mesh-stat-label" data-i18n="mesh_range">Range</div>
+        </div>
+        <div class="mesh-stat">
+          <div class="mesh-stat-val amber">94%</div>
+          <div class="mesh-stat-label" data-i18n="mesh_battery">Battery</div>
+        </div>
+        <div class="mesh-stat">
+          <div class="mesh-stat-val">18ms</div>
+          <div class="mesh-stat-label" data-i18n="mesh_latency">Latency</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section-label" data-i18n="quick_actions">Quick Actions</div>
+    <div class="quick-actions">
+      <a href="../sos/index.html" class="action-card sos">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+        </div>
+        <div class="action-text">
+          <div class="action-title" data-i18n="sos_emergency">SOS EMERGENCY</div>
+          <div class="action-sub" data-i18n="sos_desc">Broadcast distress signal</div>
+        </div>
+        <div class="sos-badge" data-i18n="hold_3s">HOLD 3s</div>
+      </a>
+      <a href="../messaging/index.html" class="action-card msg">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        </div>
+        <div class="action-text">
+          <div class="action-title" data-i18n="action_messages">Messages</div>
+          <div class="action-sub" data-i18n="msg_unread">3 unread</div>
+        </div>
+      </a>
+      <a href="../map/index.html" class="action-card map">
+        <div class="action-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </div>
+        <div class="action-text">
+          <div class="action-title" data-i18n="live_map">Live Map</div>
+          <div class="action-sub" data-i18n="map_nearby">12 nearby</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Resources Quick -->
+    <div class="section-label" data-i18n="resource_status">Resource Status</div>
+    <div class="resource-row">
+      <a href="../resources/index.html" class="res-card">
+        <div class="res-icon">🩹</div>
+        <div class="res-name" data-i18n="res_medical">Medical</div>
+        <div class="res-val low" data-i18n="res_low">LOW</div>
+      </a>
+      <a href="../resources/index.html" class="res-card">
+        <div class="res-icon">💧</div>
+        <div class="res-name" data-i18n="res_water">Water</div>
+        <div class="res-val mid">MED</div>
+      </a>
+      <a href="../resources/index.html" class="res-card">
+        <div class="res-icon">🥫</div>
+        <div class="res-name" data-i18n="res_food">Food</div>
+        <div class="res-val ok" data-i18n="res_ok">OK</div>
+      </a>
+    </div>
+
+    <!-- Recent messages -->
+    <div class="section-label" data-i18n="recent_messages">Recent Messages</div>
+    <div class="msg-list">
+      <a href="../messaging/index.html" class="msg-item">
+        <div class="msg-avatar emergency">⚠</div>
+        <div class="msg-body">
+          <div class="msg-name" data-i18n="msg_broadcast">BROADCAST — Zone B</div>
+          <div class="msg-preview" data-i18n="msg_emerg_preview">Road to shelter blocked. Use alt route via Park Ave...</div>
+        </div>
+        <div class="msg-meta">
+          <div class="msg-time">4m</div>
+          <div class="msg-badge">!</div>
+        </div>
+      </a>
+      <a href="../messaging/index.html" class="msg-item">
+        <div class="msg-avatar">MR</div>
+        <div class="msg-body">
+          <div class="msg-name" data-i18n="msg_maria">Maria Rodriguez</div>
+          <div class="msg-preview" data-i18n="msg_maria_preview">We made it to the high school gym. There's room for more...</div>
+        </div>
+        <div class="msg-meta">
+          <div class="msg-time">11m</div>
+          <div class="msg-badge">2</div>
+        </div>
+      </a>
+      <a href="../messaging/index.html" class="msg-item">
+        <div class="msg-avatar">JK</div>
+        <div class="msg-body">
+          <div class="msg-name" data-i18n="msg_james">James Kim</div>
+          <div class="msg-preview" data-i18n="msg_james_preview">Anyone have insulin? Urgent for elderly neighbor</div>
+        </div>
+        <div class="msg-meta">
+          <div class="msg-time">22m</div>
+          <div class="msg-badge">1</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <a href="../dashboard/index.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span class="nav-label" data-i18n="nav_home">Home</span>
+    </a>
+    <a href="../messaging/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+      <span class="nav-label" data-i18n="nav_messages">Messages</span>
+    </a>
+    <a href="../map/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <span class="nav-label" data-i18n="nav_map">Map</span>
+    </a>
+    <a href="../resources/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+      <span class="nav-label" data-i18n="nav_resources">Resources</span>
+    </a>
+    <a href="../settings/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
+      <span class="nav-label" data-i18n="nav_settings">Settings</span>
+    </a>
+  </div>
+
+  <!-- Help Center FAB -->
+  <div class="help-fab" onclick="openHelp()">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+  </div>
+
+  <!-- Help Center Modal -->
+  <div class="help-modal" id="helpModal">
+    <div class="help-chat">
+      <div class="chat-header">
+        <div class="chat-title">AI First Aid & Support</div>
+        <div class="close-chat" onclick="closeHelp()">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </div>
+      </div>
+      <div class="chat-body" id="chatBody">
+        <div class="chat-msg bot">Hello, I'm the RESQ offline AI assistant. I can help with basic triage, medical emergencies, and network questions. How can I help?</div>
+      </div>
+      <div class="chat-input-area">
+        <div class="quick-replies">
+          <div class="quick-reply" onclick="sendMsg('How to treat a burn?')">Treat Burn</div>
+          <div class="quick-reply" onclick="sendMsg('Someone is bleeding heavily')">Bleeding</div>
+          <div class="quick-reply" onclick="sendMsg('CPR instructions')">CPR Steps</div>
+          <div class="quick-reply" onclick="sendMsg('No network signal')">Network</div>
+        </div>
+        <div class="chat-row">
+          <input type="text" id="chatInput" class="chat-input" placeholder="Type your emergency..." onkeypress="if(event.key === 'Enter') sendInput()">
+          <div class="chat-send" onclick="sendInput()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openHelp() { document.getElementById('helpModal').classList.add('open'); }
+  function closeHelp() { document.getElementById('helpModal').classList.remove('open'); }
+  
+  const botAnswers = [
+    { keywords: ['burn', 'burnt', 'fire'], ans: "For burns: 1. Cool the burn immediately under cool (not ice cold) running water for at least 10 minutes. 2. Remove tight clothing or jewelry near the area. 3. Cover lightly with a sterile gauze or clean cloth. Do not pop blisters." },
+    { keywords: ['bleed', 'blood', 'cut'], ans: "For heavy bleeding: 1. Apply direct, firm pressure to the wound with a clean cloth. 2. Elevate the injured area above the heart if possible. 3. Keep applying pressure. If blood soaks through, do not remove the cloth—put another one on top." },
+    { keywords: ['cpr', 'breath', 'heart'], ans: "CPR Basics: 1. Place hands in center of chest. 2. Push hard and fast (100-120 beats per min, 2 inches deep). 3. If trained, give 2 rescue breaths after every 30 compressions. Keep going until help arrives." },
+    { keywords: ['choke', 'choking'], ans: "For choking: Stand behind the person. Give 5 back blows between the shoulder blades. Then 5 abdominal thrusts (Heimlich maneuver) pulling inwards and upwards. Repeat until the object is clear." },
+    { keywords: ['network', 'connect', 'signal', 'offline'], ans: "Your device is functioning as a mesh node. Even without standard cell service, messages will hop through nearby devices via Bluetooth/WiFi Direct. Just keep your device powered on to maintain the network." }
+  ];
+
+  function sendInput() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if(text) { sendMsg(text); input.value = ''; }
+  }
+
+  function sendMsg(text) {
+    const body = document.getElementById('chatBody');
+    body.innerHTML += `<div class="chat-msg user">${text}</div>`;
+    body.scrollTop = body.scrollHeight;
+    
+    setTimeout(() => {
+      let reply = "I'm sorry, I don't have offline medical data for that specific situation. Please prioritize reaching a medical professional or broadcasting a high-priority SOS via the Dashboard.";
+      const lowText = text.toLowerCase();
+      for(let item of botAnswers) {
+        if(item.keywords.some(k => lowText.includes(k))) {
+          reply = item.ans; break;
+        }
+      }
+      body.innerHTML += `<div class="chat-msg bot">${reply}</div>`;
+      body.scrollTop = body.scrollHeight;
+    }, 600);
+  }
+</script>
+<script src="../i18n.js"></script>
+</body>
+</html>

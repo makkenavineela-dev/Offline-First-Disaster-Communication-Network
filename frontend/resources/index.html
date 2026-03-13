@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RESQ — Resources</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --red: #FF1F1F; --amber: #FFAA00; --green: #00E676; --blue: #2979FF;
+    --white: #F5F5F0; --black: #0A0A0A; --gray: #141414;
+    --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
+  }
+  html, body { height: 100%; background: #080808; display: flex; align-items: center; justify-content: center; font-family: 'Barlow', sans-serif; }
+  .phone {
+    width: 390px; height: 844px; background: var(--black);
+    border-radius: 44px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .status-bar { height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; flex-shrink: 0; }
+  .time { font-size: 13px; font-weight: 600; color: var(--white); }
+  .status-icons { display: flex; gap: 5px; }
+  .status-icons svg { width: 15px; height: 15px; fill: var(--white); }
+  .header { padding: 4px 24px 12px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .back-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--gray2); display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; }
+  .back-btn svg { width: 18px; height: 18px; fill: var(--white); }
+  .header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; color: var(--white); letter-spacing: 2px; }
+  .header-title span { color: var(--green); }
+  .add-btn { margin-left: auto; width: 36px; height: 36px; border-radius: 10px; background: var(--green); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .add-btn svg { width: 20px; height: 20px; fill: #000; }
+
+  /* Tabs */
+  .tabs { display: flex; padding: 0 16px 12px; gap: 6px; flex-shrink: 0; }
+  .tab { flex: 1; padding: 8px 4px; border-radius: 10px; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; border: 1px solid var(--gray3); color: var(--text-muted); transition: all 0.15s; }
+  .tab.active { background: var(--green); border-color: var(--green); color: #000; }
+
+  .scroll-area { flex: 1; overflow-y: auto; padding: 0 16px 140px; scrollbar-width: none; }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* Summary */
+  .summary-card {
+    background: var(--gray); border: 1px solid var(--gray3);
+    border-radius: 20px; padding: 16px; margin-bottom: 14px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .sum-item { display: flex; align-items: center; gap: 10px; }
+  .sum-icon { font-size: 22px; }
+
+  .sum-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+  .sum-val { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; margin-top: 1px; }
+  .sum-val.red { color: var(--red); }
+  .sum-val.amber { color: var(--amber); }
+  .sum-val.green { color: var(--green); }
+
+  /* Alert banner */
+  .resource-alert {
+    background: rgba(255,31,31,0.08); border: 1px solid rgba(255,31,31,0.3);
+    border-radius: 12px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .res-alert-icon { font-size: 18px; flex-shrink: 0; }
+  .res-alert-text { font-size: 12px; color: rgba(255,100,100,0.9); }
+  .res-alert-text strong { color: var(--red); }
+
+  .section-label { font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; margin-top: 4px; }
+
+  /* Resource cards */
+  .resource-card {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 18px; padding: 16px;
+    margin-bottom: 10px;
+  }
+  .resource-card.critical { border-color: rgba(255,31,31,0.3); }
+  .resource-card.low { border-color: rgba(255,170,0,0.3); }
+  .res-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .res-emoji { font-size: 24px; }
+  .res-info { flex: 1; }
+  .res-name { font-size: 15px; font-weight: 600; color: var(--white); }
+  .res-location { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .res-badge { padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+  .res-badge.critical { background: rgba(255,31,31,0.15); color: var(--red); }
+  .res-badge.low { background: rgba(255,170,0,0.15); color: var(--amber); }
+  .res-badge.ok { background: rgba(0,230,118,0.15); color: var(--green); }
+
+  /* Progress bar */
+  .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .progress-track { flex: 1; height: 8px; background: var(--gray3); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+  .progress-fill.red { background: linear-gradient(90deg, #FF1F1F, #FF5555); }
+  .progress-fill.amber { background: linear-gradient(90deg, #FFAA00, #FFD000); }
+  .progress-fill.green { background: linear-gradient(90deg, #00E676, #69F0AE); }
+  .progress-pct { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; width: 40px; text-align: right; }
+  .progress-pct.red { color: var(--red); }
+  .progress-pct.amber { color: var(--amber); }
+  .progress-pct.green { color: var(--green); }
+
+  /* Details row */
+  .details-row { display: flex; gap: 8px; }
+  .detail-chip { flex: 1; background: var(--gray3); border-radius: 10px; padding: 8px; text-align: center; }
+  .detail-val { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); }
+  .detail-label { font-size: 9px; color: var(--text-muted); margin-top: 1px; letter-spacing: 0.5px; }
+
+  /* Action btn */
+  .res-action-row { display: flex; gap: 8px; margin-top: 12px; }
+  .res-btn {
+    flex: 1; padding: 9px; border-radius: 10px;
+    font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
+    border: 1px solid var(--gray3); color: var(--white); background: transparent;
+    transition: all 0.15s;
+  }
+  .res-btn.primary { background: var(--green); border-color: var(--green); color: #000; }
+  .res-btn:hover { border-color: var(--green); transform: translateY(-1px); }
+  .res-btn:active { transform: translateY(1px); }
+  
+  /* Requests */
+  .request-item {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 14px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .req-icon { font-size: 20px; flex-shrink: 0; }
+  .req-info { flex: 1; }
+  .req-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .req-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .req-fulfill { padding: 6px 14px; background: var(--blue); border: none; border-radius: 8px; color: white; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.2s, transform 0.1s; }
+  .req-fulfill:hover { background: #448aff; }
+  .req-fulfill:active { transform: scale(0.95); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 76px; background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(20px); border-top: 1px solid var(--gray3);
+    display: flex; align-items: center; justify-content: space-around;
+    padding-bottom: 8px; z-index: 20;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
+  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
+  .nav-label { font-size: 10px; color: var(--text-muted); }
+  .nav-item.active svg { fill: var(--red); }
+  .nav-item.active .nav-label { color: var(--red); }
+
+  /* App Notification Toast */
+  .toast-notification {
+    position: absolute; top: 56px; left: 50%; transform: translateX(-50%) translateY(-150%);
+    background: var(--blue); color: white; padding: 10px 18px; border-radius: 20px;
+    font-size: 13px; font-weight: 600; font-family: 'Barlow', sans-serif;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+    white-space: nowrap;
+  }
+  .toast-notification.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  /* Add Resource Overlay */
+  .add-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0; top: 0;
+    background: rgba(0,0,0,0.8); z-index: 60;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .add-overlay.open { opacity: 1; pointer-events: auto; }
+  .add-card {
+    background: #111; padding: 24px; border-radius: 30px 30px 0 0;
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .add-overlay.open .add-card { transform: translateY(0); }
+  .add-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .add-title { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; color: white; }
+  .add-close { width: 32px; height: 32px; border-radius: 16px; background: var(--gray3); display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-weight: bold; }
+  .add-input { width: 100%; background: var(--gray2); border: 1px solid var(--gray3); color: white; padding: 14px; border-radius: 12px; margin-bottom: 12px; font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; }
+  .add-submit-btn { width: 100%; padding: 16px; border-radius: 14px; background: var(--green); color: black; font-size: 16px; font-weight: 700; border: none; cursor: pointer; margin-top: 8px; transition: transform 0.1s; }
+  .add-submit-btn:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 6l5 5 6-7 6 7 5-5V4H1z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M22 11h2v3h-2z"/></svg>
+    </div>
+  </div>
+  <div class="header">
+    <a href="../dashboard/index.html" class="back-btn">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </a>
+    <div class="header-title" data-i18n="supply_tracker"><span>SUPPLY</span> TRACKER</div>
+    <div class="add-btn" onclick="openAddOverlay()">
+      <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this, 'tab-myshelter')" data-i18n="tab_myshelter">My Shelter</div>
+    <div class="tab" onclick="switchTab(this, 'tab-zoneb')" data-i18n="tab_zoneb">Zone B</div>
+    <div class="tab" onclick="switchTab(this, 'tab-requests')" data-i18n="tab_requests">Requests</div>
+  </div>
+
+  <!-- Global Toast -->
+  <div class="toast-notification" id="toastMsg">Notification</div>
+
+  <div class="scroll-area">
+    <!-- Alert -->
+    <div class="resource-alert">
+      <div class="res-alert-icon">⚠️</div>
+      <div class="res-alert-text"><strong>Medical supplies critically low.</strong> Nearest resupply 1.4km at Community Center.</div>
+    </div>
+
+    <!-- MY SHELTER TAB -->
+    <div id="tab-myshelter" class="tab-content">
+
+    <!-- Summary -->
+    <div class="summary-card">
+      <div class="sum-item"><div class="sum-icon">🩹</div><div class="sum-info"><div class="sum-label" data-i18n="res_medical">Medical</div><div class="sum-val red" data-i18n="res_critical">CRITICAL</div></div></div>
+      <div class="sum-item"><div class="sum-icon">💧</div><div class="sum-info"><div class="sum-label" data-i18n="res_water">Water</div><div class="sum-val amber" data-i18n="res_low">LOW</div></div></div>
+      <div class="sum-item"><div class="sum-icon">🥫</div><div class="sum-info"><div class="sum-label" data-i18n="res_food">Food</div><div class="sum-val green" data-i18n="res_ok">OK</div></div></div>
+      <div class="sum-item"><div class="sum-icon">🔦</div><div class="sum-info"><div class="sum-label" data-i18n="res_power">Power</div><div class="sum-val amber">45%</div></div></div>
+    </div>
+
+    <div class="section-label" data-i18n="res_details">Resource Details</div>
+
+    <!-- Medical -->
+    <div class="resource-card critical">
+      <div class="res-top">
+        <div class="res-emoji">🩹</div>
+        <div class="res-info">
+          <div class="res-name" data-i18n="res_med_supplies">Medical Supplies</div>
+          <div class="res-location" data-i18n="res_med_loc">High School Shelter · Room 4</div>
+        </div>
+        <span class="res-badge critical" data-i18n="res_critical">CRITICAL</span>
+      </div>
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill red" style="width:12%"></div></div>
+        <div class="progress-pct red">12%</div>
+      </div>
+      <div class="details-row">
+        <div class="detail-chip"><div class="detail-val">3</div><div class="detail-label" data-i18n="res_bandages">Bandages</div></div>
+        <div class="detail-chip"><div class="detail-val">0</div><div class="detail-label" data-i18n="res_insulin">Insulin</div></div>
+        <div class="detail-chip"><div class="detail-val">2</div><div class="detail-label" data-i18n="res_kits">Kits</div></div>
+        <div class="detail-chip"><div class="detail-val">8</div><div class="detail-label" data-i18n="res_pills">Pills</div></div>
+      </div>
+      <div class="res-action-row">
+        <button class="res-btn" onclick="handleRequest(this, 'Medical Supplies')" data-i18n="res_btn_request">Request</button>
+        <button class="res-btn primary" onclick="handleUpdate(this)" data-i18n="res_btn_mark_used">Mark Used</button>
+      </div>
+    </div>
+
+    <!-- Water -->
+    <div class="resource-card low">
+      <div class="res-top">
+        <div class="res-emoji">💧</div>
+        <div class="res-info">
+          <div class="res-name" data-i18n="res_water_title">Drinking Water</div>
+          <div class="res-location" data-i18n="res_water_loc">High School Shelter · Gym</div>
+        </div>
+        <span class="res-badge low" data-i18n="res_low">LOW</span>
+      </div>
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill amber" style="width:28%"></div></div>
+        <div class="progress-pct amber">28%</div>
+      </div>
+      <div class="details-row">
+        <div class="detail-chip"><div class="detail-val">14</div><div class="detail-label" data-i18n="res_liters">Liters</div></div>
+        <div class="detail-chip"><div class="detail-val">60</div><div class="detail-label" data-i18n="res_people_short">People</div></div>
+        <div class="detail-chip"><div class="detail-val">~5h</div><div class="detail-label" data-i18n="res_remaining">Remaining</div></div>
+        <div class="detail-chip"><div class="detail-val">0</div><div class="detail-label" data-i18n="res_filters">Filters</div></div>
+      </div>
+      <div class="res-action-row">
+        <button class="res-btn" onclick="handleRequest(this, 'Drinking Water')" data-i18n="res_btn_request">Request</button>
+        <button class="res-btn primary" onclick="handleUpdate(this)" data-i18n="res_btn_update">Update</button>
+      </div>
+    </div>
+
+    <!-- Food -->
+    <div class="resource-card">
+      <div class="res-top">
+        <div class="res-emoji">🥫</div>
+        <div class="res-info">
+          <div class="res-name" data-i18n="res_food_title">Non-Perishable Food</div>
+          <div class="res-location" data-i18n="res_food_loc">High School Shelter · Cafeteria</div>
+        </div>
+        <span class="res-badge ok" data-i18n="res_ok">ADEQUATE</span>
+      </div>
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill green" style="width:65%"></div></div>
+        <div class="progress-pct green">65%</div>
+      </div>
+      <div class="details-row">
+        <div class="detail-chip"><div class="detail-val">180</div><div class="detail-label" data-i18n="res_meals">Meals</div></div>
+        <div class="detail-chip"><div class="detail-val">3d</div><div class="detail-label" data-i18n="res_supply">Supply</div></div>
+        <div class="detail-chip"><div class="detail-val">12</div><div class="detail-label" data-i18n="res_veg">Veg</div></div>
+        <div class="detail-chip"><div class="detail-val">4</div><div class="detail-label" data-i18n="res_allergy">Allergy</div></div>
+      </div>
+      <div class="res-action-row">
+        <button class="res-btn" onclick="handleRequest(this, 'Non-Perishable Food')" data-i18n="res_btn_share">Share</button>
+        <button class="res-btn primary" onclick="handleUpdate(this)" data-i18n="res_btn_update">Update</button>
+      </div>
+    </div>
+    </div><!-- End My Shelter Tab -->
+
+    <!-- ZONE B TAB -->
+    <div id="tab-zoneb" class="tab-content" style="display: none;">
+      <div class="summary-card" style="grid-template-columns: 1fr; gap:8px;">
+        <div style="font-size: 14px; color: var(--white); font-weight: 600;">Zone B Aggregated Stock</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom:10px;">Data from 4 connected shelters via mesh.</div>
+        <div class="progress-row">
+          <div style="width: 40px; font-size:12px; color:var(--text-muted);">Water</div>
+          <div class="progress-track"><div class="progress-fill amber" style="width:40%"></div></div>
+          <div class="progress-pct amber" style="font-size:14px;">40%</div>
+        </div>
+        <div class="progress-row">
+          <div style="width: 40px; font-size:12px; color:var(--text-muted);">Food</div>
+          <div class="progress-track"><div class="progress-fill green" style="width:75%"></div></div>
+          <div class="progress-pct green" style="font-size:14px;">75%</div>
+        </div>
+        <div class="progress-row">
+          <div style="width: 40px; font-size:12px; color:var(--text-muted);">Meds</div>
+          <div class="progress-track"><div class="progress-fill red" style="width:15%"></div></div>
+          <div class="progress-pct red" style="font-size:14px;">15%</div>
+        </div>
+      </div>
+      
+      <div class="section-label">Other Shelters in Zone B</div>
+      
+      <!-- Another Shelter -->
+      <div class="resource-card">
+        <div class="res-top" style="margin-bottom:6px;">
+          <div class="res-emoji">🏫</div>
+          <div class="res-info">
+            <div class="res-name">Community Center</div>
+            <div class="res-location">1.4km away</div>
+          </div>
+          <span class="res-badge ok">EXCESS MEDS</span>
+        </div>
+        <div class="detail-label" style="font-size:11px; margin-bottom: 12px;">Surplus of bandages and first aid kits available for transfer.</div>
+        <button class="res-btn primary" style="width:100%" onclick="handleRequest(this, 'Meds Transfer')">Request Transfer</button>
+      </div>
+
+    </div><!-- End Zone B Tab -->
+
+    <!-- REQUESTS TAB -->
+    <div id="tab-requests" class="tab-content" style="display: none;">
+      <div class="section-label">Active Requests</div>
+    <div style="margin-bottom: 80px;">
+      <div class="request-item">
+        <div class="req-icon">💊</div>
+        <div class="req-info">
+          <div class="req-name">Insulin — Urgent</div>
+          <div class="req-detail">James Kim · 0.4km · For elderly</div>
+        </div>
+        <button class="req-fulfill" onclick="handleFulfill(this)">Fulfill</button>
+      </div>
+      <div class="request-item">
+        <div class="req-icon">💧</div>
+        <div class="req-info">
+          <div class="req-name">Water (5L)</div>
+          <div class="req-detail">Zone C Shelter · 1.2km</div>
+        </div>
+        <button class="req-fulfill" onclick="handleFulfill(this)">Fulfill</button>
+      </div>
+      <div class="request-item">
+        <div class="req-icon">🔦</div>
+        <div class="req-info">
+          <div class="req-name">Flashlight / Torch</div>
+          <div class="req-detail">Block 14 Group · 0.8km</div>
+        </div>
+        <button class="req-fulfill" onclick="handleFulfill(this)">Fulfill</button>
+      </div>
+    </div>
+    </div><!-- End Requests Tab -->
+  </div>
+
+  <!-- Add Resource Overlay -->
+  <div class="add-overlay" id="addOverlay" onclick="if(event.target === this) closeAddOverlay()">
+    <div class="add-card">
+      <div class="add-header">
+        <div class="add-title">Add / Request Resource</div>
+        <div class="add-close" onclick="closeAddOverlay()">✕</div>
+      </div>
+      <div class="add-form">
+        <input type="text" class="add-input" placeholder="Resource Name (e.g. Blankets)" id="newResName">
+        <div style="display:flex; gap:10px;">
+          <input type="number" class="add-input" placeholder="Qty" style="flex: 1;" id="newResQty" min="1" oninput="this.value = !!this.value && Math.abs(this.value) >= 0 ? Math.abs(this.value) : null">
+          <select class="add-input" style="flex: 2; appearance: none;">
+            <option>Category: Medical</option>
+            <option>Category: Water</option>
+            <option>Category: Food</option>
+            <option>Category: Power</option>
+            <option>Category: Rescue</option>
+            <option>Category: Other</option>
+          </select>
+        </div>
+        <button class="add-submit-btn" onclick="submitAddResource()">Broadcast to Mesh</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="../dashboard/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span class="nav-label" data-i18n="nav_home">Home</span>
+    </a>
+    <a href="../messaging/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+      <span class="nav-label" data-i18n="nav_messages">Messages</span>
+    </a>
+    <a href="../map/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <span class="nav-label" data-i18n="nav_map">Map</span>
+    </a>
+    <a href="../resources/index.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+      <span class="nav-label" data-i18n="nav_resources">Resources</span>
+    </a>
+    <a href="../settings/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
+      <span class="nav-label" data-i18n="nav_settings">Settings</span>
+    </a>
+  </div>lass="nav-label">Settings</span>
+    </a>
+  </div>
+</div>
+<script>
+  function switchTab(el, targetId) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    
+    document.querySelectorAll('.tab-content').forEach(content => {
+       content.style.display = 'none';
+    });
+    document.getElementById(targetId).style.display = 'block';
+  }
+
+  function showToast(message) {
+      const toast = document.getElementById('toastMsg');
+      toast.innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 3000);
+  }
+  
+  function handleRequest(btn, itemName) {
+    const oldText = btn.innerText;
+    if(oldText === 'Requested' || oldText === 'Shared') return; // Prevent multiple clicks during wait
+    const oldBorder = btn.style.borderColor;
+    const oldColor = btn.style.color;
+    
+    btn.innerHTML = `<span style="opacity:0.5">Wait...</span>`;
+    
+    setTimeout(() => {
+        btn.innerText = oldText === 'Share' ? 'Shared' : 'Requested';
+        btn.style.borderColor = 'var(--blue)';
+        btn.style.color = 'var(--blue)';
+        
+        showToast(oldText === 'Share' ? `${itemName} ` + t('toast_new_res') : `${itemName} ` + t('toast_req_broadcast'));
+        
+        // Reset after 3 seconds
+        setTimeout(() => {
+            btn.innerText = oldText;
+            btn.style.borderColor = oldBorder;
+            btn.style.color = oldColor;
+        }, 3000);
+
+    }, 600);
+  }
+
+  function handleUpdate(btn) {
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = `✓ Saved`;
+    showToast(t('toast_res_updated'));
+    setTimeout(() => btn.innerHTML = oldHtml, 2000);
+  }
+
+  function handleFulfill(btn) {
+    const oldText = btn.innerText;
+    const oldBg = btn.style.background;
+    const oldColor = btn.style.color;
+
+    if(oldText === 'Fulfilled') return;
+
+    btn.innerHTML = `...`;
+    setTimeout(() => {
+        btn.innerText = 'Fulfilled';
+        btn.style.background = 'var(--green)';
+        btn.style.color = 'black';
+        
+        showToast(t('toast_fulfilling'));
+
+        // Reset after 3 seconds
+        setTimeout(() => {
+            btn.innerText = oldText;
+            btn.style.background = oldBg;
+            btn.style.color = oldColor;
+        }, 3000);
+
+    }, 500);
+  }
+
+  function openAddOverlay() {
+      document.getElementById('addOverlay').classList.add('open');
+  }
+
+  function closeAddOverlay() {
+      document.getElementById('addOverlay').classList.remove('open');
+  }
+
+  function submitAddResource() {
+      const name = document.getElementById('newResName').value || 'New Resource';
+      const qty = document.getElementById('newResQty').value || '1';
+      closeAddOverlay();
+      showToast(`${qty}x ${name} ` + t('toast_req_broadcast'));
+      document.getElementById('newResName').value = '';
+      document.getElementById('newResQty').value = '';
+  }
+
+  // Animate progress bars on load
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.progress-fill').forEach(bar => {
+      const w = bar.style.width; bar.style.width = '0%';
+      setTimeout(() => bar.style.width = w, 200);
+    });
+  });
+</script>
+<script src="../i18n.js"></script>
+</body>
+</html>

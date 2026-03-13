@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RESQ — SOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --red: #FF1F1F; --amber: #FFAA00; --green: #00E676;
+    --white: #F5F5F0; --black: #0A0A0A; --gray: #141414;
+    --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
+  }
+  html, body { height: 100%; background: #080808; display: flex; align-items: center; justify-content: center; font-family: 'Barlow', sans-serif; }
+  .phone {
+    width: 390px; height: 844px; background: var(--black);
+    border-radius: 44px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .status-bar {
+    height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; flex-shrink: 0;
+  }
+  .time { font-size: 13px; font-weight: 600; color: var(--white); }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .status-icons svg { width: 15px; height: 15px; fill: var(--white); }
+  .header {
+    padding: 4px 24px 16px;
+    display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+  }
+  .back-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--gray2); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; text-decoration: none;
+  }
+  .back-btn svg { width: 18px; height: 18px; fill: var(--white); }
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px; font-weight: 900; color: var(--white); letter-spacing: 2px;
+  }
+  .header-title span { color: var(--red); }
+
+  .scroll-area { flex: 1; overflow-y: auto; padding: 0 16px; scrollbar-width: none; }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* SOS BUTTON */
+  .sos-container {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 16px 0 24px;
+  }
+  .sos-outer {
+    width: 220px; height: 220px; border-radius: 50%;
+    border: 2px solid rgba(255,31,31,0.2);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    animation: outerPulse 2s ease-in-out infinite;
+  }
+  @keyframes outerPulse {
+    0%,100% { border-color: rgba(255,31,31,0.2); }
+    50% { border-color: rgba(255,31,31,0.5); }
+  }
+  .sos-mid {
+    width: 180px; height: 180px; border-radius: 50%;
+    border: 2px solid rgba(255,31,31,0.3);
+    display: flex; align-items: center; justify-content: center;
+    animation: midPulse 2s ease-in-out infinite 0.3s;
+  }
+  @keyframes midPulse {
+    0%,100% { border-color: rgba(255,31,31,0.3); }
+    50% { border-color: rgba(255,31,31,0.6); }
+  }
+  .sos-btn {
+    width: 144px; height: 144px; border-radius: 50%;
+    background: linear-gradient(145deg, #FF3333, #CC0000);
+    border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    box-shadow: 0 0 40px rgba(255,31,31,0.5), 0 0 80px rgba(255,31,31,0.2), inset 0 2px 4px rgba(255,255,255,0.2);
+    transition: transform 0.1s, box-shadow 0.1s;
+    position: relative;
+  }
+  .sos-btn:active { transform: scale(0.95); box-shadow: 0 0 20px rgba(255,31,31,0.4); }
+  .sos-btn-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 36px; font-weight: 900; color: white; letter-spacing: 4px;
+    line-height: 1;
+  }
+  .sos-btn-sub { font-size: 10px; color: rgba(255,255,255,0.7); letter-spacing: 1px; text-transform: uppercase; }
+  .sos-instruction {
+    margin-top: 14px; font-size: 12px; color: var(--text-muted);
+    letter-spacing: 1px; text-align: center;
+  }
+  /* Progress ring when holding */
+  .hold-progress {
+    position: absolute; inset: -4px;
+    width: calc(100% + 8px); height: calc(100% + 8px);
+  }
+
+  /* Alert type selector */
+  .alert-types {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .alert-type {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 14px; padding: 12px 8px;
+    text-align: center; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .alert-type.active { border-color: var(--red); background: rgba(255,31,31,0.1); }
+  .alert-type-icon { font-size: 22px; margin-bottom: 6px; }
+  .alert-type-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; }
+  .alert-type.active .alert-type-label { color: var(--red); }
+
+  /* Location card */
+  .location-card {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 16px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 14px;
+  }
+  .loc-icon { width: 36px; height: 36px; background: rgba(255,170,0,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .loc-icon svg { width: 20px; height: 20px; fill: var(--amber); }
+  .loc-info {}
+  .loc-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+  .loc-coords { font-size: 14px; font-weight: 600; color: var(--white); margin-top: 2px; }
+  .loc-accuracy { font-size: 11px; color: var(--green); margin-top: 2px; }
+  .loc-refresh { margin-left: auto; cursor: pointer; }
+  .loc-refresh svg { width: 20px; height: 20px; fill: var(--text-muted); }
+
+  /* Message input */
+  .msg-input-card {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 16px; padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .input-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .msg-textarea {
+    width: 100%; background: var(--gray3); border: 1px solid #333;
+    border-radius: 10px; padding: 12px;
+    color: var(--white); font-family: 'Barlow', sans-serif; font-size: 14px;
+    resize: none; min-height: 72px; outline: none;
+  }
+  .msg-textarea::placeholder { color: var(--text-muted); }
+  .quick-msgs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .quick-msg {
+    background: var(--gray3); border: 1px solid #444;
+    border-radius: 100px; padding: 5px 12px;
+    font-size: 11px; color: var(--text-muted); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .quick-msg:hover { border-color: var(--red); color: var(--red); }
+
+  /* Recent SOS */
+  .sos-history { margin-bottom: 80px; }
+  .history-item {
+    background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 14px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .hist-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .hist-dot.pending { background: var(--amber); animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .hist-info {}
+  .hist-name { font-size: 13px; font-weight: 600; color: var(--white); }
+  .hist-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .hist-time { margin-left: auto; font-size: 11px; color: var(--text-muted); }
+
+  .section-label {
+    font-size: 11px; letter-spacing: 2px; color: var(--text-muted);
+    text-transform: uppercase; margin-bottom: 10px; margin-top: 4px;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 76px; background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--gray3);
+    display: flex; align-items: center; justify-content: space-around;
+    padding-bottom: 8px; z-index: 20;
+  }
+  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
+  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
+  .nav-label { font-size: 10px; color: var(--text-muted); }
+  .nav-item.active svg { fill: var(--red); }
+  .nav-item.active .nav-label { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 6l5 5 6-7 6 7 5-5V4H1z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M22 11h2v3h-2z"/></svg>
+    </div>
+  </div>
+  <div class="header">
+    <a href="../dashboard/index.html" class="back-btn">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    </a>
+    <div class="header-title" data-i18n="sos_title">SOS EMERGENCY</div>
+  </div>
+
+  <div class="scroll-area">
+    <!-- SOS Button -->
+    <div class="sos-container">
+      <div class="sos-outer">
+        <div class="sos-mid">
+          <button class="sos-btn" id="sosBtn" onmousedown="startHold()" onmouseup="endHold()" ontouchstart="startHold()" ontouchend="endHold()">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="white" style="margin-bottom:4px"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+            <div class="sos-btn-text">SOS</div>
+            <div class="sos-btn-sub" data-i18n="sos_hold">Hold 3 seconds</div>
+          </button>
+        </div>
+      </div>
+      <div class="sos-instruction" data-i18n="sos_instruction">Press and hold to broadcast emergency signal</div>
+    </div>
+
+    <!-- Alert Type -->
+    <div class="section-label" data-i18n="sos_alert_type">Alert Type</div>
+    <div class="alert-types">
+      <div class="alert-type active" onclick="selectType(this)">
+        <div class="alert-type-icon">🌊</div>
+        <div class="alert-type-label" data-i18n="sos_flood">Flood</div>
+      </div>
+      <div class="alert-type" onclick="selectType(this)">
+        <div class="alert-type-icon">🔥</div>
+        <div class="alert-type-label" data-i18n="sos_fire">Fire</div>
+      </div>
+      <div class="alert-type" onclick="selectType(this)">
+        <div class="alert-type-icon">🏚️</div>
+        <div class="alert-type-label" data-i18n="sos_collapse">Collapse</div>
+      </div>
+      <div class="alert-type" onclick="selectType(this)">
+        <div class="alert-type-icon">⚡</div>
+        <div class="alert-type-label" data-i18n="sos_earthquake">Earthquake</div>
+      </div>
+      <div class="alert-type" onclick="selectType(this)">
+        <div class="alert-type-icon">🚑</div>
+        <div class="alert-type-label" data-i18n="sos_medical">Medical</div>
+      </div>
+      <div class="alert-type" onclick="selectType(this)">
+        <div class="alert-type-icon">📡</div>
+        <div class="alert-type-label" data-i18n="sos_other">Other</div>
+      </div>
+    </div>
+
+    <!-- Location -->
+    <div class="location-card">
+      <div class="loc-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      </div>
+      <div class="loc-info">
+        <div class="loc-label" data-i18n="sos_location">Your Location</div>
+        <div class="loc-coords">12.9716° N, 77.5946° E</div>
+        <div class="loc-accuracy" data-i18n="sos_accuracy">± 4m accuracy · GPS Active</div>
+      </div>
+      <div class="loc-refresh">
+        <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      </div>
+    </div>
+
+    <!-- Message -->
+    <div class="msg-input-card">
+      <div class="input-label" data-i18n="sos_add_msg">Additional Message (Optional)</div>
+      <textarea class="msg-textarea" data-i18n-placeholder="sos_msg_placeholder" placeholder="Describe your situation..."></textarea>
+      <div class="quick-msgs">
+        <span class="quick-msg" onclick="setMsg(this)" data-i18n="sos_quick_trapped">Trapped in building</span>
+        <span class="quick-msg" onclick="setMsg(this)" data-i18n="sos_quick_medical">Need medical help</span>
+        <span class="quick-msg" onclick="setMsg(this)" data-i18n="sos_quick_evacuate">Can't evacuate</span>
+        <span class="quick-msg" onclick="setMsg(this)" data-i18n="sos_quick_children">With children</span>
+        <span class="quick-msg" onclick="setMsg(this)" data-i18n="sos_quick_water">Water rising</span>
+      </div>
+    </div>
+
+    <!-- Nearby SOS -->
+    <div class="section-label" data-i18n="sos_nearby">Nearby Alerts</div>
+    <div class="sos-history">
+      <div class="history-item">
+        <div class="hist-dot pending"></div>
+        <div class="hist-info">
+          <div class="hist-name">Unknown — Medical Emergency</div>
+          <div class="hist-detail">0.4km away · 3 nodes relayed</div>
+        </div>
+        <div class="hist-time">2m</div>
+      </div>
+      <div class="history-item">
+        <div class="hist-dot"></div>
+        <div class="hist-info">
+          <div class="hist-name">Sarah L. — Trapped, 4th Floor</div>
+          <div class="hist-detail">1.1km away · Resolved</div>
+        </div>
+        <div class="hist-time">18m</div>
+      </div>
+      <div class="history-item">
+        <div class="hist-dot"></div>
+        <div class="hist-info">
+          <div class="hist-name">Group B — Flood, Request Boat</div>
+          <div class="hist-detail">2.3km away · Rescue dispatched</div>
+        </div>
+        <div class="hist-time">34m</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="../dashboard/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      <span class="nav-label" data-i18n="nav_home">Home</span>
+    </a>
+    <a href="../messaging/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+      <span class="nav-label" data-i18n="nav_messages">Messages</span>
+    </a>
+    <a href="../map/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      <span class="nav-label" data-i18n="nav_map">Map</span>
+    </a>
+    <a href="../resources/index.html" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+      <span class="nav-label" data-i18n="nav_resources">Resources</span>
+    </a>
+    <a href="../settings/index.html" class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+      <span class="nav-label" data-i18n="nav_settings">Settings</span>
+    </a>
+  </div>
+</div>
+<script>
+  let holdTimer;
+  let holding = false;
+  function startHold() {
+    holding = true;
+    const btn = document.getElementById('sosBtn');
+    btn.style.transform = 'scale(0.95)';
+    holdTimer = setTimeout(() => {
+      if (holding) {
+        btn.style.background = 'linear-gradient(145deg, #ff6666, #ff1f1f)';
+        btn.querySelector('.sos-btn-text').textContent = 'SENT!';
+        btn.querySelector('.sos-btn-sub').textContent = 'Signal broadcast';
+        setTimeout(() => {
+          btn.style.background = 'linear-gradient(145deg, #FF3333, #CC0000)';
+          btn.querySelector('.sos-btn-text').textContent = 'SOS';
+          btn.querySelector('.sos-btn-sub').textContent = 'Hold 3 seconds';
+        }, 2000);
+      }
+    }, 3000);
+  }
+  function endHold() {
+    holding = false;
+    clearTimeout(holdTimer);
+    document.getElementById('sosBtn').style.transform = 'scale(1)';
+  }
+  function selectType(el) {
+    document.querySelectorAll('.alert-type').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+  }
+  function setMsg(el) {
+    document.querySelector('.msg-textarea').value = el.textContent;
+  }
+</script>
+<script src="../i18n.js"></script>
+</body>
+</html>

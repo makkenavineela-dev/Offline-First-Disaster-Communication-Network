@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RESQ — Splash</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --red: #FF1F1F;
+    --red-dark: #CC0000;
+    --amber: #FFAA00;
+    --white: #F5F5F0;
+    --black: #0A0A0A;
+    --gray: #1A1A1A;
+    --gray2: #2A2A2A;
+    --text-muted: #888;
+  }
+  html, body {
+    height: 100%; width: 100%;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    overflow: hidden;
+  }
+  .phone-frame {
+    width: 390px; height: 844px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: var(--black);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  /* Grid bg */
+  .grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,31,31,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,31,31,0.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+    animation: gridPulse 4s ease-in-out infinite;
+  }
+  @keyframes gridPulse {
+    0%,100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+  /* Radial glow */
+  .glow {
+    position: absolute;
+    width: 340px; height: 340px;
+    background: radial-gradient(circle, rgba(255,31,31,0.18) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    animation: glowPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes glowPulse {
+    0%,100% { transform: translate(-50%,-50%) scale(1); opacity: 0.7; }
+    50% { transform: translate(-50%,-50%) scale(1.15); opacity: 1; }
+  }
+  /* Signal rings */
+  .rings {
+    position: absolute;
+    width: 200px; height: 200px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -80%);
+  }
+  .ring {
+    position: absolute; border-radius: 50%;
+    border: 1px solid rgba(255,31,31,0.3);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    animation: ringExpand 3s ease-out infinite;
+  }
+  .ring:nth-child(1) { width: 120px; height: 120px; animation-delay: 0s; }
+  .ring:nth-child(2) { width: 200px; height: 200px; animation-delay: 0.8s; }
+  .ring:nth-child(3) { width: 300px; height: 300px; animation-delay: 1.6s; }
+  @keyframes ringExpand {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 0.8; }
+    100% { transform: translate(-50%,-50%) scale(1); opacity: 0; }
+  }
+  .content {
+    position: relative; z-index: 10;
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+    gap: 0;
+    animation: fadeUp 1s ease forwards;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .logo-icon {
+    width: 80px; height: 80px;
+    background: var(--red);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+    position: relative;
+    box-shadow: 0 0 40px rgba(255,31,31,0.5), 0 0 80px rgba(255,31,31,0.2);
+  }
+  .logo-icon::before {
+    content: '';
+    position: absolute; inset: -3px;
+    border-radius: 22px;
+    border: 1px solid rgba(255,100,100,0.4);
+  }
+  .logo-icon svg { width: 44px; height: 44px; fill: white; }
+  .app-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 64px; font-weight: 900;
+    letter-spacing: 8px;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .app-name span { color: var(--red); }
+  .tagline {
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 4px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 48px;
+  }
+  .status-bar {
+    display: flex; gap: 8px; align-items: center;
+    background: rgba(255,31,31,0.1);
+    border: 1px solid rgba(255,31,31,0.2);
+    border-radius: 100px;
+    padding: 6px 16px;
+    margin-bottom: 40px;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--amber);
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .status-text {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+  .btn-start {
+    width: 280px; height: 60px;
+    background: var(--red);
+    border: none; border-radius: 12px;
+    color: white;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 4px 30px rgba(255,31,31,0.4);
+  }
+  .btn-start:hover { transform: scale(1.03); box-shadow: 0 6px 40px rgba(255,31,31,0.6); }
+  .btn-start:active { transform: scale(0.97); }
+  .btn-start::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+  }
+  .btn-secondary {
+    margin-top: 14px;
+    font-size: 13px; color: var(--text-muted);
+    text-decoration: none; letter-spacing: 1px;
+  }
+  .bottom-info {
+    position: absolute; bottom: 40px;
+    display: flex; gap: 24px;
+    z-index: 10;
+  }
+  .info-badge {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .info-badge-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 700; color: var(--white);
+  }
+  .info-badge-label {
+    font-size: 9px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase;
+  }
+  .divider { width: 1px; background: var(--gray2); }
+  /* Top status */
+  .top-bar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 44px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; z-index: 20;
+  }
+  .top-time { font-size: 13px; font-weight: 600; }
+  .top-icons { display: flex; gap: 6px; align-items: center; }
+  .top-icons svg { width: 16px; height: 16px; fill: var(--white); }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+  <div class="top-bar">
+    <span class="top-time">9:41</span>
+    <div class="top-icons">
+      <svg viewBox="0 0 24 24"><path d="M1 6l5 5 6-7 6 7 5-5V4H1z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M22 11h2v3h-2z"/></svg>
+    </div>
+  </div>
+  <div class="grid-bg"></div>
+  <div class="glow"></div>
+  <div class="rings">
+    <div class="ring"></div>
+    <div class="ring"></div>
+    <div class="ring"></div>
+  </div>
+  <div class="content">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L4 7v5c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7L12 2zm0 4l5 3v4c0 3-1.8 5.8-5 7.2C8.8 18.8 7 16 7 13V9l5-3z"/></svg>
+    </div>
+    <div class="app-name">RE<span>S</span>Q</div>
+    <div class="tagline">Disaster Communication Network</div>
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <span class="status-text">Mesh Network Active</span>
+    </div>
+    <a href="../dashboard/index.html" class="btn-start">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      ACTIVATE
+    </a>
+    <a href="#" class="btn-secondary">Learn how it works →</a>
+  </div>
+  <div class="bottom-info">
+    <div class="info-badge">
+      <span class="info-badge-val">0km</span>
+      <span class="info-badge-label">Range</span>
+    </div>
+    <div class="divider"></div>
+    <div class="info-badge">
+      <span class="info-badge-val">0</span>
+      <span class="info-badge-label">Nodes</span>
+    </div>
+    <div class="divider"></div>
+    <div class="info-badge">
+      <span class="info-badge-val">100%</span>
+      <span class="info-badge-label">Battery</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>
