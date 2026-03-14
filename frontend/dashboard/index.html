@@ -548,10 +548,16 @@
 
   function sendMsg(text) {
     const body = document.getElementById('chatBody');
-    body.innerHTML += `<div class="chat-msg user">${text}</div>`;
+    if (!body) return;
+    const userBubble = document.createElement('div');
+    userBubble.className = 'chat-msg user';
+    userBubble.textContent = text;
+    body.appendChild(userBubble);
     body.scrollTop = body.scrollHeight;
-    
+
     setTimeout(() => {
+      const body2 = document.getElementById('chatBody');
+      if (!body2) return; // modal may have closed
       let reply = "I'm sorry, I don't have offline medical data for that specific situation. Please prioritize reaching a medical professional or broadcasting a high-priority SOS via the Dashboard.";
       const lowText = text.toLowerCase();
       for(let item of botAnswers) {
@@ -559,8 +565,11 @@
           reply = item.ans; break;
         }
       }
-      body.innerHTML += `<div class="chat-msg bot">${reply}</div>`;
-      body.scrollTop = body.scrollHeight;
+      const botBubble = document.createElement('div');
+      botBubble.className = 'chat-msg bot';
+      botBubble.textContent = reply;
+      body2.appendChild(botBubble);
+      body2.scrollTop = body2.scrollHeight;
     }, 600);
   }
 </script>

@@ -457,8 +457,13 @@
   
   function addBubble(text, cls) {
     const area = document.getElementById('convMessages');
+    if (!area) return;
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    area.innerHTML += `<div class="msg-bubble ${cls}">${text}<span class="msg-time">${time}</span></div>`;
+    // Use createElement + insertAdjacentHTML instead of innerHTML += to avoid full re-render
+    const bubble = document.createElement('div');
+    bubble.className = `msg-bubble ${cls}`;
+    bubble.innerHTML = `${text}<span class="msg-time">${time}</span>`;
+    area.appendChild(bubble);
     area.scrollTop = area.scrollHeight;
   }
 

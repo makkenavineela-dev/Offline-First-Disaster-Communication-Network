@@ -1,6 +1,6 @@
 {
   "appId": "com.resq.net",
   "appName": "RESQ",
-  "webDir": "www",
+  "webDir": ".",
   "bundledWebRuntime": false
 }
