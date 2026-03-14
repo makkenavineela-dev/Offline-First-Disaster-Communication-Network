@@ -122,7 +122,9 @@ window.appStore = store;
 window.appStoreReady = store.init();
 
 // Register Service Worker for PWA Offline Capabilities
-if ('serviceWorker' in navigator) {
+// Skip in Capacitor native context — SW intercepts Capacitor's bridge requests and breaks navigation
+const isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+if ('serviceWorker' in navigator && !isNativeApp) {
   window.addEventListener('load', () => {
     // Registering from root of the served directory
     navigator.serviceWorker.register('/sw.js')

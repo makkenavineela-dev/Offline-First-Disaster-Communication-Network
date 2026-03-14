@@ -485,14 +485,14 @@
     }
   }
 
-  // Use Pointer Events to avoid the touch+mouse double-fire on Android
+  // Use Pointer Events to avoid the touch+mouse double-fire on Android.
+  // Do NOT call e.preventDefault() on pointerdown — it blocks click events in Android WebView.
+  // Instead, touch-action:none on the button CSS prevents double-tap zoom without blocking clicks.
   (function wireSOSButton() {
     const btn = document.getElementById('sosBtn');
     if (!btn) return;
-    btn.addEventListener('pointerdown', (e) => {
-      e.preventDefault(); // prevent ghost mouse events on touch devices
-      startHold();
-    });
+    btn.style.touchAction = 'none'; // prevents double-tap zoom; does not block click
+    btn.addEventListener('pointerdown', startHold);
     btn.addEventListener('pointerup', endHold);
     btn.addEventListener('pointercancel', endHold);
     btn.addEventListener('pointerleave', endHold);
