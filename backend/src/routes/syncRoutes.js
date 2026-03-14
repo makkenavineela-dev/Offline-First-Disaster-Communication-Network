@@ -2,15 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { pushSync, pullSync } = require('../controllers/syncController');
 const { protect } = require('../middleware/authMiddleware');
-
-// @desc    Push local queued data to server
-// @route   POST /api/sync/push
-// @access  Private
-router.post('/push', protect, pushSync);
-
-// @desc    Pull remote changes since timestamp
-// @route   GET /api/sync/pull
-// @access  Private
-router.get('/pull', protect, pullSync);
-
+ 
+// POST /api/sync/push  — upload queued offline data to the server
+router.route('/push')
+  .post(protect, pushSync);
+ 
+// GET  /api/sync/pull?since=<ISO>  — download all changes since a timestamp
+router.route('/pull')
+  .get(protect, pullSync);
+ 
 module.exports = router;
