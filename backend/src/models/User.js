@@ -19,7 +19,8 @@ const userSchema = new mongoose.Schema({
     },
     timestamp: { type: Date, default: Date.now }
   },
-  status: { type: String, enum: ['safe', 'sos', 'offline', 'active'], default: 'active' }
+  status: { type: String, enum: ['safe', 'sos', 'offline', 'active'], default: 'active' },
+  lastSeen: { type: Date, default: Date.now }
 }, { timestamps: true });
 
 // Hash password before saving

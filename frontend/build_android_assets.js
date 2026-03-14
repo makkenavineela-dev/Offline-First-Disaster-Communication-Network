@@ -6,7 +6,7 @@ const targetDir = path.join(__dirname, 'www');
 
 // List of top-level folders/files to copy to www (excluding android, node_modules, dist, www, etc.)
 const toCopy = [
-  'dashboard', 'map', 'messaging', 'resources', 'settings', 'sos', 'splash', 'leaflet',
+  'dashboard', 'map', 'messaging', 'resources', 'settings', 'sos', 'splash', 'leaflet', 'icons',
   'i18n.js', 'store.js', 'sw.js', 'manifest.json', 'index.html'
 ];
 

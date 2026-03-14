@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
+  clientId: { type: String, unique: true, sparse: true }, // For deduplication during sync
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   receiverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Null for broadcast
   type: { type: String, enum: ['direct', 'broadcast', 'sos', 'system'], default: 'direct' },
