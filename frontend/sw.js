@@ -1,5 +1,6 @@
-const CACHE_NAME = 'resq-offline-v10';
+const CACHE_NAME = 'resq-offline-v11';
 const TILE_CACHE_NAME = 'resq-map-tiles';
+const FONT_CACHE_NAME = 'resq-fonts';
 
 // Use absolute paths from the root to ensure reliability across subdirectories
 const ASSETS_TO_CACHE = [
@@ -18,6 +19,11 @@ const ASSETS_TO_CACHE = [
   '/sos/index.html',
   '/leaflet/leaflet.js',
   '/leaflet/leaflet.css',
+  '/leaflet/images/marker-icon.png',
+  '/leaflet/images/marker-icon-2x.png',
+  '/leaflet/images/marker-shadow.png',
+  '/leaflet/images/layers.png',
+  '/leaflet/images/layers-2x.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
@@ -38,7 +44,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME && cacheName !== TILE_CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== TILE_CACHE_NAME && cacheName !== FONT_CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
@@ -52,7 +58,25 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  
+
+  // GOOGLE FONTS CACHING — cache-first so fonts work fully offline after first load
+  if (url.host === 'fonts.googleapis.com' || url.host === 'fonts.gstatic.com') {
+    event.respondWith(
+      caches.open(FONT_CACHE_NAME).then(cache => {
+        return cache.match(event.request).then(cached => {
+          if (cached) return cached;
+          return fetch(event.request).then(response => {
+            if (response.status === 200) {
+              cache.put(event.request, response.clone());
+            }
+            return response;
+          }).catch(() => new Response('', { status: 503 }));
+        });
+      })
+    );
+    return;
+  }
+
   // MAP TILES AGGRESSIVE CACHING (H-04)
   if (url.host.includes('tile.openstreetmap.org') || url.pathname.includes('/tiles/')) {
     event.respondWith(

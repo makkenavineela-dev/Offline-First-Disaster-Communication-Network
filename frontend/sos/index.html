@@ -399,6 +399,49 @@
   // Initial location fetch
   updateSOSLocation();
 
+  // --- Offline SOS Queue ---
+  const SOS_QUEUE_KEY = 'resq_sos_queue';
+
+  function enqueueSOSPayload(payload) {
+    try {
+      const queue = JSON.parse(localStorage.getItem(SOS_QUEUE_KEY) || '[]');
+      queue.push({ ...payload, queuedAt: Date.now() });
+      localStorage.setItem(SOS_QUEUE_KEY, JSON.stringify(queue));
+    } catch (e) {
+      console.warn('Failed to enqueue SOS payload', e);
+    }
+  }
+
+  async function flushSOSQueue() {
+    try {
+      const queue = JSON.parse(localStorage.getItem(SOS_QUEUE_KEY) || '[]');
+      if (!queue.length) return;
+      const token = window.appStore?.getState()?.user?.token || localStorage.getItem('resq_token');
+      const remaining = [];
+      for (const payload of queue) {
+        try {
+          const res = await fetch(`${window.RESQ_CONFIG.API_BASE_URL}/api/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) remaining.push(payload);
+          else console.log('Flushed queued SOS payload', payload.queuedAt);
+        } catch (e) {
+          remaining.push(payload); // still offline, keep in queue
+        }
+      }
+      localStorage.setItem(SOS_QUEUE_KEY, JSON.stringify(remaining));
+    } catch (e) {
+      console.warn('SOS queue flush error', e);
+    }
+  }
+
+  // Auto-retry queued SOS messages when connectivity returns
+  window.addEventListener('online', flushSOSQueue);
+  // Also try on page load in case connectivity was restored while app was closed
+  if (navigator.onLine) flushSOSQueue();
+
   async function broadcastSOS() {
     const type = document.querySelector('.alert-type.active .alert-type-label').textContent;
     const content = document.querySelector('.msg-textarea').value || `Emergency SOS: ${type}`;
@@ -413,31 +456,32 @@
 
     console.log('Broadcasting SOS:', payload);
 
-    try {
-      // 0. Get Auth Token (RESQ Security requirement)
-      const token = window.appStore?.getState()?.user?.token || localStorage.getItem('resq_token');
-      
-      // 1. Save to local history immediately (Offline First)
-      if (window.appStore) {
-          const state = window.appStore.getState();
-          const newMsg = { ...payload, id: Date.now(), timestamp: new Date(), sender: user.name || 'Me' };
-          window.appStore.updateState({ messages: [newMsg, ...state.messages] });
-      }
+    // 0. Get Auth Token
+    const token = window.appStore?.getState()?.user?.token || localStorage.getItem('resq_token');
 
-      // 2. Attempt network broadcast
+    // 1. Save to local history immediately (Offline First)
+    if (window.appStore) {
+      const state = window.appStore.getState();
+      const newMsg = { ...payload, id: Date.now(), timestamp: new Date(), sender: user.name || 'Me' };
+      window.appStore.updateState({ messages: [newMsg, ...state.messages] });
+    }
+
+    // 2. Attempt network broadcast
+    try {
       const response = await fetch(`${window.RESQ_CONFIG.API_BASE_URL}/api/messages`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
-      
       return response.ok;
     } catch (e) {
-      console.warn('Network broadcast failed, saved to local queue', e);
-      return false; 
+      // 3. Offline — add to persistent queue, will retry on reconnect
+      console.warn('Network offline, SOS queued for retry', e);
+      enqueueSOSPayload(payload);
+      return false;
     }
   }
 
