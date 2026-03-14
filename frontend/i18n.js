@@ -69,8 +69,8 @@ const translations = {
 
     // Resources Page
     supply_tracker: "SUPPLY TRACKER",
-    tab_myshelter: "My Shelter",
-    tab_zoneb: "Zone B",
+    tab_myshelter: "Resources With Me",
+    tab_zoneb: "Resources in Shelter",
     tab_requests: "Requests",
     res_critical: "CRITICAL",
     res_low: "LOW",
@@ -895,17 +895,23 @@ const translations = {
 };
 
 function t(key) {
-    const langCode = localStorage.getItem('appLang') || 'en';
+    // If the storage isn't loaded yet, default to en
+    const langCode = window.appStore?.state?.user?.language || 'en';
     const dict = translations[langCode] || translations['en']; 
     const fallback = translations['en'];
     return dict[key] || fallback[key] || key;
 }
 
-function changeLanguage(langCode) {
+async function changeLanguage(langCode) {
     const selectEl = document.getElementById('langSelect');
     if(selectEl) selectEl.blur(); // remove focus
-    // Save to local storage for global persistence
-    localStorage.setItem('appLang', langCode);
+    
+    // Save to global app store to persist (which maps to AsyncStorage/localStorage)
+    if (window.appStore) {
+      await window.appStore.updateState({ 
+        user: { ...window.appStore.getState().user, language: langCode } 
+      });
+    }
     
     // Fallback to English if translation is missing for a key
     const t = translations[langCode] || translations['en']; 
@@ -931,8 +937,12 @@ function changeLanguage(langCode) {
 }
 
 // Auto-load saved language on startup
-function loadLang() {
-    const savedLang = localStorage.getItem('appLang') || 'en';
+async function loadLang() {
+    // Ensure store is initialized before grabbing language
+    if (window.appStore && !window.appStore.state) {
+      await window.appStore.init();
+    }
+    const savedLang = window.appStore?.getState()?.user?.language || 'en';
     const selectEl = document.getElementById('langSelect');
     if(selectEl) selectEl.value = savedLang;
     changeLanguage(savedLang);

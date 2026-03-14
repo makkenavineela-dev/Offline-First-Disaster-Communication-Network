@@ -13,6 +13,16 @@
     --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
   }
   html, body { height: 100%; background: #080808; display: flex; align-items: center; justify-content: center; font-family: 'Barlow', sans-serif; }
+  
+  .offline-top-bar {
+    background: rgba(0,230,118,0.1); border-bottom: 1px solid rgba(0,230,118,0.3);
+    padding: 6px 16px; display: flex; align-items: center; justify-content: center;
+    gap: 6px; flex-shrink: 0; margin-bottom: 4px;
+  }
+  .offline-top-bar .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 2s infinite; }
+  .offline-top-bar span { font-size: 11px; font-weight: 600; color: var(--green); letter-spacing: 0.5px; }
+  .offline-top-bar .sub { font-size: 10px; color: var(--text-muted); font-weight: 400; margin-left: 2px; }
+
   .phone {
     width: 390px; height: 844px; background: var(--black);
     border-radius: 44px; overflow: hidden; position: relative;
@@ -190,7 +200,25 @@
   .msg-bubble { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.4; color: white; }
   .msg-bubble.received { background: var(--gray2); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--gray3); }
   .msg-bubble.sent { background: var(--blue); align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(41,121,255,0.2); }
+  .msg-bubble.emergency { background: rgba(255,31,31,0.2); border: 1px solid rgba(255,31,31,0.5); align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 4px 12px rgba(255,31,31,0.2); color: white; font-weight: 500;}
+  .msg-bubble.system { background: rgba(255,170,0,0.1); border: 1px solid rgba(255,170,0,0.3); align-self: center; border-radius: 12px; font-size: 11px; color: var(--amber); text-align: center; }
   .msg-time { font-size: 10px; color: rgba(255,255,255,0.5); text-align: right; margin-top: 4px; display: block; }
+
+  .chat-quick-actions {
+    display: flex; gap: 8px; padding: 10px 16px 0; overflow-x: auto;
+    background: rgba(10,10,10,0.95); border-top: 1px solid var(--gray3);
+    scrollbar-width: none; flex-shrink: 0;
+  }
+  .chat-quick-actions::-webkit-scrollbar { display: none; }
+  .quick-btn {
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    white-space: nowrap; background: var(--gray2); border: 1px solid var(--gray3);
+    color: var(--white); cursor: pointer; display: flex; align-items: center; gap: 4px;
+    flex-shrink: 0; transition: transform 0.1s;
+  }
+  .quick-btn:active { transform: scale(0.95); }
+  .quick-btn.red { background: rgba(255,31,31,0.1); border-color: rgba(255,31,31,0.3); color: var(--red); }
+  .quick-btn.blue { background: rgba(41,121,255,0.1); border-color: rgba(41,121,255,0.3); color: var(--blue); }
 
   .chat-overlay-compose {
     padding: 10px 16px 20px; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px);
@@ -208,7 +236,13 @@
       <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M22 11h2v3h-2z"/></svg>
     </div>
   </div>
-  <div class="header">
+  <div class="offline-top-bar">
+    <div class="dot"></div>
+    <span>Connected to Local Network</span>
+    <span class="sub">(Internet Not Required)</span>
+  </div>
+
+  <div class="header" style="padding-top:6px;">
     <a href="../dashboard/index.html" class="back-btn">
       <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </a>
@@ -369,7 +403,16 @@
       <!-- Bubbles injected by JS -->
     </div>
     
-    <div class="chat-overlay-compose">
+    <!-- Quick Actions Scroll -->
+    <div class="chat-quick-actions">
+      <div class="quick-btn red" onclick="sendQuickMsg('⚠ EMERGENCY: Need immediate assistance at my location!', true)">🚨 SOS Alert</div>
+      <div class="quick-btn blue" onclick="shareLocation()">📍 Share Location</div>
+      <div class="quick-btn" onclick="sendQuickMsg('🏥 Need Medical Help')">🏥 Medical</div>
+      <div class="quick-btn" onclick="sendQuickMsg('💧 Send Food/Water')">💧 Food/Water</div>
+      <div class="quick-btn" onclick="sendQuickMsg('🚁 Requesting Rescue')">🚁 Rescue</div>
+    </div>
+
+    <div class="chat-overlay-compose" style="padding-top: 10px; border-top: none;">
       <div class="attach-btn" style="background:var(--gray2); border-color:var(--gray3);">
         <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
       </div>
@@ -411,14 +454,54 @@
     document.getElementById('chatOverlay').classList.remove('open');
   }
   
+  function addBubble(text, cls) {
+    const area = document.getElementById('convMessages');
+    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    area.innerHTML += `<div class="msg-bubble ${cls}">${text}<span class="msg-time">${time}</span></div>`;
+    area.scrollTop = area.scrollHeight;
+  }
+
+  function sendQuickMsg(text, isEmergency=false) {
+    addBubble(text, isEmergency ? 'emergency' : 'sent');
+    
+    // Fake interactive demo replies
+    setTimeout(() => {
+       addBubble('System: Alert broadcasted to 12 nearby devices over mesh.', 'system');
+    }, 600);
+    
+    setTimeout(() => {
+       addBubble('Responder: We copy that. Help is on the way.', 'received');
+    }, 2500);
+  }
+
+  function shareLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const lat = pos.coords.latitude.toFixed(4);
+        const lon = pos.coords.longitude.toFixed(4);
+        const mapsLink = `https://maps.google.com/?q=${lat},${lon}`;
+        const msg = `📍 Location Shared:<br><a href="${mapsLink}" target="_blank" style="color:#FFF;text-decoration:underline;font-weight:bold;">${lat}, ${lon}</a>`;
+        addBubble(msg, 'sent');
+      }, () => {
+        // Fallback or permission denied
+        addBubble('📍 Location Shared:<br><a href="https://maps.google.com/?q=12.9716,77.5946" target="_blank" style="color:#FFF;text-decoration:underline;font-weight:bold;">12.9716, 77.5946 (Fallback)</a>', 'sent');
+      });
+    } else {
+      addBubble('📍 Location Shared:<br><a href="https://maps.google.com/?q=12.9716,77.5946" target="_blank" style="color:#FFF;text-decoration:underline;font-weight:bold;">12.9716, 77.5946</a>', 'sent');
+    }
+  }
+
   function sendOverlayMsg() {
     const input = document.getElementById('overlayInput');
     const text = input.value.trim();
     if(text) {
-      const area = document.getElementById('convMessages');
-      area.innerHTML += `<div class="msg-bubble sent">${text}<span class="msg-time">Just now</span></div>`;
-      area.scrollTop = area.scrollHeight;
+      addBubble(text, 'sent');
       input.value = '';
+      
+      // Auto-reply
+      setTimeout(() => {
+         addBubble('Copy that.', 'received');
+      }, 1500);
     }
   }
 </script>

@@ -196,8 +196,8 @@
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab(this, 'tab-myshelter')" data-i18n="tab_myshelter">My Shelter</div>
-    <div class="tab" onclick="switchTab(this, 'tab-zoneb')" data-i18n="tab_zoneb">Zone B</div>
+    <div class="tab active" onclick="switchTab(this, 'tab-withme')">Resources With Me</div>
+    <div class="tab" onclick="switchTab(this, 'tab-shelter')">Resources in Shelter</div>
     <div class="tab" onclick="switchTab(this, 'tab-requests')" data-i18n="tab_requests">Requests</div>
   </div>
 
@@ -211,8 +211,8 @@
       <div class="res-alert-text"><strong>Medical supplies critically low.</strong> Nearest resupply 1.4km at Community Center.</div>
     </div>
 
-    <!-- MY SHELTER TAB -->
-    <div id="tab-myshelter" class="tab-content">
+    <!-- RESOURCES WITH ME TAB -->
+    <div id="tab-withme" class="tab-content">
 
     <!-- Summary -->
     <div class="summary-card">
@@ -303,11 +303,11 @@
     </div>
     </div><!-- End My Shelter Tab -->
 
-    <!-- ZONE B TAB -->
-    <div id="tab-zoneb" class="tab-content" style="display: none;">
+    <!-- RESOURCES IN SHELTER TAB -->
+    <div id="tab-shelter" class="tab-content" style="display: none;">
       <div class="summary-card" style="grid-template-columns: 1fr; gap:8px;">
-        <div style="font-size: 14px; color: var(--white); font-weight: 600;">Zone B Aggregated Stock</div>
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom:10px;">Data from 4 connected shelters via mesh.</div>
+        <div style="font-size: 14px; color: var(--white); font-weight: 600;">Shelter Aggregated Stock</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom:10px;">Data from 4 connected households in your shelter via mesh.</div>
         <div class="progress-row">
           <div style="width: 40px; font-size:12px; color:var(--text-muted);">Water</div>
           <div class="progress-track"><div class="progress-fill amber" style="width:40%"></div></div>
@@ -325,15 +325,15 @@
         </div>
       </div>
       
-      <div class="section-label">Other Shelters in Zone B</div>
+      <div class="section-label">Other Households in Shelter</div>
       
-      <!-- Another Shelter -->
+      <!-- Another Household -->
       <div class="resource-card">
         <div class="res-top" style="margin-bottom:6px;">
-          <div class="res-emoji">🏫</div>
+          <div class="res-emoji">🏠</div>
           <div class="res-info">
-            <div class="res-name">Community Center</div>
-            <div class="res-location">1.4km away</div>
+            <div class="res-name">Johnson Family</div>
+            <div class="res-location">0.2km away · Connected Mesh Node</div>
           </div>
           <span class="res-badge ok">EXCESS MEDS</span>
         </div>
@@ -420,8 +420,6 @@
     <a href="../settings/index.html" class="nav-item">
       <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
       <span class="nav-label" data-i18n="nav_settings">Settings</span>
-    </a>
-  </div>lass="nav-label">Settings</span>
     </a>
   </div>
 </div>
