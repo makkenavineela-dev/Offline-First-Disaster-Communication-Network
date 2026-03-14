@@ -1,0 +1,120 @@
+openapi: 3.0.0
+info:
+  title: RESQ Disaster Communication API
+  description: Offline-First Mesh Network Sync & Emergency APIs
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Local API Server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      summary: Register a new device node
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                deviceId:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [civilian, responder, shelter_admin]
+                zone:
+                  type: string
+      responses:
+        '201':
+          description: Node registered
+  /auth/login:
+    post:
+      summary: Login via deviceId
+      tags:
+        - Auth
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+  /users/location:
+    put:
+      summary: Update node GPS location
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                lat:
+                  type: number
+                lng:
+                  type: number
+      responses:
+        '200':
+          description: Location updated successfully
+  /messages:
+    post:
+      summary: Broadcast a message or SOS
+      tags:
+        - Messaging
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                receiverId:
+                  type: string
+                type:
+                  type: string
+                  enum: [direct, broadcast, sos, system]
+                content:
+                  type: string
+                locationTag:
+                  type: object
+                  properties:
+                    lat:
+                      type: number
+                    lng:
+                      type: number
+      responses:
+        '201':
+          description: Payload saved
+  /network/nodes:
+    get:
+      summary: Get all active mesh nodes
+      tags:
+        - Map
+      responses:
+        '200':
+          description: List of active nodes with locations

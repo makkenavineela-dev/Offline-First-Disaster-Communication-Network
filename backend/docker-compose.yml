@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongo:27017/resq-disaster-app
+      - JWT_SECRET=supersecretresqkey_changeme_in_production
+      - NODE_ENV=development
+    depends_on:
+      - mongo
+    networks:
+      - resq-network
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - resq-network
+
+volumes:
+  mongo-data:
+
+networks:
+  resq-network:
+    driver: bridge
