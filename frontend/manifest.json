@@ -1,0 +1,16 @@
+{
+  "name": "RESQ Disaster System",
+  "short_name": "RESQ",
+  "start_url": "/dashboard/index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#ff3b30",
+  "description": "Offline-First Disaster Mesh Network Application",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0icmVkIi8+PC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

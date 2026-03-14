@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RESQ</string>
+    <string name="title_activity_main">RESQ</string>
+    <string name="package_name">com.resq.net</string>
+    <string name="custom_url_scheme">com.resq.net</string>
+</resources>
