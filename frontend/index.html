@@ -6,7 +6,10 @@
   <body>
     <p>Redirecting to the app...</p>
     <script>
-      window.location.href = "./splash/";
+      // Only redirect if we are at the root index
+      if (window.location.pathname === "/" || window.location.pathname.endsWith("/index.html")) {
+          window.location.href = "./splash/index.html";
+      }
     </script>
   </body>
 </html>

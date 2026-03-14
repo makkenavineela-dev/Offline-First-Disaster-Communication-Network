@@ -1,28 +1,28 @@
-const CACHE_NAME = 'resq-offline-v6';
+const CACHE_NAME = 'resq-offline-v7';
 
+// We must cache the exact filenames used in links
 const ASSETS_TO_CACHE = [
-  './',
-  'index.html',
-  'manifest.json',
-  'store.js',
-  'i18n.js',
-  'dashboard/',
-  'messaging/',
-  'resources/',
-  'settings/',
-  'map/',
-  'splash/',
-  'sos/',
-  'leaflet/leaflet.js',
-  'leaflet/leaflet.css'
+  './index.html',
+  './manifest.json',
+  './store.js',
+  './i18n.js',
+  './dashboard/index.html',
+  './messaging/index.html',
+  './resources/index.html',
+  './settings/index.html',
+  './map/index.html',
+  './splash/index.html',
+  './sos/index.html',
+  './leaflet/leaflet.js',
+  './leaflet/leaflet.css'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      console.log('Opened offline cache');
+      console.log('Precaching all explicit assets');
       return Promise.allSettled(
-        ASSETS_TO_CACHE.map(url => cache.add(url).catch(err => console.log('Skipped caching:', url, err)))
+        ASSETS_TO_CACHE.map(url => cache.add(url).catch(err => console.log('Failed to cache:', url, err)))
       );
     })
   );
@@ -47,15 +47,21 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+  
+  // Optimization: handle directory-style requests by appending index.html internally
+  let requestUrl = event.request.url;
+  if (url.pathname.endsWith('/')) {
+      requestUrl += 'index.html';
+  }
+
   event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then(response => {
-      // Cache-first strategy
-      if (response) {
-        return response;
+    caches.match(requestUrl).then(cachedResponse => {
+      if (cachedResponse) {
+        return cachedResponse;
       }
 
       return fetch(event.request).then(networkResponse => {
-        // Cache valid responses dynamically
         if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
@@ -64,9 +70,9 @@ self.addEventListener('fetch', event => {
         }
         return networkResponse;
       }).catch(() => {
-        // Fallback for navigation when offline
+        // FAILSAFE: If offline and something fails, return the main dashboard or splash
         if (event.request.mode === 'navigate') {
-          return caches.match('dashboard/') || caches.match('./');
+          return caches.match('./splash/index.html') || caches.match('./index.html');
         }
       });
     })

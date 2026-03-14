@@ -187,11 +187,40 @@
   .nav-item.active .nav-label { color: var(--amber); }
   .nav-item.sos-active svg { fill: var(--red); }
   .nav-item.sos-active .nav-label { color: var(--red); }
+
+  /* SOS Confirmation Modal */
+  .confirm-modal {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+    z-index: 100; display: none; flex-direction: column;
+    align-items: center; justify-content: center; padding: 40px;
+    text-align: center; backdrop-filter: blur(10px);
+  }
+  .confirm-modal.open { display: flex; }
+  .confirm-title { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 900; color: var(--red); letter-spacing: 2px; margin-bottom: 8px; }
+  .confirm-sub { color: var(--text-muted); font-size: 14px; line-height: 1.5; margin-bottom: 32px; }
+  .confirm-actions { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+  .confirm-btn {
+    width: 100%; height: 60px; border-radius: 12px; border: none;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+  }
+  .btn-yes { background: var(--red); color: white; box-shadow: 0 4px 20px rgba(255,31,31,0.4); }
+  .btn-no { background: var(--gray2); color: var(--white); border: 1px solid var(--gray3); }
 </style>
   <link rel="manifest" href="/manifest.json">
 </head>
 <body>
 <div class="phone">
+  <!-- SOS Confirmation Modal -->
+  <div class="confirm-modal" id="sosConfirm">
+    <div class="confirm-title" data-i18n="sos_confirm_title">CONFIRM SOS?</div>
+    <div class="confirm-sub" data-i18n="sos_confirm_sub">Are you in a life-threatening emergency? False alarms can delay rescue for others.</div>
+    <div class="confirm-actions">
+      <button class="confirm-btn btn-yes" onclick="confirmSOS()" data-i18n="sos_confirm_yes">YES, BROADCAST SOS</button>
+      <button class="confirm-btn btn-no" onclick="cancelSOS()" data-i18n="sos_confirm_no">NO, CANCEL</button>
+    </div>
+  </div>
+
   <div class="status-bar">
     <span class="time">9:41</span>
     <div class="status-icons">
@@ -403,23 +432,37 @@
     holding = true;
     const btn = document.getElementById('sosBtn');
     btn.style.transform = 'scale(0.95)';
-    holdTimer = setTimeout(async () => {
+    holdTimer = setTimeout(() => {
       if (holding) {
-        btn.style.background = 'linear-gradient(145deg, #ff6666, #ff1f1f)';
-        btn.querySelector('.sos-btn-text').textContent = 'SENDING';
-        
-        const success = await broadcastSOS();
-        
-        btn.querySelector('.sos-btn-text').textContent = success ? 'SENT!' : 'QUEUED';
-        btn.querySelector('.sos-btn-sub').textContent = success ? 'Signal broadcast' : 'Saved for mesh';
-        
-        setTimeout(() => {
-          btn.style.background = 'linear-gradient(145deg, #FF3333, #CC0000)';
-          btn.querySelector('.sos-btn-text').textContent = 'SOS';
-          btn.querySelector('.sos-btn-sub').textContent = 'Hold 3 seconds';
-        }, 3000);
+        // Instead of broadcasting, show confirmation
+        document.getElementById('sosConfirm').classList.add('open');
       }
     }, 3000);
+  }
+
+  async function confirmSOS() {
+      const modal = document.getElementById('sosConfirm');
+      const btn = document.getElementById('sosBtn');
+      modal.classList.remove('open');
+      
+      btn.style.background = 'linear-gradient(145deg, #ff6666, #ff1f1f)';
+      btn.querySelector('.sos-btn-text').textContent = 'SENDING';
+      
+      const success = await broadcastSOS();
+      
+      btn.querySelector('.sos-btn-text').textContent = success ? 'SENT!' : 'QUEUED';
+      btn.querySelector('.sos-btn-sub').textContent = success ? 'Signal broadcast' : 'Saved for mesh';
+      
+      setTimeout(() => {
+        btn.style.background = 'linear-gradient(145deg, #FF3333, #CC0000)';
+        btn.querySelector('.sos-btn-text').textContent = 'SOS';
+        btn.querySelector('.sos-btn-sub').textContent = 'Hold 3 seconds';
+      }, 3000);
+  }
+
+  function cancelSOS() {
+      document.getElementById('sosConfirm').classList.remove('open');
+      document.getElementById('sosBtn').style.transform = 'scale(1)';
   }
   function endHold() {
     holding = false;
