@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>RESQ Redirect</title>
+    <title>RESQ</title>
+    <!-- Primary redirect: works even if JS is disabled -->
+    <meta http-equiv="refresh" content="0; url=/splash/index.html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body { margin: 0; background: #0a0a0a; display: flex; align-items: center; justify-content: center; height: 100vh; }
+      p { color: #888; font-family: sans-serif; font-size: 14px; }
+    </style>
   </head>
   <body>
-    <p>Redirecting to the app...</p>
+    <p>Loading RESQ...</p>
     <script>
-      // Only redirect if we are at the root index
-      if (window.location.pathname === "/" || window.location.pathname.endsWith("/index.html")) {
-          window.location.href = "./splash/index.html";
-      }
+      // Use location.replace() so the redirect page is not kept in history.
+      // Use absolute path — more reliable than relative in Capacitor WebView.
+      window.location.replace('/splash/index.html');
     </script>
   </body>
 </html>
