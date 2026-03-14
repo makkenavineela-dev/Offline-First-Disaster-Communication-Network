@@ -895,12 +895,12 @@ const translations = {
 };
 
 function t(key) {
-    // If the storage isn't loaded yet, default to en
-    const langCode = window.appStore?.state?.user?.language || 'en';
+    const langCode = window.appStore?.getState()?.user?.language || 'en';
     const dict = translations[langCode] || translations['en']; 
     const fallback = translations['en'];
     return dict[key] || fallback[key] || key;
 }
+window.t = t;
 
 async function changeLanguage(langCode) {
     const selectEl = document.getElementById('langSelect');
@@ -948,9 +948,25 @@ async function loadLang() {
     changeLanguage(savedLang);
 }
 
-// Run exactly when loaded
+// Initial location fetch
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadLang);
+  document.addEventListener('DOMContentLoaded', () => {
+      loadLang();
+      if (window.appStore) {
+          window.appStore.subscribe((state) => {
+              if (state?.user?.language) {
+                  changeLanguage(state.user.language);
+              }
+          });
+      }
+  });
 } else {
   loadLang();
+  if (window.appStore) {
+      window.appStore.subscribe((state) => {
+          if (state?.user?.language) {
+              changeLanguage(state.user.language);
+          }
+      });
+  }
 }

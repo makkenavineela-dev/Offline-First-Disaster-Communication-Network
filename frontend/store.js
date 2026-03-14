@@ -2,27 +2,40 @@ const STORAGE_KEY = 'resq_app_state';
 
 const storage = {
   get: async (key) => {
-    if (typeof AsyncStorage !== 'undefined') {
-      return await AsyncStorage.getItem(key);
+    try {
+      if (typeof AsyncStorage !== 'undefined') {
+        return await AsyncStorage.getItem(key);
+      }
+      return localStorage.getItem(key);
+    } catch (e) {
+      console.warn('Storage read failed:', e);
+      return null;
     }
-    return localStorage.getItem(key);
   },
   set: async (key, value) => {
-    if (typeof AsyncStorage !== 'undefined') {
-      await AsyncStorage.setItem(key, value);
-    } else {
-      localStorage.setItem(key, value);
+    try {
+      if (typeof AsyncStorage !== 'undefined') {
+        await AsyncStorage.setItem(key, value);
+      } else {
+        localStorage.setItem(key, value);
+      }
+    } catch (e) {
+      console.warn('Storage write failed:', e);
     }
   }
 };
 
 const getPersistentUserId = () => {
-    let id = localStorage.getItem('resq_uid');
-    if (!id) {
-        id = 'RESQ-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-        localStorage.setItem('resq_uid', id);
+    try {
+        let id = localStorage.getItem('resq_uid');
+        if (!id) {
+            id = 'RESQ-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            localStorage.setItem('resq_uid', id);
+        }
+        return id;
+    } catch (e) {
+        return 'RESQ-GUEST-' + Math.random().toString(36).substr(2, 4).toUpperCase();
     }
-    return id;
 };
 
 const defaultState = {

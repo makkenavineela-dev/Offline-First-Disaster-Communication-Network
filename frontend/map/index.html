@@ -379,7 +379,7 @@ function initMap() {
   map = L.map('map', {
     zoomControl: false, 
     attributionControl: false
-  }).setView([12.9415, 77.5657], 15);
+  }).setView([12.941487207089997, 77.56582967529805], 15);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19
@@ -405,7 +405,7 @@ const myIcon = L.divIcon({
   iconSize: [20, 20],
   iconAnchor: [10, 10]
 });
-let myLocationMarker = L.marker([12.9415, 77.5657], {icon: myIcon}).addTo(map);
+let myLocationMarker = L.marker([12.941487207089997, 77.56582967529805], {icon: myIcon}).addTo(map);
 
 // Wait for Capacitor to inject Native Plugins
 document.addEventListener('DOMContentLoaded', async () => {
@@ -493,7 +493,7 @@ document.querySelector('.my-loc-btn').addEventListener('click', async () => {
       map.setView([position.coords.latitude, position.coords.longitude], 16);
     });
   } else {
-    map.setView([12.9415, 77.5657], 15);
+    map.setView([12.941487207089997, 77.56582967529805], 15);
   }
 });
 
@@ -536,7 +536,7 @@ document.querySelector('.offline-dl-btn').addEventListener('click', async functi
 function openMapDetail(titleKey, iconHtml, type, distKey, descKey) {
     document.getElementById('detailTitle').setAttribute('data-i18n', titleKey);
     document.getElementById('detailIcon').innerText = iconHtml;
-    document.getElementById('detailIcon').className = \`detail-icon-wrap \${type}\`;
+    document.getElementById('detailIcon').className = `detail-icon-wrap ${type}`;
     document.getElementById('detailDist').setAttribute('data-i18n', distKey);
     document.getElementById('detailDesc').setAttribute('data-i18n', descKey);
     

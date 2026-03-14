@@ -1,30 +1,32 @@
-const CACHE_NAME = 'resq-offline-v8';
+const CACHE_NAME = 'resq-offline-v9';
 const TILE_CACHE_NAME = 'resq-map-tiles';
 
-// We must cache the exact filenames used in links
+// Use absolute paths from the root to ensure reliability across subdirectories
 const ASSETS_TO_CACHE = [
-  './index.html',
-  './manifest.json',
-  './store.js',
-  './i18n.js',
-  './dashboard/index.html',
-  './messaging/index.html',
-  './resources/index.html',
-  './settings/index.html',
-  './map/index.html',
-  './splash/index.html',
-  './sos/index.html',
-  './leaflet/leaflet.js',
-  './leaflet/leaflet.css'
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/store.js',
+  '/i18n.js',
+  '/dashboard/index.html',
+  '/messaging/index.html',
+  '/resources/index.html',
+  '/settings/index.html',
+  '/map/index.html',
+  '/splash/index.html',
+  '/sos/index.html',
+  '/leaflet/leaflet.js',
+  '/leaflet/leaflet.css',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      console.log('Precaching all explicit assets');
-      return Promise.allSettled(
-        ASSETS_TO_CACHE.map(url => cache.add(url).catch(err => console.log('Failed to cache:', url, err)))
-      );
+      console.log('Precaching critical assets');
+      // Using addAll so that if any critical asset fails, the SW install fails
+      return cache.addAll(ASSETS_TO_CACHE);
     })
   );
   self.skipWaiting();
@@ -50,14 +52,15 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(event.request.url);
   
-  // SPECIAL HANDLING FOR MAP TILES (H-04)
-  // We cache tiles aggressively so they are available offline after first load
+  // MAP TILES AGGRESSIVE CACHING (H-04)
   if (url.host.includes('tile.openstreetmap.org') || url.pathname.includes('/tiles/')) {
     event.respondWith(
       caches.open(TILE_CACHE_NAME).then(cache => {
         return cache.match(event.request).then(response => {
           return response || fetch(event.request).then(networkResponse => {
-            cache.put(event.request, networkResponse.clone());
+            if (networkResponse.status === 200) {
+                cache.put(event.request, networkResponse.clone());
+            }
             return networkResponse;
           });
         });
@@ -66,14 +69,14 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Optimization: handle directory-style requests by appending index.html internally
-  let requestUrl = event.request.url;
-  if (url.pathname.endsWith('/')) {
-      requestUrl += 'index.html';
+  // Normalize directory requests
+  let requestPath = url.pathname;
+  if (requestPath.endsWith('/')) {
+      requestPath += 'index.html';
   }
 
   event.respondWith(
-    caches.match(requestUrl).then(cachedResponse => {
+    caches.match(requestPath).then(cachedResponse => {
       if (cachedResponse) {
         return cachedResponse;
       }
@@ -87,10 +90,15 @@ self.addEventListener('fetch', event => {
         }
         return networkResponse;
       }).catch(() => {
-        // FAILSAFE: If offline and something fails, return the main dashboard or splash
+        // FAILSAFE Fallback (L-05)
         if (event.request.mode === 'navigate') {
-          return caches.match('./splash/index.html') || caches.match('./index.html');
+          return caches.match('/splash/index.html') || caches.match('/index.html');
         }
+        // Graceful 503 for non-navigation assets that failed and aren't cached
+        return new Response('Offline: Resource not available', { 
+            status: 503, 
+            statusText: 'Service Unavailable (Offline)' 
+        });
       });
     })
   );

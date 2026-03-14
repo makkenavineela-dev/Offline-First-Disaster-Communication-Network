@@ -15,6 +15,7 @@ const initCronJobs = () => {
       const result = await User.updateMany(
         { 
           status: { $in: ['active', 'safe'] },
+          role: { $nin: ['responder', 'admin'] },
           updatedAt: { $lt: fortyEightHoursAgo }
         },
         { $set: { status: 'offline' } }
