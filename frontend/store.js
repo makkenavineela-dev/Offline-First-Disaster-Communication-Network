@@ -1,6 +1,5 @@
 const STORAGE_KEY = 'resq_app_state';
 
-// Try to use AsyncStorage (if available in a React Native web shim) or fallback to localStorage
 const storage = {
   get: async (key) => {
     if (typeof AsyncStorage !== 'undefined') {
@@ -17,9 +16,18 @@ const storage = {
   }
 };
 
+const getPersistentUserId = () => {
+    let id = localStorage.getItem('resq_uid');
+    if (!id) {
+        id = 'RESQ-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        localStorage.setItem('resq_uid', id);
+    }
+    return id;
+};
+
 const defaultState = {
   user: {
-    id: 'RESQ-7F3A-K9',
+    id: getPersistentUserId(),
     name: 'You',
     zone: 'Zone B',
     role: 'First Responder',
@@ -44,7 +52,6 @@ const defaultState = {
   messages: []
 };
 
-// Simple event bus and state manager
 class Store {
   constructor() {
     this.state = null;
@@ -56,6 +63,8 @@ class Store {
     if (saved) {
       try {
         this.state = JSON.parse(saved);
+        // Ensure ID is persistent even if state was wiped but localStorage wasn't
+        if (!this.state.user.id) this.state.user.id = getPersistentUserId();
       } catch (e) {
         this.state = { ...defaultState };
       }
@@ -75,15 +84,8 @@ class Store {
     this.notify();
   }
 
-  async updateResource(type, updates) {
-    const newResources = { ...this.state.resources };
-    newResources[type] = { ...newResources[type], ...updates };
-    await this.updateState({ resources: newResources });
-  }
-
   subscribe(listener) {
     this.listeners.push(listener);
-    // Return unsubscribe function
     return () => {
       this.listeners = this.listeners.filter(l => l !== listener);
     };
@@ -95,7 +97,6 @@ class Store {
 }
 
 const store = new Store();
-// Call init early so it's ready
 store.init();
 
 window.appStore = store;
@@ -103,8 +104,9 @@ window.appStore = store;
 // Register Service Worker for PWA Offline Capabilities
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    // Registering from root of the served directory
     navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('✅ Service Worker Registered. App is fully offline-capable.', reg.scope))
+      .then(reg => console.log('✅ Service Worker Registered. Scope:', reg.scope))
       .catch(err => console.error('❌ Service Worker Registration Failed:', err));
   });
 }

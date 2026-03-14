@@ -122,7 +122,6 @@
   }
   .loc-icon { width: 36px; height: 36px; background: rgba(255,170,0,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .loc-icon svg { width: 20px; height: 20px; fill: var(--amber); }
-  .loc-info {}
   .loc-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
   .loc-coords { font-size: 14px; font-weight: 600; color: var(--white); margin-top: 2px; }
   .loc-accuracy { font-size: 11px; color: var(--green); margin-top: 2px; }
@@ -163,7 +162,6 @@
   .hist-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
   .hist-dot.pending { background: var(--amber); animation: blink 1s step-end infinite; }
   @keyframes blink { 50% { opacity: 0; } }
-  .hist-info {}
   .hist-name { font-size: 13px; font-weight: 600; color: var(--white); }
   .hist-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
   .hist-time { margin-left: auto; font-size: 11px; color: var(--text-muted); }
@@ -185,8 +183,10 @@
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
   .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
   .nav-label { font-size: 10px; color: var(--text-muted); }
-  .nav-item.active svg { fill: var(--red); }
-  .nav-item.active .nav-label { color: var(--red); }
+  .nav-item.active svg { fill: var(--amber); }
+  .nav-item.active .nav-label { color: var(--amber); }
+  .nav-item.sos-active svg { fill: var(--red); }
+  .nav-item.sos-active .nav-label { color: var(--red); }
 </style>
   <link rel="manifest" href="/manifest.json">
 </head>
@@ -257,10 +257,10 @@
       </div>
       <div class="loc-info">
         <div class="loc-label" data-i18n="sos_location">Your Location</div>
-        <div class="loc-coords">12.9716° N, 77.5946° E</div>
-        <div class="loc-accuracy" data-i18n="sos_accuracy">± 4m accuracy · GPS Active</div>
+        <div class="loc-coords" id="sosCoords">Locating...</div>
+        <div class="loc-accuracy" id="sosAccuracy" data-i18n="sos_accuracy">Waiting for GPS...</div>
       </div>
-      <div class="loc-refresh">
+      <div class="loc-refresh" onclick="updateSOSLocation()">
         <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
       </div>
     </div>
@@ -325,8 +325,8 @@
       <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
       <span class="nav-label" data-i18n="nav_resources">Resources</span>
     </a>
-    <a href="../settings/" class="nav-item active">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+    <a href="../settings/" class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
       <span class="nav-label" data-i18n="nav_settings">Settings</span>
     </a>
   </div>
@@ -334,20 +334,90 @@
 <script>
   let holdTimer;
   let holding = false;
+  let currentCoords = { lat: 12.9716, lng: 77.5946 };
+
+  async function updateSOSLocation() {
+    const coordsEl = document.getElementById('sosCoords');
+    const accEl = document.getElementById('sosAccuracy');
+    
+    coordsEl.textContent = "Updating...";
+    
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Geolocation) {
+      try {
+        const position = await window.Capacitor.Plugins.Geolocation.getCurrentPosition();
+        currentCoords = { lat: position.coords.latitude, lng: position.coords.longitude };
+        coordsEl.textContent = `${currentCoords.lat.toFixed(4)}° N, ${currentCoords.lng.toFixed(4)}° E`;
+        accEl.textContent = `± ${Math.round(position.coords.accuracy)}m accuracy · GPS Active`;
+      } catch (e) {
+        coordsEl.textContent = "GPS Unavailable";
+      }
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        coordsEl.textContent = `${currentCoords.lat.toFixed(4)}° N, ${currentCoords.lng.toFixed(4)}° E`;
+        accEl.textContent = `± ${Math.round(pos.coords.accuracy)}m accuracy · Browser GPS`;
+      });
+    }
+  }
+
+  // Initial location fetch
+  updateSOSLocation();
+
+  async function broadcastSOS() {
+    const type = document.querySelector('.alert-type.active .alert-type-label').textContent;
+    const content = document.querySelector('.msg-textarea').value || `Emergency SOS: ${type}`;
+    const user = window.appStore ? window.appStore.getState().user : { id: 'UNKNOWN', zone: 'all' };
+
+    const payload = {
+      type: 'sos',
+      content: content,
+      zone: user.zone,
+      locationTag: currentCoords
+    };
+
+    console.log('Broadcasting SOS:', payload);
+
+    try {
+      // 1. Save to local history immediately (Offline First)
+      if (window.appStore) {
+          const state = window.appStore.getState();
+          const newMsg = { ...payload, id: Date.now(), timestamp: new Date() };
+          window.appStore.updateState({ messages: [newMsg, ...state.messages] });
+      }
+
+      // 2. Attempt network broadcast
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      return response.ok;
+    } catch (e) {
+      console.warn('Network broadcast failed, saved to local queue', e);
+      return false; 
+    }
+  }
+
   function startHold() {
     holding = true;
     const btn = document.getElementById('sosBtn');
     btn.style.transform = 'scale(0.95)';
-    holdTimer = setTimeout(() => {
+    holdTimer = setTimeout(async () => {
       if (holding) {
         btn.style.background = 'linear-gradient(145deg, #ff6666, #ff1f1f)';
-        btn.querySelector('.sos-btn-text').textContent = 'SENT!';
-        btn.querySelector('.sos-btn-sub').textContent = 'Signal broadcast';
+        btn.querySelector('.sos-btn-text').textContent = 'SENDING';
+        
+        const success = await broadcastSOS();
+        
+        btn.querySelector('.sos-btn-text').textContent = success ? 'SENT!' : 'QUEUED';
+        btn.querySelector('.sos-btn-sub').textContent = success ? 'Signal broadcast' : 'Saved for mesh';
+        
         setTimeout(() => {
           btn.style.background = 'linear-gradient(145deg, #FF3333, #CC0000)';
           btn.querySelector('.sos-btn-text').textContent = 'SOS';
           btn.querySelector('.sos-btn-sub').textContent = 'Hold 3 seconds';
-        }, 2000);
+        }, 3000);
       }
     }, 3000);
   }

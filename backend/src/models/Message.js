@@ -5,6 +5,7 @@ const messageSchema = new mongoose.Schema({
   receiverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Null for broadcast
   type: { type: String, enum: ['direct', 'broadcast', 'sos', 'system'], default: 'direct' },
   content: { type: String, required: true },
+  zone: { type: String, default: 'all' }, // For targeted broadcasts
   locationTag: {
     lat: { type: Number },
     lng: { type: Number }
@@ -13,9 +14,9 @@ const messageSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Optimize pulling histories (Direct messages timeline)
-messageSchema.index({ senderId: 1, receiverId: 1, timestamp: -1 });
+messageSchema.index({ senderId: 1, receiverId: 1, createdAt: -1 });
 
 // Optimize pulling broadcasts
-messageSchema.index({ type: 1, timestamp: -1 });
+messageSchema.index({ type: 1, zone: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Message', messageSchema);

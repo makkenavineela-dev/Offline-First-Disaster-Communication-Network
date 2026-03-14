@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator');
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -12,6 +13,11 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { name, deviceId, password, role, zone } = req.body;
 
@@ -49,6 +55,11 @@ const registerUser = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { deviceId, password } = req.body;
 
@@ -100,6 +111,11 @@ const getUserProfile = async (req, res) => {
 // @route   PUT /api/users/location
 // @access  Private
 const updateLocation = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { lat, lng } = req.body;
 
@@ -107,8 +123,8 @@ const updateLocation = async (req, res) => {
 
     if (user) {
       user.location = {
-        lat,
-        lng,
+        type: 'Point',
+        coordinates: [parseFloat(lng), parseFloat(lat)],
         timestamp: new Date()
       };
 

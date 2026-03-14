@@ -33,7 +33,10 @@ const app = express();
 
 // Middleware
 app.use(express.json({ limit: '10kb' })); // Body parser explicitly sized
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  credentials: true
+}));
 app.use(helmet());
 app.use(morgan('dev'));
 

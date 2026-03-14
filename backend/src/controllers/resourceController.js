@@ -39,13 +39,13 @@ const addResource = async (req, res) => {
     
     if (existingResource) {
       existingResource.quantity = quantity !== undefined ? quantity : existingResource.quantity;
-      existingResource.unit = unit || existingResource.unit;
-      existingResource.status = status || existingResource.status;
+      existingResource.unit = unit !== undefined ? unit : existingResource.unit;
+      existingResource.status = status !== undefined ? status : existingResource.status;
       existingResource.isPublic = isPublic !== undefined ? isPublic : existingResource.isPublic;
       if (location) existingResource.location = location;
 
       const updated = await existingResource.save();
-      return res.json(updated);
+      return res.status(200).json(updated);
     }
 
     const resource = await Resource.create({

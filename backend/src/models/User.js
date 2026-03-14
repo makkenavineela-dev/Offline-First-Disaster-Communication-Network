@@ -8,9 +8,16 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['civilian', 'responder', 'shelter_admin'], default: 'civilian' },
   zone: { type: String, default: 'Unassigned' },
   location: {
-    lat: { type: Number },
-    lng: { type: Number },
-    timestamp: { type: Date }
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [lng, lat]
+      default: [0, 0]
+    },
+    timestamp: { type: Date, default: Date.now }
   },
   status: { type: String, enum: ['safe', 'sos', 'offline', 'active'], default: 'active' }
 }, { timestamps: true });
@@ -29,7 +36,7 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
 };
 
 // Optimization Indexes
-userSchema.index({ 'location.lng': '2dsphere' });
+userSchema.index({ 'location': '2dsphere' });
 userSchema.index({ status: 1 });
 
 module.exports = mongoose.model('User', userSchema);

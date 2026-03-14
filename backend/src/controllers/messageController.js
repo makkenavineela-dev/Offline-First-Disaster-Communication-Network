@@ -15,7 +15,7 @@ const getDirectMessages = async (req, res) => {
         { senderId: userId, receiverId: myId }
       ]
     })
-    .sort({ timestamp: 1 })
+    .sort({ createdAt: 1 })
     .populate('senderId', 'name deviceId')
     .populate('receiverId', 'name deviceId');
 
@@ -35,9 +35,13 @@ const getBroadcasts = async (req, res) => {
     // Simplification: In a real app we might join user table to match sender's zone
     // For now we get all broadcasts unless we store zone in the message directly
     const messages = await Message.find({
-      type: { $in: ['broadcast', 'sos', 'system'] }
+      type: { $in: ['broadcast', 'sos', 'system'] },
+      $or: [
+        { zone: zone },
+        { zone: 'all' }
+      ]
     })
-    .sort({ timestamp: -1 })
+    .sort({ createdAt: -1 })
     .limit(50)
     .populate('senderId', 'name deviceId zone role');
 
@@ -59,6 +63,7 @@ const sendMessage = async (req, res) => {
       receiverId: receiverId || null,
       type: type || 'direct',
       content,
+      zone: req.body.zone || (type === 'direct' ? null : 'all'),
       locationTag
     });
 
