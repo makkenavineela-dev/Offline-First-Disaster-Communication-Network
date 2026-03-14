@@ -117,9 +117,9 @@ class Store {
 }
 
 const store = new Store();
-store.init();
-
 window.appStore = store;
+// Expose a Promise so pages can await store readiness before rendering
+window.appStoreReady = store.init();
 
 // Register Service Worker for PWA Offline Capabilities
 if ('serviceWorker' in navigator) {

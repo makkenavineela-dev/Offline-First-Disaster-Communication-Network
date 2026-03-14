@@ -70,35 +70,38 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Normalize directory requests
-  let requestPath = url.pathname;
-  if (requestPath.endsWith('/')) {
-      requestPath += 'index.html';
+  // Normalize directory requests to index.html
+  let normalizedPath = url.pathname;
+  if (normalizedPath.endsWith('/')) {
+    normalizedPath += 'index.html';
   }
+  const normalizedUrl = url.origin + normalizedPath;
 
   event.respondWith(
-    caches.match(requestPath).then(cachedResponse => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+    // Try matching the original request first, then the normalized URL path
+    caches.match(event.request).then(cachedResponse => {
+      if (cachedResponse) return cachedResponse;
+      return caches.match(normalizedUrl);
+    }).then(cachedResponse => {
+      if (cachedResponse) return cachedResponse;
 
       return fetch(event.request).then(networkResponse => {
         if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
+            cache.put(normalizedUrl, responseToCache);
           });
         }
         return networkResponse;
       }).catch(() => {
         // FAILSAFE Fallback (L-05)
         if (event.request.mode === 'navigate') {
-          return caches.match('/splash/index.html') || caches.match('/index.html');
+          return caches.match('/splash/index.html').then(r => r || caches.match('/index.html'));
         }
         // Graceful 503 for non-navigation assets that failed and aren't cached
-        return new Response('Offline: Resource not available', { 
-            status: 503, 
-            statusText: 'Service Unavailable (Offline)' 
+        return new Response('Offline: Resource not available', {
+          status: 503,
+          statusText: 'Service Unavailable (Offline)'
         });
       });
     })
