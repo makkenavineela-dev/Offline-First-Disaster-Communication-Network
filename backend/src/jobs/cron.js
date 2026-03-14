@@ -1,28 +1,30 @@
 const cron = require('node-cron');
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
 // Business Logic Layer: Background Daemon Tasks
 const initCronJobs = () => {
   // Run every hour to check for offline/dead mesh nodes
   cron.schedule('0 * * * *', async () => {
-    console.log('[Cron Worker] Running periodic node cleanup task...');
+    logger.info('[Cron] Running periodic node cleanup task...');
     try {
-      // Find all users who haven't updated location/pinged in 24 hours
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      // Find all users who haven't updated location/pinged in 48 hours
+      // CRITICAL: We NEVER auto-offline users with status 'sos'
+      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
       
       const result = await User.updateMany(
         { 
           status: { $in: ['active', 'safe'] },
-          'location.timestamp': { $lt: twentyFourHoursAgo }
+          updatedAt: { $lt: fortyEightHoursAgo }
         },
         { $set: { status: 'offline' } }
       );
       
       if (result.modifiedCount > 0) {
-        console.log(`[Cron Worker] Marked ${result.modifiedCount} silent nodes as offline.`);
+        logger.warn(`[Cron] Marked ${result.modifiedCount} silent nodes as offline.`);
       }
     } catch (error) {
-      console.error('[Cron Worker] Error during node cleanup:', error.message);
+      logger.error(`[Cron] Error during node cleanup: ${error.message}`);
     }
   });
 };

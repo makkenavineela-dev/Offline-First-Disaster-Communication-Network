@@ -1,4 +1,5 @@
-const CACHE_NAME = 'resq-offline-v7';
+const CACHE_NAME = 'resq-offline-v8';
+const TILE_CACHE_NAME = 'resq-map-tiles';
 
 // We must cache the exact filenames used in links
 const ASSETS_TO_CACHE = [
@@ -34,7 +35,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== TILE_CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
@@ -49,6 +50,22 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(event.request.url);
   
+  // SPECIAL HANDLING FOR MAP TILES (H-04)
+  // We cache tiles aggressively so they are available offline after first load
+  if (url.host.includes('tile.openstreetmap.org') || url.pathname.includes('/tiles/')) {
+    event.respondWith(
+      caches.open(TILE_CACHE_NAME).then(cache => {
+        return cache.match(event.request).then(response => {
+          return response || fetch(event.request).then(networkResponse => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+        });
+      })
+    );
+    return;
+  }
+
   // Optimization: handle directory-style requests by appending index.html internally
   let requestUrl = event.request.url;
   if (url.pathname.endsWith('/')) {

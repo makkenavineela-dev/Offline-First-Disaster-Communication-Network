@@ -498,11 +498,10 @@
     if(text) {
       addBubble(text, 'sent');
       input.value = '';
-      
-      // Auto-reply
-      setTimeout(() => {
-         addBubble('Copy that.', 'received');
-      }, 1500);
+      if(window.appStore) {
+        const payload = { type: 'broadcast', content: text, zone: 'all' };
+        window.appStore.updateState({ messages: [{...payload, id:Date.now(), timestamp:new Date(), sender:'Me'}, ...window.appStore.getState().messages] });
+      }
     }
   }
 </script>

@@ -373,9 +373,12 @@
     
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Geolocation) {
       try {
-        const position = await window.Capacitor.Plugins.Geolocation.getCurrentPosition();
+        const position = await window.Capacitor.Plugins.Geolocation.getCurrentPosition({ enableHighAccuracy: true });
         currentCoords = { lat: position.coords.latitude, lng: position.coords.longitude };
-        coordsEl.textContent = `${currentCoords.lat.toFixed(4)}° N, ${currentCoords.lng.toFixed(4)}° E`;
+        
+        const latDir = currentCoords.lat >= 0 ? 'N' : 'S';
+        const lngDir = currentCoords.lng >= 0 ? 'E' : 'W';
+        coordsEl.textContent = `${Math.abs(currentCoords.lat).toFixed(4)}° ${latDir}, ${Math.abs(currentCoords.lng).toFixed(4)}° ${lngDir}`;
         accEl.textContent = `± ${Math.round(position.coords.accuracy)}m accuracy · GPS Active`;
       } catch (e) {
         coordsEl.textContent = "GPS Unavailable";
@@ -383,9 +386,13 @@
     } else if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
         currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        coordsEl.textContent = `${currentCoords.lat.toFixed(4)}° N, ${currentCoords.lng.toFixed(4)}° E`;
+        const latDir = currentCoords.lat >= 0 ? 'N' : 'S';
+        const lngDir = currentCoords.lng >= 0 ? 'E' : 'W';
+        coordsEl.textContent = `${Math.abs(currentCoords.lat).toFixed(4)}° ${latDir}, ${Math.abs(currentCoords.lng).toFixed(4)}° ${lngDir}`;
         accEl.textContent = `± ${Math.round(pos.coords.accuracy)}m accuracy · Browser GPS`;
-      });
+      }, (err) => {
+        coordsEl.textContent = "Location Denied";
+      }, { enableHighAccuracy: true });
     }
   }
 
@@ -407,17 +414,23 @@
     console.log('Broadcasting SOS:', payload);
 
     try {
+      // 0. Get Auth Token (RESQ Security requirement)
+      const token = window.appStore?.getState()?.user?.token || localStorage.getItem('resq_token');
+      
       // 1. Save to local history immediately (Offline First)
       if (window.appStore) {
           const state = window.appStore.getState();
-          const newMsg = { ...payload, id: Date.now(), timestamp: new Date() };
+          const newMsg = { ...payload, id: Date.now(), timestamp: new Date(), sender: user.name || 'Me' };
           window.appStore.updateState({ messages: [newMsg, ...state.messages] });
       }
 
       // 2. Attempt network broadcast
       const response = await fetch('/api/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify(payload)
       });
       

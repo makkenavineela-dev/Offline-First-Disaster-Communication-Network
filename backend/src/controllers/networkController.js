@@ -7,8 +7,8 @@ const getActiveNodes = async (req, res) => {
   try {
     // Return all users that are active and have a location tag
     const nodes = await User.find({ status: { $ne: 'offline' } })
-      .select('name deviceId role zone location status')
-      .sort({ 'location.timestamp': -1 });
+      .select('name deviceId role zone location status updatedAt')
+      .sort({ updatedAt: -1 });
       
     res.json(nodes);
   } catch (error) {

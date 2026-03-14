@@ -34,7 +34,7 @@ const app = express();
 // Middleware
 app.use(express.json({ limit: '10kb' })); // Body parser explicitly sized
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  origin: (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean),
   credentials: true
 }));
 app.use(helmet());
