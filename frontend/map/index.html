@@ -37,7 +37,14 @@
     flex: 1; position: relative; overflow: hidden;
     background: #0d1117;
   }
-  #map { position: absolute; inset: 0; width: 100%; height: 100%; background: #0d1117; }
+  #map { 
+    position: absolute; 
+    inset: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: #0d1117 url('map-fallback.png') no-repeat center; 
+    background-size: cover;
+  }
   /* Optional leaflet attribution dark theme patch */
   .leaflet-container { font-family: 'Barlow', sans-serif !important; }
   .leaflet-bar { border: none !important; }
@@ -158,7 +165,7 @@
   .nearby-icon.shelter { background: rgba(0,230,118,0.15); }
   .nearby-icon.hazard { background: rgba(255,170,0,0.15); }
   .nearby-icon.sos { background: rgba(255,31,31,0.15); }
-  .nearby-info {}
+  .nearby-info { flex: 1; }
   .nearby-name { font-size: 13px; font-weight: 600; color: var(--white); }
   .nearby-dist { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
   .nearby-arrow { margin-left: auto; }

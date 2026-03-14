@@ -1,4 +1,4 @@
-const CACHE_NAME = 'resq-offline-v9';
+const CACHE_NAME = 'resq-offline-v10';
 const TILE_CACHE_NAME = 'resq-map-tiles';
 
 // Use absolute paths from the root to ensure reliability across subdirectories
@@ -13,6 +13,7 @@ const ASSETS_TO_CACHE = [
   '/resources/index.html',
   '/settings/index.html',
   '/map/index.html',
+  '/map/map-fallback.png',
   '/splash/index.html',
   '/sos/index.html',
   '/leaflet/leaflet.js',
