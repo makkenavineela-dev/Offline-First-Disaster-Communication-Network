@@ -1,5 +1,5 @@
 version: '3.8'
-
+ 
 services:
   backend:
     build: .
@@ -7,13 +7,16 @@ services:
     ports:
       - "5000:5000"
     env_file: .env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/resq-disaster-app
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy   # Wait until MongoDB is truly ready
     networks:
       - resq-network
-
+ 
   mongo:
-    image: mongo:latest
+    image: mongo:7
     restart: always
     ports:
       - "27017:27017"
@@ -21,10 +24,16 @@ services:
       - mongo-data:/data/db
     networks:
       - resq-network
-
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+ 
 volumes:
   mongo-data:
-
+ 
 networks:
   resq-network:
     driver: bridge
