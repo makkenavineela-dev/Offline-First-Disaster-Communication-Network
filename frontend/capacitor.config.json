@@ -1,7 +1,7 @@
 {
   "appId": "com.resq.net",
   "appName": "RESQ",
-  "webDir": ".",
+  "webDir": "www",
   "bundledWebRuntime": false,
   "server": {
     "androidScheme": "http",

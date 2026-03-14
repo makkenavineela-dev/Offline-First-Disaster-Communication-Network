@@ -4,6 +4,8 @@
   "description": "",
   "main": "i18n.js",
   "scripts": {
+    "build": "node build_android_assets.js",
+    "sync": "node build_android_assets.js && npx cap sync android",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
