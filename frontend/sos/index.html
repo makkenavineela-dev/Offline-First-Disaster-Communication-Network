@@ -425,7 +425,7 @@
       }
 
       // 2. Attempt network broadcast
-      const response = await fetch('/api/messages', {
+      const response = await fetch(`${window.RESQ_CONFIG.API_BASE_URL}/api/messages`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

@@ -1,4 +1,11 @@
 const STORAGE_KEY = 'resq_app_state';
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? 'http://localhost:5000' 
+  : window.location.origin;
+
+window.RESQ_CONFIG = {
+  API_BASE_URL: localStorage.getItem('resq_api_url') || API_BASE_URL
+};
 
 const storage = {
   get: async (key) => {
