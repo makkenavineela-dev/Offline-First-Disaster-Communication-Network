@@ -22,6 +22,11 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 // deduplicate re-delivered messages on subsequent pushes.
 // ─────────────────────────────────────────────────────────────────────────────
 const pushSync = async (req, res) => {
+  // Top-level guard: if req.body is missing (malformed Content-Type, etc.) return early
+  if (!req.body || typeof req.body !== 'object') {
+    return res.status(400).json({ message: 'Request body must be JSON' });
+  }
+ 
   const { messages = [], resources = [], location, status } = req.body;
  
   const results = {
@@ -135,7 +140,13 @@ const pushSync = async (req, res) => {
   }
  
   if (Object.keys(nodeUpdate).length > 1) {
-    await User.findByIdAndUpdate(req.user._id, nodeUpdate);
+    try {
+      await User.findByIdAndUpdate(req.user._id, nodeUpdate);
+      results.node.updated = true;
+    } catch (err) {
+      logger.error(`[Sync] Node update failed: ${err.message}`);
+      // Non-fatal — messages/resources already processed, still return results
+    }
   }
  
   res.json({ success: true, results });
