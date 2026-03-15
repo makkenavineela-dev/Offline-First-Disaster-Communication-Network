@@ -1,4 +1,4 @@
-const CACHE_NAME = 'resq-offline-v11';
+const CACHE_NAME = 'resq-offline-v12';
 const TILE_CACHE_NAME = 'resq-map-tiles';
 const FONT_CACHE_NAME = 'resq-fonts';
 
