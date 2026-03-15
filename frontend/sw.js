@@ -120,7 +120,13 @@ self.addEventListener('fetch', event => {
       }).catch(() => {
         // FAILSAFE Fallback (L-05)
         if (event.request.mode === 'navigate') {
-          return caches.match('/splash/index.html').then(r => r || caches.match('/index.html'));
+          const url = new URL(event.request.url);
+          // Try to serve the exact page first, then fall back to splash
+          return caches.match(event.request)
+            .then(r => r || caches.match(url.pathname))
+            .then(r => r || caches.match('/splash/index.html'))
+            .then(r => r || caches.match('./splash/index.html'))
+            .then(r => r || fetch(event.request));
         }
         // Graceful 503 for non-navigation assets that failed and aren't cached
         return new Response('Offline: Resource not available', {

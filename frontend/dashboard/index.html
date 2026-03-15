@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>RESQ — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -12,7 +16,7 @@
     --white: #F5F5F0; --black: #0A0A0A; --gray: #141414; --gray2: #1E1E1E;
     --gray3: #2A2A2A; --text-muted: #666; --blue: #2979FF;
   }
-  html, body { height: 100%; background: #080808; font-family: 'Barlow', sans-serif; }
+  html, body { height: 100%; background: #080808; font-family: 'Barlow', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   
   .offline-top-bar {
     background: rgba(0,230,118,0.1); border-bottom: 1px solid rgba(0,230,118,0.3);
@@ -40,7 +44,7 @@
 
   /* Header */
   .header {
-    padding: 6px 24px 16px;
+    padding: max(6px, env(safe-area-inset-top)) 24px 16px;
     display: flex; align-items: center; justify-content: space-between;
     flex-shrink: 0;
   }
@@ -237,7 +241,7 @@
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--gray3);
     display: flex; align-items: center; justify-content: space-around;
-    padding-bottom: 8px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
     z-index: 20;
   }
   .nav-item {
