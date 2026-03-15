@@ -2,8 +2,6 @@
 <html>
   <head>
     <title>RESQ</title>
-    <!-- Primary redirect: works even if JS is disabled -->
-    <meta http-equiv="refresh" content="0; url=/splash/index.html">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
       body { margin: 0; background: #0a0a0a; display: flex; align-items: center; justify-content: center; height: 100vh; }
@@ -13,9 +11,18 @@
   <body>
     <p>Loading RESQ...</p>
     <script>
-      // Use location.replace() so the redirect page is not kept in history.
-      // Use absolute path — more reliable than relative in Capacitor WebView.
-      window.location.replace('/splash/index.html');
+      // Only redirect to splash when loaded at the true root ("/").
+      // If Capacitor's local server falls back to this file for a missing page
+      // (e.g. /dashboard/ not found), we must NOT redirect — that creates an
+      // infinite loop: missing page → index.html → splash → user taps link →
+      // missing page again. In that case, show an error message instead.
+      var path = window.location.pathname;
+      if (path === '/' || path === '/index.html') {
+        window.location.replace('/splash/index.html');
+      } else {
+        document.querySelector('p').textContent =
+          'App pages not found (' + path + '). Run BUILD_ANDROID.bat then rebuild in Android Studio.';
+      }
     </script>
   </body>
 </html>
