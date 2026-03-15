@@ -9,6 +9,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const path = require('path');
+const compression = require('compression');
  
 // Route Imports
 const authRoutes = require('./src/routes/authRoutes');
@@ -29,7 +30,24 @@ const logger = require('./src/utils/logger');
 // Load env vars
 dotenv.config();
  
+
+// ─── Startup Environment Validation ──────────────────────────────────────────
+const DEFAULT_JWT = 'resq-offline-disaster-secret-CHANGE-IN-PRODUCTION';
+if (process.env.JWT_SECRET === DEFAULT_JWT && process.env.NODE_ENV === 'production') {
+  logger.error('FATAL: JWT_SECRET is using the default insecure value in production. Exiting.');
+  process.exit(1);
+}
+if (!process.env.JWT_SECRET) {
+  logger.warn('WARNING: JWT_SECRET is not set — using insecure default. Set it in .env before deploying.');
+}
+if (!process.env.MONGO_URI) {
+  logger.warn('WARNING: MONGO_URI not set — using localhost default.');
+}
+
 const app = express();
+
+// ─── Compression ──────────────────────────────────────────────────────────────
+app.use(compression());
  
 // ─── Body Parser ──────────────────────────────────────────────────────────────
 // Use a single json middleware with a per-path size limit so the sync endpoint
@@ -114,11 +132,11 @@ const standardLimiter = rateLimit({
   skip: (req) => req.path.startsWith('/api/sync'),
 });
  
-// Relaxed limiter for the sync endpoint only (300 / 15 min).
+// Relaxed limiter for the sync endpoint only (100 / 15 min).
 // Devices may push large queued batches when they reconnect after being offline.
 const syncLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: 100,
   message: { message: 'Sync rate limit exceeded, please retry shortly' },
   standardHeaders: true,
   legacyHeaders: false,

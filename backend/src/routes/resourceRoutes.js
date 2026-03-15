@@ -1,14 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const {
-  getPublicResources,
-  getMyResources,
-  addResource
-} = require('../controllers/resourceController');
-const { protect } = require('../middleware/authMiddleware');
+const { getPublicResources, getMyResources, addResource } = require('../controllers/resourceController');
+const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.route('/')
-  .post(protect, addResource);
+  .post(protect, authorize('responder', 'shelter_admin'), addResource);
 
 router.route('/public')
   .get(protect, getPublicResources);

@@ -71,9 +71,7 @@ const pushSync = async (req, res) => {
         content:     msg.content.trim().substring(0, 2000),
         zone:        msg.zone       || (msgType === 'direct' ? null : 'all'),
         locationTag: msg.locationTag || null,
-        // Honor the original timestamp from the device so the timeline is
-        // correct when old messages are pushed during sync.
-        createdAt:   msg.createdAt ? new Date(msg.createdAt) : new Date(),
+        // createdAt always set server-side for integrity — client timestamps not trusted
       });
  
       results.messages.created++;
@@ -83,7 +81,7 @@ const pushSync = async (req, res) => {
         results.messages.skipped++;
       } else {
         logger.error(`[Sync] Message error (clientId=${msg.clientId}): ${err.message}`);
-        results.messages.errors.push({ clientId: msg.clientId, error: err.message });
+        results.messages.errors.push({ clientId: msg.clientId, error: 'Message processing failed' });
       }
     }
   }
@@ -114,7 +112,7 @@ const pushSync = async (req, res) => {
       results.resources.upserted++;
     } catch (err) {
       logger.error(`[Sync] Resource error (type=${r.type}): ${err.message}`);
-      results.resources.errors.push({ type: r.type, error: err.message });
+      results.resources.errors.push({ type: r.type, error: 'Resource processing failed' });
     }
   }
  
@@ -124,7 +122,8 @@ const pushSync = async (req, res) => {
   if (location && location.lat !== undefined && location.lng !== undefined) {
     const lat = parseFloat(location.lat);
     const lng = parseFloat(location.lng);
-    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 &&
+        !(lat === 0 && lng === 0)) { // skip default unset (0,0) coordinates
       nodeUpdate.location = {
         type: 'Point',
         coordinates: [lng, lat],
