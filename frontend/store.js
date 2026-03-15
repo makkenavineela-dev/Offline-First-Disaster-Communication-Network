@@ -126,13 +126,17 @@ window.appStoreReady = store.init();
 const isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 if ('serviceWorker' in navigator) {
   if (isNativeApp) {
-    // Unregister any stale SW from previous APK installs — they intercept navigation
-    // requests and send the user back to splash when the cached page is missing.
+    // Unregister any stale SW from previous APK installs.
+    // Calling unregister() alone is not enough — the old SW stays active
+    // for the current page. We must reload after unregistering so the next
+    // page load runs without any SW intercepting navigation requests.
     navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(reg => {
-        reg.unregister();
-        console.log('Unregistered stale SW:', reg.scope);
-      });
+      if (regs.length > 0) {
+        Promise.all(regs.map(reg => reg.unregister())).then(() => {
+          console.log('Cleared ' + regs.length + ' stale SW(s). Reloading...');
+          window.location.reload();
+        });
+      }
     });
   } else {
     window.addEventListener('load', () => {
