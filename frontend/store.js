@@ -124,11 +124,21 @@ window.appStoreReady = store.init();
 // Register Service Worker for PWA Offline Capabilities
 // Skip in Capacitor native context — SW intercepts Capacitor's bridge requests and breaks navigation
 const isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-if ('serviceWorker' in navigator && !isNativeApp) {
-  window.addEventListener('load', () => {
-    // Registering from root of the served directory
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('✅ Service Worker Registered. Scope:', reg.scope))
-      .catch(err => console.error('❌ Service Worker Registration Failed:', err));
-  });
+if ('serviceWorker' in navigator) {
+  if (isNativeApp) {
+    // Unregister any stale SW from previous APK installs — they intercept navigation
+    // requests and send the user back to splash when the cached page is missing.
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => {
+        reg.unregister();
+        console.log('Unregistered stale SW:', reg.scope);
+      });
+    });
+  } else {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('SW Registered. Scope:', reg.scope))
+        .catch(err => console.error('SW Registration Failed:', err));
+    });
+  }
 }
