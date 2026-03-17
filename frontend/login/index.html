@@ -34,15 +34,6 @@
     background-size: 32px 32px;
   }
 
-  /* Top status bar */
-  .status-bar {
-    height: 44px; display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px; z-index: 10; flex-shrink: 0;
-  }
-  .time { font-size: 13px; font-weight: 600; }
-  .status-icons { display: flex; gap: 5px; align-items: center; }
-  .status-icons svg { width: 15px; height: 15px; fill: var(--white); opacity: 0.9; }
-
   /* Header */
   .header {
     padding: 16px 24px 0; z-index: 10; flex-shrink: 0;
@@ -209,14 +200,6 @@
 <div class="phone-frame">
   <div class="grid-bg"></div>
 
-  <div class="status-bar">
-    <span class="time" id="statusTime">9:41</span>
-    <div class="status-icons">
-      <svg viewBox="0 0 24 24"><path d="M1 6l5 5 6-7 6 7 5-5V4H1z"/></svg>
-      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M22 11h2v3h-2z"/></svg>
-    </div>
-  </div>
-
   <div class="header">
     <div class="logo-icon">
       <svg viewBox="0 0 24 24"><path d="M12 2L4 7v5c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7L12 2zm0 4l5 3v4c0 3-1.8 5.8-5 7.2C8.8 18.8 7 16 7 13V9l5-3z"/></svg>
@@ -350,16 +333,6 @@
 </div>
 
 <script>
-  // Live clock
-  function updateTime() {
-    const now = new Date();
-    const h = now.getHours().toString().padStart(2, '0');
-    const m = now.getMinutes().toString().padStart(2, '0');
-    document.getElementById('statusTime').textContent = h + ':' + m;
-  }
-  updateTime();
-  setInterval(updateTime, 10000);
-
   // Role selection
   let selectedRole = 'Civilian';
   function selectRole(card) {

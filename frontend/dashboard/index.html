@@ -29,15 +29,6 @@
     display: flex; flex-direction: column;
     
   }
-  /* Status bar */
-  .status-bar {
-    height: 44px; display: flex; align-items: center; justify-content: space-between;
-    padding: 0 28px; flex-shrink: 0; z-index: 10;
-  }
-  .time { font-size: 13px; font-weight: 600; color: var(--white); }
-  .status-icons { display: flex; gap: 5px; align-items: center; }
-  .status-icons svg { width: 15px; height: 15px; fill: var(--white); opacity: 0.9; }
-
   /* Header */
   .header {
     padding: 6px 24px 16px;
@@ -367,14 +358,6 @@
 </head>
 <body>
 <div class="phone">
-  <div class="status-bar">
-    <span class="time">9:41</span>
-    <div class="status-icons">
-      <svg viewBox="0 0 24 24"><path d="M1 6l5 5 6-7 6 7 5-5V4H1z"/></svg>
-      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="2"/><path d="M22 11h2v3h-2z"/></svg>
-    </div>
-  </div>
-  
   <div class="offline-top-bar">
     <div class="dot"></div>
     <span>Connected to Local Network</span>
