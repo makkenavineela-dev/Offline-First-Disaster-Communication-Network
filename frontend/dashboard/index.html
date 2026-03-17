@@ -230,6 +230,58 @@
     text-align: center; line-height: 18px; margin-top: 4px;
   }
 
+  /* Location card */
+  .location-card {
+    background: var(--gray); border: 1px solid var(--gray3);
+    border-radius: 20px; padding: 16px 18px; margin-bottom: 14px;
+    position: relative; overflow: hidden;
+  }
+  .location-card::before {
+    content: ''; position: absolute; top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(41,121,255,0.1) 0%, transparent 70%);
+  }
+  .loc-top {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .loc-label { font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
+  .loc-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(41,121,255,0.1); border: 1px solid rgba(41,121,255,0.25);
+    border-radius: 100px; padding: 3px 10px;
+  }
+  .loc-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
+  .loc-badge-dot.acquiring { background: var(--amber); animation: blink 1s step-end infinite; }
+  .loc-badge-dot.error { background: var(--red); }
+  .loc-badge-text { font-size: 10px; font-weight: 600; color: var(--blue); letter-spacing: 1px; }
+  .loc-badge-text.acquiring { color: var(--amber); }
+  .loc-badge-text.error { color: var(--red); }
+  .loc-coords {
+    display: flex; gap: 0; margin-bottom: 10px;
+  }
+  .loc-coord { flex: 1; }
+  .loc-coord:not(:last-child) { border-right: 1px solid var(--gray3); padding-right: 12px; margin-right: 12px; }
+  .loc-coord-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 700; color: var(--white); letter-spacing: 0.5px;
+  }
+  .loc-coord-val.placeholder { color: var(--text-muted); font-size: 16px; }
+  .loc-coord-label { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .loc-meta {
+    display: flex; gap: 16px; align-items: center;
+  }
+  .loc-meta-item { display: flex; align-items: center; gap: 5px; }
+  .loc-meta-item svg { width: 12px; height: 12px; fill: var(--text-muted); flex-shrink: 0; }
+  .loc-meta-text { font-size: 11px; color: var(--text-muted); }
+  .loc-meta-text strong { color: var(--white); font-weight: 500; }
+  .loc-refresh {
+    margin-left: auto; display: flex; align-items: center; gap: 4px;
+    cursor: pointer; opacity: 0.7;
+  }
+  .loc-refresh:active { opacity: 1; }
+  .loc-refresh svg { width: 14px; height: 14px; fill: var(--blue); }
+  .loc-refresh span { font-size: 11px; color: var(--blue); }
+
   /* Bottom nav */
   .bottom-nav {
     position: absolute; bottom: 0; left: 0; right: 0;
@@ -331,7 +383,7 @@
 
   <div class="header">
     <div class="header-left">
-      <div class="greeting" data-i18n="good_morning">Good morning</div>
+      <div class="greeting" id="dashGreeting">Good morning</div>
       <div class="header-title" data-i18n="dashboard_title">RE<span>S</span>Q</div>
     </div>
   </div>
@@ -348,6 +400,41 @@
   </div>
 
   <div class="scroll-area">
+    <!-- GPS Location Card -->
+    <div class="location-card" id="locationCard">
+      <div class="loc-top">
+        <span class="loc-label">Your GPS Location</span>
+        <div class="loc-badge" id="locBadge">
+          <div class="loc-badge-dot acquiring" id="locDot"></div>
+          <span class="loc-badge-text acquiring" id="locBadgeText">ACQUIRING</span>
+        </div>
+      </div>
+      <div class="loc-coords">
+        <div class="loc-coord">
+          <div class="loc-coord-val placeholder" id="locLat">---.------</div>
+          <div class="loc-coord-label">Latitude</div>
+        </div>
+        <div class="loc-coord">
+          <div class="loc-coord-val placeholder" id="locLng">---.------</div>
+          <div class="loc-coord-label">Longitude</div>
+        </div>
+        <div class="loc-coord">
+          <div class="loc-coord-val placeholder" id="locAcc">-- m</div>
+          <div class="loc-coord-label">Accuracy</div>
+        </div>
+      </div>
+      <div class="loc-meta">
+        <div class="loc-meta-item">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <span class="loc-meta-text" id="locUpdated">Waiting for GPS fix...</span>
+        </div>
+        <div class="loc-meta-item loc-refresh" id="locRefreshBtn" onclick="refreshLocation()">
+          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          <span>Refresh</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Mesh Status -->
     <div class="mesh-card">
       <div class="mesh-top">
@@ -574,6 +661,95 @@
   }
 </script>
 <script src="../i18n.js"></script>
-  <script src="../store.js"></script>
+<script src="../store.js"></script>
+<script src="../location.js"></script>
+<script>
+  // ── Greet user by name ──
+  (function() {
+    const name = localStorage.getItem('resq_name');
+    const mobile = localStorage.getItem('resq_mobile');
+    if (name || mobile) {
+      const label = name || ('User ' + (mobile || '').slice(-4));
+      const h = new Date().getHours();
+      const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+      const el = document.getElementById('dashGreeting');
+      if (el) el.textContent = greet + ', ' + label;
+    }
+    // Redirect to login if not registered
+    if (!localStorage.getItem('resq_mobile')) {
+      window.location.replace('/login/index.html');
+    }
+  })();
+
+  // ── GPS Location UI ──
+  function setLocBadge(state) {
+    const dot = document.getElementById('locDot');
+    const text = document.getElementById('locBadgeText');
+    if (!dot || !text) return;
+    dot.className = 'loc-badge-dot';
+    text.className = 'loc-badge-text';
+    if (state === 'live') {
+      dot.style.background = 'var(--green)';
+      text.style.color = 'var(--green)';
+      text.textContent = 'LIVE';
+    } else if (state === 'error') {
+      dot.classList.add('error');
+      text.classList.add('error');
+      text.textContent = 'GPS ERROR';
+    } else {
+      dot.classList.add('acquiring');
+      text.classList.add('acquiring');
+      text.textContent = 'ACQUIRING';
+    }
+  }
+
+  function renderLocation(loc) {
+    if (!loc) return;
+    const latEl = document.getElementById('locLat');
+    const lngEl = document.getElementById('locLng');
+    const accEl = document.getElementById('locAcc');
+    const updEl = document.getElementById('locUpdated');
+    if (latEl) { latEl.textContent = loc.lat.toFixed(6); latEl.classList.remove('placeholder'); }
+    if (lngEl) { lngEl.textContent = loc.lng.toFixed(6); lngEl.classList.remove('placeholder'); }
+    if (accEl) { accEl.textContent = loc.accuracy + ' m'; accEl.classList.remove('placeholder'); }
+    if (updEl) {
+      const d = new Date(loc.timestamp);
+      updEl.innerHTML = 'Updated <strong>' + d.getHours().toString().padStart(2,'0') + ':' +
+        d.getMinutes().toString().padStart(2,'0') + ':' +
+        d.getSeconds().toString().padStart(2,'0') + '</strong>';
+    }
+    setLocBadge('live');
+  }
+
+  // Show last cached location immediately (no GPS delay)
+  const lastLoc = window.RESQ_Location && window.RESQ_Location.getLast();
+  if (lastLoc) renderLocation(lastLoc);
+
+  // Listen for live updates
+  window.addEventListener('resq:location', function(e) {
+    renderLocation(e.detail);
+  });
+
+  window.addEventListener('resq:location:error', function(e) {
+    setLocBadge('error');
+    const updEl = document.getElementById('locUpdated');
+    if (updEl) updEl.textContent = 'GPS error: ' + e.detail.message;
+  });
+
+  // Start GPS if user consented
+  if (localStorage.getItem('resq_gps_enabled') !== '0') {
+    window.RESQ_Location && window.RESQ_Location.start();
+  }
+
+  // Manual refresh button
+  function refreshLocation() {
+    setLocBadge('acquiring');
+    const updEl = document.getElementById('locUpdated');
+    if (updEl) updEl.textContent = 'Getting GPS fix...';
+    window.RESQ_Location && window.RESQ_Location.getCurrent()
+      .then(renderLocation)
+      .catch(function(e) { setLocBadge('error'); });
+  }
+</script>
 </body>
 </html>
