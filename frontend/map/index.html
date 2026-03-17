@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>RESQ — Map</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../leaflet/leaflet.css" />
@@ -14,7 +18,7 @@
     --white: #F5F5F0; --black: #0A0A0A; --gray: #141414;
     --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
   }
-  html, body { height: 100%; background: #080808; font-family: 'Barlow', sans-serif; }
+  html, body { height: 100%; background: #080808; font-family: 'Barlow', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   .phone {
     width: 100%; height: 100%; background: var(--black);
     overflow: hidden; position: relative;
@@ -37,13 +41,13 @@
     flex: 1; position: relative; overflow: hidden;
     background: #0d1117;
   }
-  #map { 
-    position: absolute; 
-    inset: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: #0d1117 url('map-fallback.png') no-repeat center; 
-    background-size: cover;
+  #map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: #0d1117;
+    touch-action: manipulation;
   }
   /* Optional leaflet attribution dark theme patch */
   .leaflet-container { font-family: 'Barlow', sans-serif !important; }
@@ -177,7 +181,7 @@
     height: 76px; background: rgba(10,10,10,0.97);
     backdrop-filter: blur(20px); border-top: 1px solid var(--gray3);
     display: flex; align-items: center; justify-content: space-around;
-    padding-bottom: 8px; z-index: 400;
+    padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 400;
   }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
   .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
@@ -232,14 +236,6 @@
 <link rel="manifest" href="/manifest.json">
 </head>
 <body>
-<script>
-  // Emergency SW Clear for the presentation
-  if('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      for(let reg of regs) reg.unregister();
-    });
-  }
-</script>
 <div class="phone">
   <div class="status-bar">
     <span class="time">9:41</span>
@@ -260,7 +256,7 @@
     </a>
     <div class="map-search">
       <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      <input type="text" class="map-search-input" data-i18n-placeholder="search_placeholder" placeholder="Search location or person…" style="background: transparent; border: none; outline: none; color: var(--text-muted); width: 100%; font-family: 'Barlow', sans-serif; font-size: 13px;">
+      <input type="search" class="map-search-input" data-i18n-placeholder="search_placeholder" placeholder="Search location or person…" style="background: transparent; border: none; outline: none; color: var(--text-muted); width: 100%; font-family: 'Barlow', sans-serif; font-size: 13px;">
     </div>
   </div>
 
@@ -351,7 +347,7 @@
       <span class="nav-label" data-i18n="nav_resources">Resources</span>
     </a>
     <a href="/settings/index.html" class="nav-item">
-      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.12-.22-.07-.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
       <span class="nav-label" data-i18n="nav_settings">Settings</span>
     </a>
   </div>
@@ -378,13 +374,14 @@
 
 <script>
 let map;
+let myLocationMarker;
+
 function initMap() {
   console.log('Map Booting... [OFFLINE READY]');
-  
   if (map) return;
-  
+
   map = L.map('map', {
-    zoomControl: false, 
+    zoomControl: false,
     attributionControl: false
   }).setView([12.941487207089997, 77.56582967529805], 15);
 
@@ -392,153 +389,123 @@ function initMap() {
     maxZoom: 19
   }).addTo(map);
 
-  console.log('Tile Layer Added [CACHED BY SW FOR OFFLINE]');
-  
-  setTimeout(() => { 
-    map.invalidateSize();
-    console.log('Map Refreshed');
-  }, 400);
+  setTimeout(() => { map.invalidateSize(); }, 400);
+
+  // My Location Marker
+  const myIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="width:20px;height:20px;background:rgba(255,170,0,0.8);border:2px solid white;border-radius:50%;box-shadow:0 0 15px rgba(255,170,0,0.8);"></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+  myLocationMarker = L.marker([12.941487207089997, 77.56582967529805], {icon: myIcon}).addTo(map);
+
+  // Demo Shelter
+  const shelterIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background:rgba(0,230,118,0.2);backdrop-filter:blur(4px);border:2px solid #00E676;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;">🏫</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
+  });
+  L.marker([12.9450, 77.5700], {icon: shelterIcon})
+    .addTo(map)
+    .on('click', () => openMapDetail('map_shelter_title', '🏫', 'shelter', 'map_shelter_dist', 'map_shelter_desc'));
+
+  // SOS Alert
+  const sosIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background:rgba(255,31,31,0.2);backdrop-filter:blur(4px);border:2px solid #FF1F1F;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#FF1F1F;">SOS</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
+  L.marker([12.9380, 77.5620], {icon: sosIcon})
+    .addTo(map)
+    .on('click', () => openMapDetail('map_sos_title', '🆘', 'sos', 'map_sos_dist', 'map_sos_desc'));
+
+  // Hazard Node
+  const hazardIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background:rgba(255,170,0,0.2);backdrop-filter:blur(4px);border:2px solid #FFAA00;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;">⚡</div>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+  L.marker([12.9430, 77.5600], {icon: hazardIcon})
+    .addTo(map)
+    .on('click', () => openMapDetail('map_hazard_title', '⚡', 'hazard', 'map_hazard_dist', 'map_hazard_desc'));
+
+  // Zoom Controls
+  const zoomBtns = document.querySelectorAll('.zoom-btn');
+  if (zoomBtns.length >= 2) {
+    zoomBtns[0].addEventListener('click', () => map.zoomIn());
+    zoomBtns[1].addEventListener('click', () => map.zoomOut());
+  }
+
+  // My Location Button
+  document.querySelector('.my-loc-btn').addEventListener('click', async () => {
+    if (!map) return;
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Geolocation) {
+      const pos = await window.Capacitor.Plugins.Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+      map.setView([pos.coords.latitude, pos.coords.longitude], 16);
+    } else if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        map.setView([position.coords.latitude, position.coords.longitude], 16);
+      });
+    } else {
+      map.setView([12.941487207089997, 77.56582967529805], 15);
+    }
+  });
+
+  // Offline Map Downloader
+  document.querySelector('.offline-dl-btn').addEventListener('click', async function() {
+    const btn = this;
+    if (btn.classList.contains('syncing')) return;
+    btn.classList.add('syncing');
+    const bounds = map.getBounds();
+    const zoom = map.getZoom();
+    const layers = [zoom, zoom + 1];
+    let count = 0;
+    for (let z of layers) {
+      const nw = map.project(bounds.getNorthWest(), z).divideBy(256).floor();
+      const se = map.project(bounds.getSouthEast(), z).divideBy(256).floor();
+      for (let x = nw.x; x <= se.x; x++) {
+        for (let y = nw.y; y <= se.y; y++) {
+          fetch(`https://a.tile.openstreetmap.org/${z}/${x}/${y}.png`).catch(() => {});
+          count++;
+        }
+      }
+    }
+    setTimeout(() => {
+      btn.classList.remove('syncing');
+      btn.style.background = 'var(--green)';
+      setTimeout(() => { btn.style.background = ''; }, 2000);
+    }, 2000);
+  });
+
+  setupGPS();
 }
 
-// Global initialization
-window.onload = initMap;
-// Fallback if window.onload already fired
-if (document.readyState === 'complete') initMap();
-
-// My Location Indicator Variable
-const myIcon = L.divIcon({
-  className: 'custom-div-icon',
-  html: `<div style="width:20px;height:20px;background:rgba(255,170,0,0.8);border:2px solid white;border-radius:50%;box-shadow:0 0 15px rgba(255,170,0,0.8);"></div>`,
-  iconSize: [20, 20],
-  iconAnchor: [10, 10]
-});
-let myLocationMarker = L.marker([12.941487207089997, 77.56582967529805], {icon: myIcon}).addTo(map);
-
-// Wait for Capacitor to inject Native Plugins
-document.addEventListener('DOMContentLoaded', async () => {
-  // If running via Android Studio (Capacitor), use Native Hardware GPS (Offline/Satellites)
+async function setupGPS() {
+  if (!map || !myLocationMarker) return;
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Geolocation) {
     try {
       const Geo = window.Capacitor.Plugins.Geolocation;
-      
-      // Request initial position
       const pos = await Geo.getCurrentPosition({ enableHighAccuracy: true });
       myLocationMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
       map.setView([pos.coords.latitude, pos.coords.longitude], 15);
-
-      // Setup offline tracker
-      Geo.watchPosition({ enableHighAccuracy: true }, (position, err) => {
-        if (position) {
-          myLocationMarker.setLatLng([position.coords.latitude, position.coords.longitude]);
-        }
+      Geo.watchPosition({ enableHighAccuracy: true }, (position) => {
+        if (position) myLocationMarker.setLatLng([position.coords.latitude, position.coords.longitude]);
       });
-    } catch (e) {
-      console.warn("Hardware GPS failed. Make sure Location services are ON.", e);
-    }
-  } 
-  // Fallback for debugging in standard Browser
-  else if ('geolocation' in navigator) {
+    } catch (e) { console.warn("Hardware GPS failed.", e); }
+  } else if ('geolocation' in navigator) {
     navigator.geolocation.watchPosition((position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      myLocationMarker.setLatLng([lat, lng]);
-      map.setView([lat, lng], 15); // Auto-center
-    }, (err) => {
-      console.warn('Browser GPS Error or Denied:', err);
-    }, { enableHighAccuracy: true });
+      myLocationMarker.setLatLng([position.coords.latitude, position.coords.longitude]);
+      map.setView([position.coords.latitude, position.coords.longitude], 15);
+    }, (err) => { console.warn('Browser GPS Error:', err); }, { enableHighAccuracy: true });
   }
-});
-
-// Add Demo Shelter 1
-const shelterIcon = L.divIcon({
-  className: 'custom-div-icon',
-  html: `<div style="background:rgba(0,230,118,0.2);backdrop-filter:blur(4px);border:2px solid #00E676;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;">🏫</div>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 16]
-});
-L.marker([12.9450, 77.5700], {icon: shelterIcon})
-  .addTo(map)
-  .on('click', () => openMapDetail('map_shelter_title', '🏫', 'shelter', 'map_shelter_dist', 'map_shelter_desc'));
-
-// Add SOS Alert
-const sosIcon = L.divIcon({
-  className: 'custom-div-icon',
-  html: `<div style="background:rgba(255,31,31,0.2);backdrop-filter:blur(4px);border:2px solid #FF1F1F;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#FF1F1F;">SOS</div>`,
-  iconSize: [28, 28],
-  iconAnchor: [14, 14]
-});
-L.marker([12.9380, 77.5620], {icon: sosIcon})
-  .addTo(map)
-  .on('click', () => openMapDetail('map_sos_title', '🆘', 'sos', 'map_sos_dist', 'map_sos_desc'));
-
-// Add Hazard Node
-const hazardIcon = L.divIcon({
-  className: 'custom-div-icon',
-  html: `<div style="background:rgba(255,170,0,0.2);backdrop-filter:blur(4px);border:2px solid #FFAA00;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;">⚡</div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12]
-});
-L.marker([12.9430, 77.5600], {icon: hazardIcon})
-  .addTo(map)
-  .on('click', () => openMapDetail('map_hazard_title', '⚡', 'hazard', 'map_hazard_dist', 'map_hazard_desc'));
-
-
-// Wire up UI Zoom Controls
-const zoomBtns = document.querySelectorAll('.zoom-btn');
-if (zoomBtns.length >= 2) {
-  zoomBtns[0].addEventListener('click', () => map.zoomIn());
-  zoomBtns[1].addEventListener('click', () => map.zoomOut());
 }
 
-document.querySelector('.my-loc-btn').addEventListener('click', async () => {
-  if (!map) return;
-  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Geolocation) {
-    const pos = await window.Capacitor.Plugins.Geolocation.getCurrentPosition({ enableHighAccuracy: true });
-    map.setView([pos.coords.latitude, pos.coords.longitude], 16);
-  } else if ('geolocation' in navigator) {
-    navigator.geolocation.getCurrentPosition((position) => {
-      map.setView([position.coords.latitude, position.coords.longitude], 16);
-    });
-  } else {
-    map.setView([12.941487207089997, 77.56582967529805], 15);
-  }
-});
-
-// Offline Map Pack Downloader
-document.querySelector('.offline-dl-btn').addEventListener('click', async function() {
-  const btn = this;
-  if (btn.classList.contains('syncing')) return;
-  
-  btn.classList.add('syncing');
-  console.log('Starting Offline Map Download for current region...');
-  
-  const bounds = map.getBounds();
-  const zoom = map.getZoom();
-  const layers = [zoom, zoom + 1]; // Cache current and next zoom level
-  
-  let count = 0;
-  for (let z of layers) {
-      const nw = map.project(bounds.getNorthWest(), z).divideBy(256).floor();
-      const se = map.project(bounds.getSouthEast(), z).divideBy(256).floor();
-      
-      for (let x = nw.x; x <= se.x; x++) {
-          for (let y = nw.y; y <= se.y; y++) {
-              const url = `https://a.tile.openstreetmap.org/${z}/${x}/${y}.png`;
-              // This is intercepted by sw.js and added to TILE_CACHE_NAME
-              fetch(url).catch(() => {}); 
-              count++;
-          }
-      }
-  }
-  
-  console.log(`Queued ${count} tiles for offline caching.`);
-  
-  setTimeout(() => {
-    btn.classList.remove('syncing');
-    btn.style.background = 'var(--green)';
-    setTimeout(() => { btn.style.background = ''; }, 2000);
-  }, 2000);
-});
+window.onload = initMap;
+if (document.readyState === 'complete') initMap();
 
 function openMapDetail(titleKey, iconHtml, type, distKey, descKey) {
     document.getElementById('detailTitle').setAttribute('data-i18n', titleKey);
@@ -546,12 +513,9 @@ function openMapDetail(titleKey, iconHtml, type, distKey, descKey) {
     document.getElementById('detailIcon').className = `detail-icon-wrap ${type}`;
     document.getElementById('detailDist').setAttribute('data-i18n', distKey);
     document.getElementById('detailDesc').setAttribute('data-i18n', descKey);
-    
-    // Trigger translation update immediately
     if (typeof changeLanguage === 'function') {
         changeLanguage(localStorage.getItem('appLang') || 'en');
     }
-
     document.getElementById('mapDetailOverlay').classList.add('open');
 }
 
