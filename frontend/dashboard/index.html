@@ -663,9 +663,42 @@
     // HELP / GENERAL
     { k: ['help','emergency','sos','danger','save','rescue','urgent','critical','serious','bad','please'],
       a: "🆘 EMERGENCY DETECTED\nI can guide you through:\n• 🩸 Bleeding & wounds\n• 🔥 Burns & fire\n• ❤️ CPR & unconscious\n• 🌊 Flood survival\n• 🌍 Earthquake\n• 🦴 Fractures\n• 📍 If you're lost\n• 🏚️ If you're trapped\n\nDescribe your situation and I'll give step-by-step help.\nOr press the SOS button to broadcast emergency signal." },
+    // POISONING / OVERDOSE
+    { k: ['poison','poisoning','overdose','swallow','swallowed chemical','toxic','toxin','inhale','gas leak','carbon monoxide','bleach','acid','drug overdose'],
+      a: "☠️ POISONING / OVERDOSE\n1. Do NOT induce vomiting unless instructed\n2. If inhaled gas: move to fresh air immediately, open windows\n3. If swallowed: keep person calm, note what was swallowed\n4. If unconscious: recovery position — on side, head tilted\n5. Do NOT give food or water\n⚠️ Unconscious or seizure → SOS immediately" },
+    // DIABETIC EMERGENCY
+    { k: ['diabetic','diabetes','sugar','low sugar','hypoglycemia','insulin','glucose','shaking dizzy','sugar level'],
+      a: "🍬 DIABETIC EMERGENCY (Low Blood Sugar)\n1. If conscious: give sugar immediately — juice, candy, glucose tablet\n2. Wait 15 minutes — if no improvement, give more sugar\n3. Once better: give a proper meal\n4. If unconscious: do NOT give anything by mouth\n5. Position on side (recovery position)\n⚠️ Unconscious diabetic → SOS" },
+    // STROKE
+    { k: ['stroke','face droop','drooping','slurred','cant speak','can\'t speak','arm weak','sudden headache','paralysis','FAST'],
+      a: "🧠 STROKE — Use FAST\nF — FACE: Ask to smile. Does one side droop?\nA — ARMS: Ask to raise both. Does one drift down?\nS — SPEECH: Ask to repeat a phrase. Is it slurred?\nT — TIME: Act immediately\n\n1. Keep person still and calm\n2. Do NOT give food or water\n3. Note what time symptoms started\n4. Lay flat if unconscious, tilt to side\n⚠️ Stroke = medical emergency → SOS immediately" },
+    // TSUNAMI
+    { k: ['tsunami','tidal wave','sea wave','ocean wave','wave coming','coastal'],
+      a: "🌊 TSUNAMI WARNING\n1. Move inland and to HIGH GROUND immediately — do not wait for official warning\n2. Go at least 30 meters above sea level or 3km inland\n3. Do NOT go to the shore to watch\n4. If caught in water: grab floating object, protect head\n5. Stay away from coast until all-clear is given\n6. First wave may not be largest — multiple waves come" },
+    // LANDSLIDE
+    { k: ['landslide','mudslide','rockslide','mud','slope','hillside','sliding earth','ground moving'],
+      a: "⛰️ LANDSLIDE\nIF APPROACHING:\n1. Move away from path — go sideways off slope\n2. If no escape: curl into ball, protect head with arms\n\nAFTER:\n1. Stay away from slide area — more can follow\n2. Check for trapped people by listening for sounds\n3. Do NOT enter damaged buildings\n4. Watch for broken gas/water lines" },
+    // CYCLONE / HURRICANE
+    { k: ['cyclone','hurricane','typhoon','storm','windstorm','tornado','twister','strong wind','strong winds'],
+      a: "🌀 CYCLONE / STORM\nBEFORE it hits:\n1. Move to strongest part of building — interior room\n2. Away from windows and glass\n3. Lie flat under sturdy table if possible\n\nDURING:\n1. Do NOT go outside — eye of storm is deceptive\n2. Stay inside until official all-clear\n\nAFTER:\n1. Watch for downed power lines\n2. Do not enter flood water" },
+    // ANIMAL ATTACK / BITE
+    { k: ['dog bite','animal bite','bitten by dog','attacked by','animal attack','rabies','bite wound'],
+      a: "🐕 ANIMAL BITE\n1. Wash wound immediately with soap and water for 10 minutes\n2. Apply antiseptic if available\n3. Cover with clean bandage\n4. Note animal details (domestic/wild, vaccinated?)\n5. Do NOT try to catch or kill the animal\n⚠️ Deep bites, face bites, or unknown animal → medical attention needed for rabies prevention" },
+    // DROWNING / NEAR DROWNING
+    { k: ['drowning','drowned','near drowning','underwater','water rescue','pulled from water'],
+      a: "💧 DROWNING\n1. Do NOT jump in if you cannot swim — throw rope/float\n2. Once out of water: check breathing immediately\n3. If not breathing → begin CPR immediately\n4. Tilt head back, 30 compressions + 2 breaths\n5. Even if revived — keep lying down, monitor breathing\n⚠️ All near-drowning victims need medical check — fluid in lungs can be delayed" },
+    // EYE INJURY
+    { k: ['eye','eyes','eye injury','something in eye','chemical in eye','eye pain','vision','blind','can\'t see'],
+      a: "👁️ EYE INJURY\nCHEMICAL in eye:\n1. Flush immediately with clean water for 20 minutes\n2. Hold eye open under gentle stream\n3. Do NOT rub\n\nOBJECT in eye:\n1. Do NOT rub or press\n2. Try to blink naturally to clear small particles\n3. Flush with water gently\n4. Cover with clean cloth (don't press)\n⚠️ Vision loss or deep injury → SOS" },
+    // CHILDBIRTH EMERGENCY
+    { k: ['baby','birth','born','deliver','delivery','pregnant','labor','labour','contractions'],
+      a: "👶 EMERGENCY BIRTH\n1. Keep mother calm, lying on back with knees bent\n2. Wash hands thoroughly\n3. Do NOT try to stop or delay delivery\n4. Support baby's head as it emerges — guide gently\n5. Keep baby warm immediately — skin to skin with mother\n6. Do NOT cut cord unless medically trained\n7. Tie cord tightly in two places if cutting needed\n⚠️ Keep both warm and still → SOS for medical help" },
+    // MENTAL HEALTH / PANIC
+    { k: ['panic','panic attack','anxiety','breathing fast','hyperventilate','scared','fear','shaking','nervous','stress','mental'],
+      a: "🧘 PANIC ATTACK\n1. Speak calmly: 'You are safe, this will pass'\n2. Guide slow breathing: breathe IN 4 seconds, HOLD 4 sec, OUT 4 sec\n3. Ground technique: name 5 things you see, 4 you feel, 3 you hear\n4. Sit or lie down in safe position\n5. Loosen tight clothing\n6. Do NOT leave person alone\nNote: Panic attacks feel severe but are not life-threatening. Symptoms peak at 10 min." },
     // HOW TO USE
     { k: ['how','what','work','working','use','test','hello','hi','hey','who are you'],
-      a: "👋 I'm RESQ AI — your offline emergency assistant.\n\nI give first aid & survival guidance with zero internet.\n\nTry asking me:\n• 'I am bleeding badly'\n• 'There is a fire'\n• 'Someone is unconscious'\n• 'I am trapped'\n• 'Flood water is rising'\n• 'I am lost'\n\nI understand natural language — just describe what's happening." }
+      a: "👋 I'm RESQ AI — your offline emergency assistant.\n\nI give first aid & survival guidance with zero internet.\n\nTry asking me:\n• 'I am bleeding badly'\n• 'There is a fire'\n• 'Someone is unconscious'\n• 'I am trapped'\n• 'Flood water is rising'\n• 'I am lost'\n• 'Snake bite'\n• 'Stroke symptoms'\n• 'Panic attack'\n\nI understand natural language — just describe what's happening." }
   ];
 
   function aiBestMatch(text) {
