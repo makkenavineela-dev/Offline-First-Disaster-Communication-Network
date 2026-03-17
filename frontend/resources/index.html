@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>RESQ — Resources</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -12,7 +16,7 @@
     --white: #F5F5F0; --black: #0A0A0A; --gray: #141414;
     --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
   }
-  html, body { height: 100%; background: #080808; font-family: 'Barlow', sans-serif; }
+  html, body { height: 100%; background: #080808; font-family: 'Barlow', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   .phone {
     width: 100%; height: 100%; background: var(--black);
     overflow: hidden; position: relative;
@@ -23,7 +27,7 @@
   .time { font-size: 13px; font-weight: 600; color: var(--white); }
   .status-icons { display: flex; gap: 5px; }
   .status-icons svg { width: 15px; height: 15px; fill: var(--white); }
-  .header { padding: 4px 24px 12px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .header { padding: max(4px, env(safe-area-inset-top)) 24px 12px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
   .back-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--gray2); display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; }
   .back-btn svg { width: 18px; height: 18px; fill: var(--white); }
   .header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; color: var(--white); letter-spacing: 2px; }
@@ -136,7 +140,7 @@
     height: 76px; background: rgba(10,10,10,0.95);
     backdrop-filter: blur(20px); border-top: 1px solid var(--gray3);
     display: flex; align-items: center; justify-content: space-around;
-    padding-bottom: 8px; z-index: 20;
+    padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 20;
   }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
   .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
@@ -247,7 +251,7 @@
       </div>
       <div class="res-action-row">
         <button class="res-btn" onclick="handleRequest(this, 'Medical Supplies')" data-i18n="res_btn_request">Request</button>
-        <button class="res-btn primary" onclick="handleUpdate(this)" data-i18n="res_btn_mark_used">Mark Used</button>
+        <button class="res-btn primary" onclick="handleMarkUsed(this)" data-i18n="res_btn_mark_used">Mark Used</button>
       </div>
     </div>
 
@@ -419,7 +423,7 @@
       <span class="nav-label" data-i18n="nav_resources">Resources</span>
     </a>
     <a href="/settings/index.html" class="nav-item">
-      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.12-.22-.07-.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
       <span class="nav-label" data-i18n="nav_settings">Settings</span>
     </a>
   </div>
@@ -428,101 +432,181 @@
   function switchTab(el, targetId) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
-    
-    document.querySelectorAll('.tab-content').forEach(content => {
-       content.style.display = 'none';
-    });
+    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
     document.getElementById(targetId).style.display = 'block';
   }
 
   function showToast(message) {
-      const toast = document.getElementById('toastMsg');
-      toast.innerText = message;
-      toast.classList.add('show');
-      setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    const toast = document.getElementById('toastMsg');
+    toast.innerText = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
   }
-  
-  function handleRequest(btn, itemName) {
-    const oldText = btn.innerText;
-    if(oldText === 'Requested' || oldText === 'Shared') return; // Prevent multiple clicks during wait
-    const oldBorder = btn.style.borderColor;
-    const oldColor = btn.style.color;
-    
-    btn.innerHTML = `<span style="opacity:0.5">Wait...</span>`;
-    
-    setTimeout(() => {
-        btn.innerText = oldText === 'Share' ? 'Shared' : 'Requested';
-        btn.style.borderColor = 'var(--blue)';
-        btn.style.color = 'var(--blue)';
-        
-        showToast(oldText === 'Share' ? `${itemName} ` + t('toast_new_res') : `${itemName} ` + t('toast_req_broadcast'));
-        
-        // Reset after 3 seconds
-        setTimeout(() => {
-            btn.innerText = oldText;
-            btn.style.borderColor = oldBorder;
-            btn.style.color = oldColor;
-        }, 3000);
 
+  // Update progress bar + badge colours based on new percentage
+  function applyStatus(card, pct) {
+    const fill   = card.querySelector('.progress-fill');
+    const pctEl  = card.querySelector('.progress-pct');
+    const badge  = card.querySelector('.res-badge');
+    const newPct = Math.max(0, pct);
+
+    fill.style.width = newPct + '%';
+    pctEl.textContent = newPct + '%';
+
+    if (newPct <= 15) {
+      fill.className  = 'progress-fill red';
+      pctEl.className = 'progress-pct red';
+      if (badge) { badge.className = 'res-badge critical'; badge.setAttribute('data-i18n','res_critical'); badge.textContent = (typeof t === 'function' ? t('res_critical') : 'CRITICAL'); }
+      card.classList.remove('low'); card.classList.add('critical');
+    } else if (newPct <= 40) {
+      fill.className  = 'progress-fill amber';
+      pctEl.className = 'progress-pct amber';
+      if (badge) { badge.className = 'res-badge low'; badge.setAttribute('data-i18n','res_low'); badge.textContent = (typeof t === 'function' ? t('res_low') : 'LOW'); }
+      card.classList.remove('critical'); card.classList.add('low');
+    } else {
+      fill.className  = 'progress-fill green';
+      pctEl.className = 'progress-pct green';
+      if (badge) { badge.className = 'res-badge ok'; badge.setAttribute('data-i18n','res_ok'); badge.textContent = (typeof t === 'function' ? t('res_ok') : 'OK'); }
+      card.classList.remove('critical','low');
+    }
+  }
+
+  // Recalculate summary card icons from current card states
+  function updateSummary() {
+    const cards = document.querySelectorAll('#tab-withme .resource-card');
+    const icons = ['🩹','💧','🥫','🔦'];
+    const sumVals = document.querySelectorAll('.sum-val');
+    cards.forEach((card, i) => {
+      const pct = parseInt(card.querySelector('.progress-pct').textContent);
+      const val = sumVals[i];
+      if (!val) return;
+      if (pct <= 15) { val.className = 'sum-val red';   val.setAttribute('data-i18n','res_critical'); val.textContent = (typeof t==='function'?t('res_critical'):'CRITICAL'); }
+      else if (pct <= 40) { val.className = 'sum-val amber'; val.setAttribute('data-i18n','res_low');      val.textContent = (typeof t==='function'?t('res_low'):'LOW'); }
+      else { val.className = 'sum-val green'; val.setAttribute('data-i18n','res_ok');       val.textContent = pct + '%'; }
+    });
+  }
+
+  // "Mark Used" — decrements every numeric chip value in the card
+  function handleMarkUsed(btn) {
+    if (btn.disabled) return;
+    const card = btn.closest('.resource-card');
+    const chips = card.querySelectorAll('.detail-chip .detail-val');
+
+    chips.forEach(valEl => {
+      const n = parseInt(valEl.textContent);
+      if (!isNaN(n) && n > 0) valEl.textContent = n - 1;
+    });
+
+    // Recalculate % from total items left vs a fixed max reference stored on card
+    if (!card.dataset.maxItems) {
+      // First click: snapshot the total as the baseline max
+      let tot = 0;
+      chips.forEach(v => { const n = parseInt(v.textContent); if (!isNaN(n)) tot += n + 1; }); // +1 because we already decremented
+      card.dataset.maxItems = tot;
+    }
+    let tot = 0;
+    chips.forEach(v => { const n = parseInt(v.textContent); if (!isNaN(n)) tot += n; });
+    const max = parseInt(card.dataset.maxItems) || 1;
+    const newPct = Math.round((tot / max) * 100);
+    applyStatus(card, newPct);
+    updateSummary();
+
+    btn.disabled = true;
+    btn.textContent = '✓ Updated';
+    showToast(typeof t==='function' ? t('toast_res_updated') : 'Resource updated');
+    setTimeout(() => { btn.disabled = false; btn.setAttribute('data-i18n','res_btn_mark_used'); btn.textContent = (typeof t==='function'?t('res_btn_mark_used'):'Mark Used'); }, 1500);
+  }
+
+  // "Update" — decrements the FIRST numeric chip value (quantity)
+  function handleUpdate(btn) {
+    if (btn.disabled) return;
+    const card = btn.closest('.resource-card');
+    const firstChip = card.querySelector('.detail-chip .detail-val');
+    if (firstChip) {
+      const n = parseInt(firstChip.textContent);
+      if (!isNaN(n) && n > 0) {
+        const decrement = Math.max(1, Math.floor(n * 0.05)); // use 5% per update
+        firstChip.textContent = Math.max(0, n - decrement);
+      }
+    }
+    // Recalculate progress %
+    const fill = card.querySelector('.progress-fill');
+    const currentPct = parseInt(fill.style.width) || 0;
+    const newPct = Math.max(0, currentPct - 5);
+    applyStatus(card, newPct);
+    updateSummary();
+
+    btn.disabled = true;
+    btn.textContent = '✓ Saved';
+    showToast(typeof t==='function' ? t('toast_res_updated') : 'Resource updated');
+    setTimeout(() => { btn.disabled = false; btn.setAttribute('data-i18n','res_btn_update'); btn.textContent = (typeof t==='function'?t('res_btn_update'):'Update'); }, 1500);
+  }
+
+  function handleRequest(btn, itemName) {
+    if (btn.dataset.busy) return;
+    btn.dataset.busy = '1';
+    const origText = btn.textContent;
+    btn.innerHTML = '<span style="opacity:0.5">...</span>';
+    setTimeout(() => {
+      const label = origText === 'Share' ? 'Shared' : 'Requested';
+      btn.textContent = label;
+      btn.style.borderColor = 'var(--blue)';
+      btn.style.color = 'var(--blue)';
+      showToast(origText === 'Share'
+        ? `${itemName} ` + (typeof t==='function'?t('toast_new_res'):'broadcasted')
+        : `${itemName} ` + (typeof t==='function'?t('toast_req_broadcast'):'request broadcasted'));
+      setTimeout(() => {
+        btn.textContent = origText;
+        btn.style.borderColor = '';
+        btn.style.color = '';
+        delete btn.dataset.busy;
+      }, 3000);
     }, 600);
   }
 
-  function handleUpdate(btn) {
-    const oldHtml = btn.innerHTML;
-    btn.innerHTML = `✓ Saved`;
-    showToast(t('toast_res_updated'));
-    setTimeout(() => btn.innerHTML = oldHtml, 2000);
-  }
-
   function handleFulfill(btn) {
-    const oldText = btn.innerText;
-    const oldBg = btn.style.background;
-    const oldColor = btn.style.color;
-
-    if(oldText === 'Fulfilled') return;
-
-    btn.innerHTML = `...`;
+    if (btn.dataset.busy) return;
+    btn.dataset.busy = '1';
+    const origText = btn.textContent;
+    btn.textContent = '...';
     setTimeout(() => {
-        btn.innerText = 'Fulfilled';
-        btn.style.background = 'var(--green)';
-        btn.style.color = 'black';
-        
-        showToast(t('toast_fulfilling'));
-
-        // Reset after 3 seconds
-        setTimeout(() => {
-            btn.innerText = oldText;
-            btn.style.background = oldBg;
-            btn.style.color = oldColor;
-        }, 3000);
-
+      btn.textContent = 'Fulfilled';
+      btn.style.background = 'var(--green)';
+      btn.style.color = 'black';
+      showToast(typeof t==='function' ? t('toast_fulfilling') : 'Fulfilling request...');
+      // Remove request item after brief pause
+      setTimeout(() => {
+        const item = btn.closest('.request-item');
+        if (item) { item.style.opacity = '0'; item.style.transition = 'opacity 0.4s'; setTimeout(() => item.remove(), 400); }
+      }, 1000);
     }, 500);
   }
 
-  function openAddOverlay() {
-      document.getElementById('addOverlay').classList.add('open');
-  }
-
-  function closeAddOverlay() {
-      document.getElementById('addOverlay').classList.remove('open');
-  }
+  function openAddOverlay()  { document.getElementById('addOverlay').classList.add('open'); }
+  function closeAddOverlay() { document.getElementById('addOverlay').classList.remove('open'); }
 
   function submitAddResource() {
-      const name = document.getElementById('newResName').value || 'New Resource';
-      const qty = document.getElementById('newResQty').value || '1';
-      closeAddOverlay();
-      showToast(`${qty}x ${name} ` + t('toast_req_broadcast'));
-      document.getElementById('newResName').value = '';
-      document.getElementById('newResQty').value = '';
+    const name = document.getElementById('newResName').value.trim() || 'New Resource';
+    const qty  = document.getElementById('newResQty').value || '1';
+    closeAddOverlay();
+    showToast(`${qty}x ${name} ` + (typeof t==='function'?t('toast_req_broadcast'):'broadcasted'));
+    document.getElementById('newResName').value = '';
+    document.getElementById('newResQty').value  = '';
   }
 
-  // Animate progress bars on load
-  document.addEventListener('DOMContentLoaded', () => {
+  // Animate progress bars on load — works whether DOM is ready or not
+  function animateBars() {
     document.querySelectorAll('.progress-fill').forEach(bar => {
-      const w = bar.style.width; bar.style.width = '0%';
+      const w = bar.style.width;
+      bar.style.width = '0%';
       setTimeout(() => bar.style.width = w, 200);
     });
-  });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', animateBars);
+  } else {
+    animateBars();
+  }
 </script>
 <script src="../i18n.js"></script>
   <script src="../store.js"></script>

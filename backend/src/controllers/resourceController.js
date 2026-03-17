@@ -1,6 +1,8 @@
 const Resource = require('../models/Resource');
 
-// @desc    Get public/aggregated resources (e.g., for a shelter view)
+const VALID_TYPES = ['medical', 'water', 'food', 'shelter', 'equipment', 'communication', 'power', 'other'];
+
+// @desc    Get public/aggregated resources
 // @route   GET /api/resources/public
 // @access  Private
 const getPublicResources = async (req, res) => {
@@ -10,7 +12,7 @@ const getPublicResources = async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(resources);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to retrieve resources' });
   }
 };
 
@@ -23,7 +25,7 @@ const getMyResources = async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(resources);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to retrieve resources' });
   }
 };
 
@@ -34,9 +36,12 @@ const addResource = async (req, res) => {
   try {
     const { type, quantity, unit, status, isPublic, location } = req.body;
 
-    // Optional: check if the resource already exists for this user and type
+    if (!type || !VALID_TYPES.includes(type)) {
+      return res.status(400).json({ message: `Invalid resource type. Must be one of: ${VALID_TYPES.join(', ')}` });
+    }
+
     let existingResource = await Resource.findOne({ ownerId: req.user._id, type });
-    
+
     if (existingResource) {
       existingResource.quantity = quantity !== undefined ? quantity : existingResource.quantity;
       existingResource.unit = unit !== undefined ? unit : existingResource.unit;
@@ -50,22 +55,13 @@ const addResource = async (req, res) => {
 
     const resource = await Resource.create({
       ownerId: req.user._id,
-      type,
-      quantity,
-      unit,
-      status,
-      isPublic,
-      location
+      type, quantity, unit, status, isPublic, location
     });
 
     res.status(201).json(resource);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to save resource' });
   }
 };
 
-module.exports = {
-  getPublicResources,
-  getMyResources,
-  addResource
-};
+module.exports = { getPublicResources, getMyResources, addResource };

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
 const protect = async (req, res, next) => {
   let token;
@@ -13,19 +14,21 @@ const protect = async (req, res, next) => {
 
       // Find user and attach to request
       req.user = await User.findById(decoded.id).select('-password');
-      
+
       if (!req.user) {
         return res.status(401).json({ message: 'User not found' });
       }
-      
-      return next(); // Explicit return
+
+      return next();
     } catch (error) {
-      console.error('Token verification failed:', error);
+      logger.error(`Token verification failed from IP ${req.ip}: ${error.message}`);
+      logger.warn(`Failed auth attempt — IP: ${req.ip}, time: ${new Date().toISOString()}`);
       return res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }
 
   if (!token) {
+    logger.warn(`No token provided — IP: ${req.ip}, path: ${req.originalUrl}, time: ${new Date().toISOString()}`);
     return res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
@@ -33,8 +36,8 @@ const protect = async (req, res, next) => {
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ 
-        message: `User role '${req.user.role}' is not authorized to access this route` 
+      return res.status(403).json({
+        message: `Access denied — insufficient permissions`
       });
     }
     next();

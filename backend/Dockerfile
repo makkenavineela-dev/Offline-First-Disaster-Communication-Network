@@ -21,5 +21,8 @@ RUN rm -f .env
 # Expose standard port
 EXPOSE 5000
  
+# Run as non-root user for security
+USER node
+
 # Start the server
 CMD [ "node", "server.js" ]

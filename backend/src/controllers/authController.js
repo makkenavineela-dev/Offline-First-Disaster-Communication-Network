@@ -1,13 +1,15 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 
 // Generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
-  });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
+
+// Dummy hash for constant-time comparison when user not found (prevents timing attacks)
+const DUMMY_HASH = '$2a$12$invalidhashpadding1234567890123456789012345678901234';
 
 // @desc    Register a new node/user
 // @route   POST /api/auth/register
@@ -27,9 +29,7 @@ const registerUser = async (req, res) => {
     }
 
     const user = await User.create({
-      name,
-      deviceId,
-      password,
+      name, deviceId, password,
       role: role || 'civilian',
       zone: zone || 'Unassigned',
     });
@@ -47,7 +47,7 @@ const registerUser = async (req, res) => {
       res.status(400).json({ message: 'Invalid user data' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Registration failed' });
   }
 };
 
@@ -65,8 +65,13 @@ const loginUser = async (req, res) => {
 
     const user = await User.findOne({ deviceId });
 
-    if (user && (await user.matchPassword(password))) {
-      res.json({
+    // Always run bcrypt compare to prevent timing attacks
+    // If user doesn't exist, compare against dummy hash (same time cost)
+    const passwordToCheck = user ? user.password : DUMMY_HASH;
+    const isMatch = await bcrypt.compare(password, passwordToCheck);
+
+    if (user && isMatch) {
+      return res.status(200).json({
         _id: user._id,
         name: user.name,
         deviceId: user.deviceId,
@@ -75,10 +80,10 @@ const loginUser = async (req, res) => {
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid device ID or password' });
+      return res.status(401).json({ message: 'Invalid device ID or password' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Login failed' });
   }
 };
 
@@ -88,9 +93,8 @@ const loginUser = async (req, res) => {
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-
     if (user) {
-      res.json({
+      res.status(200).json({
         _id: user._id,
         name: user.name,
         deviceId: user.deviceId,
@@ -103,7 +107,7 @@ const getUserProfile = async (req, res) => {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to retrieve profile' });
   }
 };
 
@@ -118,7 +122,6 @@ const updateLocation = async (req, res) => {
 
   try {
     const { lat, lng } = req.body;
-
     const user = await User.findById(req.user._id);
 
     if (user) {
@@ -127,20 +130,14 @@ const updateLocation = async (req, res) => {
         coordinates: [parseFloat(lng), parseFloat(lat)],
         timestamp: new Date()
       };
-
       const updatedUser = await user.save();
-      res.json(updatedUser.location);
+      res.status(200).json(updatedUser.location);
     } else {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Failed to update location' });
   }
 };
 
-module.exports = {
-  registerUser,
-  loginUser,
-  getUserProfile,
-  updateLocation
-};
+module.exports = { registerUser, loginUser, getUserProfile, updateLocation };

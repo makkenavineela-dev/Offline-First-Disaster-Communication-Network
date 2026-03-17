@@ -905,12 +905,16 @@ window.t = t;
 async function changeLanguage(langCode) {
     const selectEl = document.getElementById('langSelect');
     if(selectEl) selectEl.blur(); // remove focus
-    
-    // Save to global app store to persist (which maps to AsyncStorage/localStorage)
+
+    // Only persist if language actually changed — prevents infinite subscribe loop:
+    // subscribe → changeLanguage → updateState → notify → subscribe → ...
     if (window.appStore) {
-      await window.appStore.updateState({ 
-        user: { ...window.appStore.getState().user, language: langCode } 
-      });
+      const currentLang = window.appStore.getState()?.user?.language;
+      if (currentLang !== langCode) {
+        await window.appStore.updateState({
+          user: { ...window.appStore.getState().user, language: langCode }
+        });
+      }
     }
     
     // Fallback to English if translation is missing for a key
