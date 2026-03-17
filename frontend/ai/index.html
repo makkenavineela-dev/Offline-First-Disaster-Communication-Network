@@ -8,113 +8,73 @@
 <title>RESQ — AI Assistant</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  :root {
-    --red:#FF1F1F; --amber:#FFAA00; --green:#00E676; --blue:#2979FF;
-    --white:#F5F5F0; --black:#0A0A0A; --gray2:#1E1E1E; --gray3:#2A2A2A; --muted:#666;
-  }
-  html,body { height:100%; background:#080808; font-family:'Barlow',sans-serif; }
-  .phone { width:100%; height:100%; background:var(--black); display:flex; flex-direction:column; overflow:hidden; }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{--red:#FF1F1F;--amber:#FFAA00;--green:#00E676;--blue:#2979FF;--white:#F5F5F0;--black:#0A0A0A;--g2:#1E1E1E;--g3:#2A2A2A;--muted:#666}
+  html,body{height:100%;background:#080808;font-family:'Barlow',sans-serif}
+  .phone{width:100%;height:100%;background:var(--black);display:flex;flex-direction:column;overflow:hidden}
 
-  /* HEADER */
-  .hdr {
-    padding:max(4px,env(safe-area-inset-top)) 16px 10px;
-    display:flex; align-items:center; gap:12px; flex-shrink:0;
-    border-bottom:1px solid var(--gray3);
-    background:rgba(10,10,10,0.97); backdrop-filter:blur(10px);
-  }
-  .back { width:36px; height:36px; border-radius:10px; background:var(--gray2);
-    display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; }
-  .back svg { width:18px; height:18px; fill:var(--white); }
-  .hdr-info { flex:1; }
-  .hdr-title { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:900; color:var(--white); }
-  .hdr-sub { font-size:10px; color:var(--green); margin-top:1px; display:flex; align-items:center; gap:5px; }
-  .live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-  .hdr-badge {
-    padding:4px 10px; border-radius:100px; font-size:10px; font-weight:700; letter-spacing:1px;
-    background:rgba(41,121,255,0.15); border:1px solid rgba(41,121,255,0.4); color:var(--blue);
-  }
+  .hdr{padding:max(4px,env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:1px solid var(--g3);background:rgba(10,10,10,.97)}
+  .back{width:36px;height:36px;border-radius:10px;background:var(--g2);display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0}
+  .back svg{width:18px;height:18px;fill:var(--white)}
+  .hdr-info{flex:1}
+  .hdr-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--white)}
+  .hdr-sub{font-size:10px;color:var(--green);margin-top:1px;display:flex;align-items:center;gap:5px}
+  .ldot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:bl 2s infinite}
+  @keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+  .hdr-badge{padding:4px 10px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:1px;background:rgba(41,121,255,.15);border:1px solid rgba(41,121,255,.4);color:var(--blue)}
 
-  /* CHAT */
-  .chat { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; scrollbar-width:none; }
-  .chat::-webkit-scrollbar { display:none; }
-  .row { display:flex; gap:8px; max-width:92%; animation:msgIn .2s ease; }
-  @keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  .row.bot { align-self:flex-start; }
-  .row.user { align-self:flex-end; flex-direction:row-reverse; }
-  .av { width:30px; height:30px; border-radius:9px; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-size:15px; }
-  .row.bot .av { background:var(--gray2); border:1px solid var(--gray3); }
-  .row.user .av { background:var(--gray3); }
-  .bub { padding:10px 13px; border-radius:14px; font-size:13.5px; line-height:1.55; white-space:pre-wrap; }
-  .row.bot .bub { background:var(--gray2); border:1px solid var(--gray3); color:var(--white); border-bottom-left-radius:3px; }
-  .row.user .bub { background:linear-gradient(135deg,#1a3060,#102040); border:1px solid rgba(41,121,255,0.3); color:var(--white); border-bottom-right-radius:3px; }
+  .chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
+  .chat::-webkit-scrollbar{display:none}
+  .row{display:flex;gap:8px;max-width:93%;animation:mi .2s ease}
+  @keyframes mi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .row.bot{align-self:flex-start}
+  .row.user{align-self:flex-end;flex-direction:row-reverse}
+  .av{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .row.bot .av{background:var(--g2);border:1px solid var(--g3)}
+  .row.user .av{background:var(--g3)}
+  .bub{padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.55;white-space:pre-wrap}
+  .row.bot .bub{background:var(--g2);border:1px solid var(--g3);color:var(--white);border-bottom-left-radius:3px}
+  .row.user .bub{background:linear-gradient(135deg,#1a3060,#102040);border:1px solid rgba(41,121,255,.3);color:var(--white);border-bottom-right-radius:3px}
 
-  /* NLP TAG */
-  .nlp-tag { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:100px;
-    font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; margin-bottom:5px; }
-  .t-sos    { background:rgba(255,31,31,.15);   border:1px solid rgba(255,31,31,.4);   color:var(--red); }
-  .t-injury { background:rgba(255,170,0,.15);   border:1px solid rgba(255,170,0,.4);   color:var(--amber); }
-  .t-fire   { background:rgba(255,100,0,.15);   border:1px solid rgba(255,100,0,.4);   color:#FF6400; }
-  .t-flood  { background:rgba(41,121,255,.15);  border:1px solid rgba(41,121,255,.4);  color:var(--blue); }
-  .t-quake  { background:rgba(255,170,0,.15);   border:1px solid rgba(255,170,0,.4);   color:var(--amber); }
-  .t-ok     { background:rgba(0,230,118,.1);    border:1px solid rgba(0,230,118,.3);   color:var(--green); }
-  .conf-bar { height:3px; border-radius:2px; margin-top:6px; margin-bottom:2px; background:var(--gray3); overflow:hidden; }
-  .conf-fill { height:100%; background:var(--green); transition:width .5s; }
+  .tag{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px}
+  .ti{background:rgba(255,170,0,.15);border:1px solid rgba(255,170,0,.4);color:var(--amber)}
+  .ts{background:rgba(255,31,31,.15);border:1px solid rgba(255,31,31,.4);color:var(--red)}
+  .tf{background:rgba(255,100,0,.15);border:1px solid rgba(255,100,0,.4);color:#FF6400}
+  .tw{background:rgba(41,121,255,.15);border:1px solid rgba(41,121,255,.4);color:var(--blue)}
+  .tq{background:rgba(255,170,0,.15);border:1px solid rgba(255,170,0,.4);color:var(--amber)}
+  .tok{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);color:var(--green)}
 
-  /* SOS CARD */
-  .sos-card { background:rgba(255,31,31,.08); border:1px solid rgba(255,31,31,.3); border-radius:12px; padding:12px 14px; margin-top:8px; }
-  .sos-card-title { font-size:12px; font-weight:700; color:var(--red); margin-bottom:4px; }
-  .sos-card-btn { width:100%; padding:11px; border-radius:10px; border:none;
-    background:var(--red); color:white; font-family:'Barlow Condensed',sans-serif;
-    font-size:15px; font-weight:900; letter-spacing:2px; cursor:pointer; margin-top:8px; }
+  .conf{height:3px;border-radius:2px;margin:5px 0 3px;background:var(--g3);overflow:hidden}
+  .conf-fill{height:100%;background:var(--green);transition:width .5s}
+  .conf-label{font-size:10px;color:var(--muted);margin-bottom:5px}
 
-  /* CHOICES */
-  .choices { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-  .ch { background:var(--gray3); border:1px solid #444; border-radius:10px;
-    padding:9px 12px; font-size:13px; color:var(--white); cursor:pointer; text-align:left; transition:all .15s; }
-  .ch:active { transform:scale(.98); }
-  .ch.danger { border-color:rgba(255,31,31,.4); }
-  .ch.ok { border-color:rgba(0,230,118,.4); }
+  .sos-card{background:rgba(255,31,31,.08);border:1px solid rgba(255,31,31,.3);border-radius:12px;padding:12px 14px;margin-top:8px}
+  .sos-card-t{font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px}
+  .sos-btn{width:100%;padding:11px;border-radius:10px;border:none;background:var(--red);color:white;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;letter-spacing:2px;cursor:pointer;margin-top:8px}
 
-  /* TYPING */
-  .typing { display:flex; gap:4px; padding:12px 14px; align-items:center; }
-  .typing span { width:7px; height:7px; border-radius:50%; background:var(--muted); animation:typ 1s infinite; }
-  .typing span:nth-child(2){animation-delay:.2s} .typing span:nth-child(3){animation-delay:.4s}
-  @keyframes typ{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+  .typing{display:flex;gap:4px;padding:12px 14px;align-items:center}
+  .typing span{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:ty 1s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+  @keyframes ty{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
 
-  /* INPUT */
-  .inp-bar { flex-shrink:0; padding:10px 14px max(12px,env(safe-area-inset-bottom));
-    background:rgba(10,10,10,.97); border-top:1px solid var(--gray3); display:flex; align-items:flex-end; gap:9px; }
-  .inp-wrap { flex:1; background:var(--gray2); border:1px solid var(--gray3); border-radius:20px;
-    padding:9px 13px; display:flex; align-items:center; gap:7px; transition:border-color .2s; }
-  .inp-wrap:focus-within { border-color:rgba(41,121,255,.5); }
-  .inp { flex:1; background:none; border:none; outline:none; color:var(--white);
-    font-family:'Barlow',sans-serif; font-size:14px; resize:none; max-height:80px; line-height:1.4; }
-  .inp::placeholder { color:var(--muted); }
-  .mic { width:34px; height:34px; border-radius:50%; background:var(--gray3); border:none; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .2s; }
-  .mic svg { width:16px; height:16px; fill:var(--muted); }
-  .mic.on { background:rgba(255,31,31,.2); animation:pring 1s ease-in-out infinite; }
-  .mic.on svg { fill:var(--red); }
-  @keyframes pring{0%,100%{box-shadow:0 0 0 0 rgba(255,31,31,.4)}50%{box-shadow:0 0 0 7px rgba(255,31,31,0)}}
-  .send { width:42px; height:42px; border-radius:50%; background:var(--blue); border:none; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    box-shadow:0 4px 14px rgba(41,121,255,.4); transition:transform .1s; }
-  .send:active { transform:scale(.91); }
-  .send svg { width:17px; height:17px; fill:white; }
+  .inp-bar{flex-shrink:0;padding:10px 14px max(12px,env(safe-area-inset-bottom));background:rgba(10,10,10,.97);border-top:1px solid var(--g3);display:flex;align-items:flex-end;gap:9px}
+  .inp-wrap{flex:1;background:var(--g2);border:1px solid var(--g3);border-radius:20px;padding:9px 13px;display:flex;align-items:center;gap:7px;transition:border-color .2s}
+  .inp-wrap:focus-within{border-color:rgba(41,121,255,.5)}
+  .inp{flex:1;background:none;border:none;outline:none;color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;resize:none;max-height:80px;line-height:1.4}
+  .inp::placeholder{color:var(--muted)}
+  .mic{width:34px;height:34px;border-radius:50%;background:var(--g3);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s}
+  .mic svg{width:16px;height:16px;fill:var(--muted)}
+  .mic.on{background:rgba(255,31,31,.2);animation:pr 1s ease-in-out infinite}
+  .mic.on svg{fill:var(--red)}
+  @keyframes pr{0%,100%{box-shadow:0 0 0 0 rgba(255,31,31,.4)}50%{box-shadow:0 0 0 7px rgba(255,31,31,0)}}
+  .send{width:42px;height:42px;border-radius:50%;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 14px rgba(41,121,255,.4);transition:transform .1s}
+  .send:active{transform:scale(.91)}
+  .send svg{width:17px;height:17px;fill:white}
 
-  /* QUICK PILLS */
-  .pills { flex-shrink:0; padding:0 12px 8px; display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; }
-  .pills::-webkit-scrollbar { display:none; }
-  .pill { flex-shrink:0; padding:6px 11px; border-radius:100px; background:var(--gray2);
-    border:1px solid var(--gray3); font-size:12px; color:var(--muted); cursor:pointer; white-space:nowrap; }
-  .pill:active { border-color:var(--blue); color:var(--blue); }
-
-  /* NLP LOADING */
-  .nlp-ready { display:none; }
-  .nlp-loading { font-size:11px; color:var(--muted); text-align:center; padding:6px; }
+  .pills{flex-shrink:0;padding:0 12px 8px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+  .pills::-webkit-scrollbar{display:none}
+  .pill{flex-shrink:0;padding:6px 11px;border-radius:100px;background:var(--g2);border:1px solid var(--g3);font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap}
+  .pill:active{border-color:var(--blue);color:var(--blue)}
 </style>
 <link rel="manifest" href="/manifest.json">
 </head>
@@ -126,7 +86,7 @@
     </a>
     <div class="hdr-info">
       <div class="hdr-title">RESQ AI</div>
-      <div class="hdr-sub"><span class="live-dot"></span><span id="nlpStatus">Loading NLP engine…</span></div>
+      <div class="hdr-sub"><span class="ldot"></span><span id="nlpSt">Loading NLP…</span></div>
     </div>
     <div class="hdr-badge">OFFLINE</div>
   </div>
@@ -134,18 +94,20 @@
   <div class="chat" id="chat"></div>
 
   <div class="pills">
-    <div class="pill" onclick="ask('I am bleeding badly')">🩸 Bleeding</div>
-    <div class="pill" onclick="ask('There is a fire')">🔥 Fire</div>
-    <div class="pill" onclick="ask('Someone is not breathing')">❤️ Not breathing</div>
-    <div class="pill" onclick="ask('I am trapped inside')">🏚️ Trapped</div>
-    <div class="pill" onclick="ask('Flood water is rising')">🌊 Flood</div>
-    <div class="pill" onclick="ask('Earthquake happened')">🌍 Earthquake</div>
-    <div class="pill" onclick="ask('I am lost')">📍 Lost</div>
-    <div class="pill" onclick="ask('Snake bite on my hand')">🐍 Snake bite</div>
-    <div class="pill" onclick="ask('Someone had a stroke')">🧠 Stroke</div>
-    <div class="pill" onclick="ask('Person is choking')">🫁 Choking</div>
-    <div class="pill" onclick="ask('Severe burns on body')">🔥 Burns</div>
-    <div class="pill" onclick="ask('Broken bone fracture')">🦴 Fracture</div>
+    <div class="pill" onclick="ask(\"i cant breathe\")">🫁 Can't Breathe</div>
+    <div class="pill" onclick="ask(\"I am bleeding badly\")">🩸 Bleeding</div>
+    <div class="pill" onclick="ask(\"chest pain heart attack\")">❤️ Chest Pain</div>
+    <div class="pill" onclick="ask(\"there is fire and smoke\")">🔥 Fire/Smoke</div>
+    <div class="pill" onclick="ask(\"flood water rising\")">🌊 Flood</div>
+    <div class="pill" onclick="ask(\"building collapsed earthquake\")">🌍 Earthquake</div>
+    <div class="pill" onclick="ask(\"someone unconscious not moving\")">😵 Unconscious</div>
+    <div class="pill" onclick="ask(\"I am trapped inside\")">🏚️ Trapped</div>
+    <div class="pill" onclick="ask(\"severe burn on skin\")">🔥 Burns</div>
+    <div class="pill" onclick="ask(\"broken bone fracture\")">🦴 Fracture</div>
+    <div class="pill" onclick="ask(\"snake bite on hand\")">🐍 Snake Bite</div>
+    <div class="pill" onclick="ask(\"having a seizure\")">⚡ Seizure</div>
+    <div class="pill" onclick="ask(\"allergic reaction swollen\")">🐝 Allergy</div>
+    <div class="pill" onclick="ask(\"I am lost\")">📍 Lost</div>
   </div>
 
   <div class="inp-bar">
@@ -163,484 +125,673 @@
   </div>
 </div>
 
-<!-- compromise.js NLP engine (~350KB, fully offline) -->
 <script src="../lib/compromise.js"></script>
 <script>
-// ═══════════════════════════════════════════════════════════
-//  RESQ AI — Real NLP Engine using compromise.js
-//  Works 100% offline · No internet needed · ~350KB model
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
+//  RESQ AI — NLP Emergency Assistant
+//  Uses compromise.js (350KB) + expanded matching engine
+//  100% offline · No internet needed
+// ════════════════════════════════════════════════════════
 
-const chat = document.getElementById('chat');
-let SR = null, isListening = false;
-let context = []; // conversation memory
+const chatEl = document.getElementById('chat');
+let SR = null, isListening = false, ctx = [];
 
-// ── KNOWLEDGE BASE ────────────────────────────────────────
+// ── KNOWLEDGE BASE ───────────────────────────────────────
+// Each entry has:
+//   tokens : individual words that score (each word = 1pt)
+//   phrases: multi-word phrases that score higher (each = 3pts)
+//   tag/label/answer/sos
+
 const KB = [
   {
-    id:'bleeding', tag:'t-injury', label:'Injury / Bleeding',
-    nouns: ['blood','bleeding','wound','cut','stab','gash','puncture','laceration','injury','rod','nail','glass','metal','spike','knife'],
-    verbs: ['bleed','cut','stab','hurt','injured','stuck','pierce','embedded'],
-    body: ['leg','arm','hand','head','chest','neck','foot','finger','stomach','abdomen','back','shoulder'],
-    answer: `🩸 BLEEDING / WOUND — First Aid
+    id:'breathing', tag:'ts', label:'🆘 Breathing Emergency',
+    tokens:['breathe','breathing','breath','suffocate','suffocating','airway','inhale','exhale','asphyxia','respiratory','oxygen','air','windpipe','trachea','asthma','wheeze','wheezing'],
+    phrases:['cant breathe','cannot breathe','not breathing','hard to breathe','difficulty breathing','trouble breathing','short of breath','out of breath','no breath','breath stopped','stopped breathing','no air','losing breath','breath tight'],
+    answer:`🫁 BREATHING EMERGENCY
 
-1️⃣  Apply FIRM direct pressure with clean cloth — press hard
-2️⃣  Do NOT remove cloth if blood soaks through — add more on top
-3️⃣  Elevate the limb above heart level if possible
-4️⃣  If object is embedded (rod/nail/glass): do NOT remove it — stabilize it and keep still
+Is the person CONSCIOUS?
+
+► If YES and something is stuck (CHOKING):
+1️⃣  Give 5 firm BACK BLOWS between shoulder blades
+2️⃣  5 ABDOMINAL THRUSTS: stand behind, pull fist sharply inward + upward
+3️⃣  Alternate until object is cleared
+
+► If YES but no blockage (ASTHMA / RESPIRATORY):
+1️⃣  Sit person upright — leaning slightly forward
+2️⃣  Loosen any tight clothing around chest and neck
+3️⃣  Use inhaler if available (2 puffs)
+4️⃣  Keep them calm — anxiety makes it worse
+5️⃣  Breathe together slowly — in 4 counts, out 4 counts
+
+► If UNCONSCIOUS / NOT BREATHING:
+1️⃣  Tilt head back, lift chin
+2️⃣  30 chest compressions (fast, 2 inches deep)
+3️⃣  2 rescue breaths — pinch nose, seal mouth
+4️⃣  Repeat until breathing returns
+
+⚠️  All breathing emergencies = SOS immediately`,
+    sos:true
+  },
+  {
+    id:'cardiac', tag:'ts', label:'❤️ Heart / Cardiac',
+    tokens:['heart','cardiac','chest','coronary','pulse','heartbeat','palpitation','artery','infarction','angina','ecg','defibrillator'],
+    phrases:['chest pain','heart attack','heart stopped','heart failure','chest tight','chest pressure','chest crushing','heart racing','no pulse','cardiac arrest','pain in chest','left arm pain','arm pain','jaw pain','shortness breath'],
+    answer:`❤️ HEART ATTACK / CARDIAC ARREST
+
+SIGNS: Chest crushing/pressure, left arm pain, jaw pain, sweating, nausea
+
+IF CONSCIOUS (Heart Attack):
+1️⃣  Sit or lie the person down — do NOT let them walk around
+2️⃣  Loosen tight clothing
+3️⃣  Give aspirin (300mg) to chew if available and not allergic
+4️⃣  Stay calm and still — exertion makes it worse
+5️⃣  Monitor breathing constantly
+
+IF UNCONSCIOUS (Cardiac Arrest):
+1️⃣  Check breathing for 10 seconds
+2️⃣  Start CPR immediately:
+      • Hands center of chest
+      • Push HARD and FAST — 100/min, 2 inches deep
+      • 30 compressions → 2 rescue breaths
+3️⃣  Do NOT stop until person breathes or help arrives
+
+⚠️  Cardiac arrest = SOS immediately — every second counts`,
+    sos:true
+  },
+  {
+    id:'bleeding', tag:'ti', label:'🩸 Bleeding / Wound',
+    tokens:['bleed','blood','wound','cut','gash','stab','slash','laceration','puncture','injury','injured','rod','nail','glass','metal','spike','knife','sharp','hemorrhage','hemmorhage'],
+    phrases:['bleeding badly','heavy bleeding','blood everywhere','wont stop bleeding','deep cut','deep wound','object stuck','metal stuck','rod stuck','nail stuck','blood loss','losing blood','profuse bleeding','cut artery'],
+    answer:`🩸 BLEEDING / WOUND
+
+1️⃣  Apply FIRM direct pressure with clean cloth — press HARD
+2️⃣  Do NOT remove cloth if soaking through — add more on top
+3️⃣  Elevate the injured limb above heart level
+4️⃣  If object is embedded (rod/nail/glass):
+      → Do NOT pull it out — stabilize it with cloth padding
+      → Keep person still
 5️⃣  Press continuously for 10+ minutes without releasing
 
-⚠️  Spurting blood or object embedded = LIFE THREATENING
-👉  Trigger SOS immediately`,
-    sos: true
+TOURNIQUET (last resort — limb only):
+→ Tie cloth tightly 2 inches ABOVE wound
+→ Twist until bleeding stops
+→ Note the time applied
+
+⚠️  Arterial bleeding (spurting) = life threatening → SOS NOW`,
+    sos:true
   },
   {
-    id:'burns', tag:'t-fire', label:'Burns',
-    nouns: ['burn','scald','blister','flame','heat','fire','chemical','acid','steam'],
-    verbs: ['burn','burnt','burned','scalded','melt'],
-    body: ['skin','hand','face','arm','leg','body'],
-    answer: `🔥 BURNS — First Aid
+    id:'unconscious', tag:'ts', label:'😵 Unconscious / CPR',
+    tokens:['unconscious','unresponsive','faint','fainted','coma','comatose','limp','revive','resuscitate','cpr','pulse','wake','awake','respond','response'],
+    phrases:['not moving','cannot wake','cant wake','wont wake','passed out','fell down','collapsed','not responding','no response','no pulse','person fell','fell unconscious','blacked out','lost consciousness','not waking up'],
+    answer:`😵 UNCONSCIOUS PERSON — Act Immediately
 
-1️⃣  Cool immediately under running water for 20 minutes — NOT ice
-2️⃣  Remove clothing or jewellery near burn (only if not stuck to skin)
+1️⃣  Shout "Are you OK?" and FIRMLY tap shoulder
+2️⃣  If no response → call for help + check breathing:
+      Tilt head back, lift chin, look-listen-feel for 10 sec
+
+IF BREATHING:
+→ Recovery position: roll onto side, head tilted back
+→ Monitor breathing every 2 minutes
+
+IF NOT BREATHING:
+→ START CPR NOW:
+1️⃣  Place heel of hand on CENTER of chest
+2️⃣  Push DOWN 2 inches HARD and FAST (100/min)
+3️⃣  30 compressions → 2 rescue breaths (pinch nose)
+4️⃣  KEEP GOING until they breathe or help arrives
+
+⚠️  Every minute without CPR = 10% less chance of survival
+      → SOS immediately`,
+    sos:true
+  },
+  {
+    id:'burns', tag:'tf', label:'🔥 Burns',
+    tokens:['burn','scald','blister','flame','heat','acid','chemical','hot','steam','fire','boiling'],
+    phrases:['skin burned','hand burned','face burned','severe burn','chemical burn','boiling water','acid burn','burnt skin','fire burn'],
+    answer:`🔥 BURNS — First Aid
+
+1️⃣  Cool under RUNNING WATER for 20 minutes — NOT ice
+2️⃣  Remove clothing and jewellery near burn (if NOT stuck to skin)
 3️⃣  Cover loosely with clean non-stick cloth
-4️⃣  Do NOT use butter, oil, toothpaste, or ice — they make it worse
-5️⃣  Do NOT pop blisters — infection risk
+4️⃣  Do NOT use butter, oil, toothpaste, or ice
+5️⃣  Do NOT burst blisters — infection risk
 
-⚠️  Burns larger than your palm, or on face/hands = SOS`,
-    sos: false
+SEVERITY:
+• 1st degree (red, no blister): Cool water, cover
+• 2nd degree (blisters): Cool water, cover, monitor
+• 3rd degree (white/black, no pain): Cover only, SOS
+
+⚠️  Larger than palm, or face/hands/genitals → SOS`,
+    sos:false
   },
   {
-    id:'cpr', tag:'t-sos', label:'Unconscious / CPR',
-    nouns: ['cpr','breathing','pulse','heartbeat','chest','cardiac','arrest','resuscitation'],
-    verbs: ['unconscious','unresponsive','collapse','faint','breathe','revive','wake'],
-    body: ['chest','heart'],
-    answer: `❤️ UNCONSCIOUS / CPR
+    id:'fracture', tag:'ti', label:'🦴 Fracture',
+    tokens:['fracture','bone','break','broke','broken','snap','crack','joint','dislocate','sprain','ankle','wrist','spine','rib'],
+    phrases:['broken bone','broken leg','broken arm','broken wrist','bone sticking out','bone through skin','open fracture','compound fracture','bone snap','bone crack','twisted ankle','dislocated shoulder'],
+    answer:`🦴 FRACTURE / BROKEN BONE
 
-1️⃣  Shout "Are you OK?" and tap shoulder firmly
-2️⃣  Tilt head back, lift chin — open airway
-3️⃣  Check breathing for 10 seconds (look, listen, feel)
-4️⃣  If not breathing → 30 chest compressions:
-      • Place hands center of chest
-      • Push 2 inches deep, fast (100/min)
-5️⃣  Give 2 rescue breaths (pinch nose, seal mouth)
-6️⃣  Repeat 30:2 until breathing returns
+1️⃣  Do NOT try to straighten or push bone back
+2️⃣  IMMOBILIZE with splint:
+      • 2 rigid objects (sticks/boards) on both sides
+      • Pad with cloth for comfort
+      • Tie ABOVE and BELOW the fracture — NOT over it
+3️⃣  Check circulation every 10 min:
+      • Feel for pulse below injury
+      • Check for numbness, coldness, pale skin
+4️⃣  Keep person still and warm
+5️⃣  For neck/spine injury: do NOT move at all
 
-⚠️  Do not stop compressions — send SOS immediately`,
-    sos: true
+OPEN FRACTURE (bone through skin):
+→ Cover with clean cloth — do NOT push bone back
+→ Apply gentle pressure around (not on) wound
+→ SOS immediately`,
+    sos:false
   },
   {
-    id:'choking', tag:'t-sos', label:'Choking',
-    nouns: ['throat','airway','food','object','choking','blockage'],
-    verbs: ['choke','choking','swallow','swallowed','breathe','cough'],
-    body: ['throat','mouth','neck'],
-    answer: `🫁 CHOKING
+    id:'seizure', tag:'ts', label:'⚡ Seizure',
+    tokens:['seizure','convulsion','convulsing','epilepsy','epileptic','fit','fitting','spasm','twitch','shaking','tremor','jerking'],
+    phrases:['having seizure','having a fit','body shaking uncontrollably','muscle spasm','losing control','body jerking','fell shaking','collapse shaking','convulsion attack'],
+    answer:`⚡ SEIZURE — What to Do
 
-1️⃣  Ask "Are you choking?" — if they can't speak, act immediately
-2️⃣  Lean them forward — give 5 firm BACK BLOWS between shoulder blades
-3️⃣  If not cleared → 5 ABDOMINAL THRUSTS (Heimlich):
-      • Stand behind them
-      • Fist above navel, pull sharply inward and upward
-4️⃣  Alternate back blows and thrusts until cleared
-5️⃣  For infant: face-down on forearm, firm back blows only
+DURING seizure:
+1️⃣  Stay CALM — most seizures last 1-3 minutes
+2️⃣  Clear area of hard/sharp objects
+3️⃣  Cushion head with something soft
+4️⃣  Do NOT hold down or restrain them
+5️⃣  Do NOT put anything in their mouth
+6️⃣  Turn them on their SIDE if possible (prevents choking)
+7️⃣  Time the seizure
 
-⚠️  If unconscious → start CPR and SOS`,
-    sos: true
+AFTER seizure:
+1️⃣  Recovery position — on side
+2️⃣  Speak calmly: "You're safe, stay still"
+3️⃣  They may be confused for up to 30 minutes — this is normal
+
+⚠️  Call SOS if:
+  • Seizure lasts more than 5 minutes
+  • Person does not regain consciousness
+  • Multiple seizures in a row
+  • First-ever seizure or injury during`,
+    sos:false
   },
   {
-    id:'fracture', tag:'t-injury', label:'Fracture / Broken Bone',
-    nouns: ['bone','fracture','break','crack','joint','limb','ankle','wrist','spine'],
-    verbs: ['break','broke','broken','snap','snapped','twist','dislocate','fracture'],
-    body: ['leg','arm','wrist','ankle','spine','back','neck','rib'],
-    answer: `🦴 FRACTURE / BROKEN BONE
+    id:'allergy', tag:'ts', label:'🐝 Allergic Reaction',
+    tokens:['allergy','allergic','reaction','anaphylaxis','anaphylactic','sting','bee','wasp','swollen','swelling','hives','rash','epipen','antihistamine'],
+    phrases:['allergic reaction','throat swelling','can\'t swallow','tongue swelling','face swelling','bee sting','wasp sting','severe allergy','skin rash','full body rash','breathing after sting'],
+    answer:`🐝 ALLERGIC REACTION
 
-1️⃣  Do NOT try to straighten or move the bone
-2️⃣  Immobilize with splint:
-      • Two sticks/boards on both sides of the injury
-      • Tie with cloth above AND below fracture site
-3️⃣  Pad between splint and skin for comfort
-4️⃣  Check circulation: pulse, warmth, sensation below injury
-5️⃣  Keep person calm, still, and warm
+MILD (rash, hives, itching):
+1️⃣  Remove allergen if known (sting, food, medication)
+2️⃣  Apply cold pack to reduce swelling
+3️⃣  Antihistamine tablet if available
+4️⃣  Monitor closely for 2 hours
 
-⚠️  Open fracture (bone through skin) → cover with clean cloth + SOS`,
-    sos: false
+SEVERE — ANAPHYLAXIS (throat swelling, can't breathe, face swelling):
+🚨 This is life-threatening — act in seconds
+1️⃣  Use EpiPen if available — outer thigh, hold 10 seconds
+2️⃣  Lay person FLAT — legs raised (unless breathing difficulty)
+3️⃣  If no EpiPen: keep upright if breathing problems
+4️⃣  If unconscious and not breathing → CPR
+5️⃣  A second dose of EpiPen may be needed in 5-15 min
+
+⚠️  Throat/tongue swelling = call SOS immediately`,
+    sos:true
   },
   {
-    id:'earthquake', tag:'t-quake', label:'Earthquake',
-    nouns: ['earthquake','tremor','quake','aftershock','rubble','debris','collapse','shaking'],
-    verbs: ['shake','shaking','collapse','crumble','rumble','fall'],
-    body: [],
-    answer: `🌍 EARTHQUAKE
+    id:'stroke', tag:'ts', label:'🧠 Stroke',
+    tokens:['stroke','paralysis','paralyzed','slur','slurred','droop','drooping','numb','numbness','vision','headache','dizzy','confusion','confused','face','speech'],
+    phrases:['face drooping','arm weakness','slurred speech','sudden headache','worst headache','one side weak','sudden confusion','sudden vision','cannot speak','cant speak','face droop','sudden nausea'],
+    answer:`🧠 STROKE — Use FAST Test
 
-DURING shaking:
-1️⃣  DROP on hands and knees immediately
-2️⃣  COVER under sturdy table, or against interior wall
-3️⃣  HOLD ON and protect head/neck with arms
-4️⃣  Away from windows, glass, and heavy furniture
+F — FACE: Ask them to SMILE
+    → One side drooping? = WARNING SIGN
 
-AFTER shaking stops:
-1️⃣  Check yourself and others for injuries
-2️⃣  Smell for gas — if detected, open windows and evacuate
-3️⃣  Do not use elevators — expect aftershocks
-4️⃣  Move to open area away from buildings`,
-    sos: false
-  },
-  {
-    id:'fire', tag:'t-fire', label:'Fire Emergency',
-    nouns: ['fire','smoke','flame','blaze','fumes','building','room','escape'],
-    verbs: ['burn','catch fire','spread','evacuate','escape','trapped'],
-    body: [],
-    answer: `🔥 FIRE EMERGENCY
+A — ARMS: Ask to raise BOTH arms
+    → One drifts or can't raise? = WARNING SIGN
 
-1️⃣  Alert everyone — shout FIRE, activate alarm if possible
-2️⃣  Crawl LOW under smoke — cleaner air near the floor
-3️⃣  FEEL door before opening — if hot, find another exit
-4️⃣  Use STAIRS only — never elevator
-5️⃣  Close doors behind you to slow fire spread
+S — SPEECH: Ask to say "The sky is blue"
+    → Slurred or strange words? = WARNING SIGN
 
-If TRAPPED:
-→ Seal door gap with cloth
-→ Signal from window: shout, wave bright cloth
-→ Trigger SOS now`,
-    sos: true
-  },
-  {
-    id:'flood', tag:'t-flood', label:'Flood',
-    nouns: ['flood','water','rain','river','tide','current','stream'],
-    verbs: ['rise','rising','flood','overflow','submerge','drown','swept'],
-    body: [],
-    answer: `🌊 FLOOD SURVIVAL
-
-1️⃣  Move to HIGHEST floor immediately — never go to basement
-2️⃣  Do NOT walk in moving water — 6 inches can knock you down
-3️⃣  Turn off electricity at main breaker if safe to do so
-4️⃣  Do NOT drink floodwater — it is contaminated
-
-If swept into water:
-→ Float on BACK, feet pointing downstream
-→ Grab fixed object to stop moving
-→ Do not fight the current
-
-Signal for rescue from window or roof → Trigger SOS`,
-    sos: true
-  },
-  {
-    id:'snake', tag:'t-injury', label:'Snake Bite',
-    nouns: ['snake','venom','bite','fang','poison','reptile'],
-    verbs: ['bite','bitten','sting','envenomed'],
-    body: ['foot','leg','hand','arm','ankle'],
-    answer: `🐍 SNAKE BITE
-
-1️⃣  Keep the person STILL and CALM — movement spreads venom faster
-2️⃣  Keep bitten limb at or BELOW heart level
-3️⃣  Remove tight clothing and jewellery near bite
-4️⃣  Do NOT cut or suck the wound
-5️⃣  Do NOT apply tourniquet or ice
-6️⃣  Note snake appearance (color, pattern) if safe to do so
-
-⚠️  All snake bites need antivenom — SOS immediately`,
-    sos: true
-  },
-  {
-    id:'stroke', tag:'t-sos', label:'Stroke',
-    nouns: ['stroke','face','arm','speech','headache','paralysis','vision','dizziness'],
-    verbs: ['droop','slur','numb','weak','paralyzed','confused'],
-    body: ['face','arm','leg','mouth'],
-    answer: `🧠 STROKE — Use FAST Test
-
-F — FACE: Ask to smile. One side drooping?
-A — ARMS: Ask to raise both. One drifting down?
-S — SPEECH: Ask to repeat a phrase. Slurred or strange?
-T — TIME: If YES to any → act immediately
+T — TIME: If ANY sign → Act NOW
 
 What to do:
-1️⃣  Keep person lying still and calm
-2️⃣  Do NOT give food or water
-3️⃣  Note exact time symptoms started
+1️⃣  Note exact time symptoms started
+2️⃣  Lay person down — head slightly elevated
+3️⃣  Do NOT give food, drink, or aspirin
 4️⃣  If unconscious → recovery position (on side)
-5️⃣  Do NOT let them "sleep it off"
+5️⃣  Loosen tight clothing around neck
 
-⚠️  Every minute matters — brain cells die — SOS immediately`,
-    sos: true
+⚠️  Brain cells die every minute — SOS immediately
+   "Time is brain" — treatment window is 4.5 hours`,
+    sos:true
   },
   {
-    id:'heat', tag:'t-injury', label:'Heat Stroke',
-    nouns: ['heat','sun','temperature','dehydration','exhaustion'],
-    verbs: ['overheat','faint','sweat','dizzy','collapse'],
-    body: ['body','skin','head'],
-    answer: `☀️ HEAT STROKE
+    id:'fire', tag:'tf', label:'🔥 Fire / Smoke',
+    tokens:['fire','smoke','flame','blaze','fumes','ember','ash','arson','inferno'],
+    phrases:['building fire','house fire','smoke everywhere','trapped fire','cant escape fire','fire spreading','fire alarm','smell smoke','inhaled smoke','smoke inhalation'],
+    answer:`🔥 FIRE / SMOKE EMERGENCY
 
-1️⃣  Move person to SHADE or cool area immediately
+IF IN A BUILDING WITH FIRE:
+1️⃣  Alert everyone — shout FIRE, pull alarm
+2️⃣  CRAWL low — smoke rises, cleaner air near floor
+3️⃣  Feel door with BACK of hand before opening
+      → Hot door = fire behind, find another exit
+4️⃣  Use STAIRS only — never elevator
+5️⃣  Close doors behind you (slows fire spread)
+
+IF TRAPPED:
+1️⃣  Seal door gap with wet cloth
+2️⃣  Signal from window — wave bright cloth, shout
+3️⃣  Do NOT break window unless escape route below
+4️⃣  Stay low, protect face
+
+SMOKE INHALATION:
+→ Wet cloth over nose/mouth
+→ Get fresh air immediately
+→ Cough deeply to clear airways
+
+⚠️  Trigger SOS if trapped`,
+    sos:true
+  },
+  {
+    id:'flood', tag:'tw', label:'🌊 Flood',
+    tokens:['flood','flooding','floodwater','water','rain','river','dam','tide','current','surge','inundation','submerge'],
+    phrases:['water rising','flood rising','water coming inside','water level','rising water','swept by water','in floodwater','cant get out flood','water entering','rain flooding'],
+    answer:`🌊 FLOOD SURVIVAL
+
+IF INDOORS:
+1️⃣  Move to HIGHEST floor immediately
+2️⃣  Do NOT go to basement
+3️⃣  Turn off electricity at main breaker (safely)
+4️⃣  Move valuables and food to high shelf
+5️⃣  Signal from window for rescue
+
+IF CAUGHT IN FLOODWATER:
+1️⃣  Do NOT walk in moving water — 6 inches knocks you down
+2️⃣  If swept away: float on BACK, feet downstream
+3️⃣  Feet act as bumpers against obstacles
+4️⃣  Grab fixed object (tree, pole) to stop
+5️⃣  Do NOT fight the current
+
+⚠️  Never drive through floodwater
+    Never drink floodwater — contaminated
+    → Trigger SOS if trapped`,
+    sos:true
+  },
+  {
+    id:'earthquake', tag:'tq', label:'🌍 Earthquake',
+    tokens:['earthquake','quake','tremor','aftershock','seismic','magnitude','richter','shake','shaking','rubble','debris','collapse'],
+    phrases:['building shaking','ground shaking','earth shaking','building collapsed','fell in earthquake','earthquake happening','after earthquake','trapped rubble','under debris'],
+    answer:`🌍 EARTHQUAKE
+
+DURING shaking:
+1️⃣  DROP to hands and knees
+2️⃣  COVER — under sturdy table or against interior wall
+3️⃣  HOLD ON — stay until shaking completely stops
+4️⃣  Stay AWAY from windows, glass, heavy furniture
+5️⃣  If outdoors: open area far from buildings and power lines
+
+AFTER shaking:
+1️⃣  Check yourself for injuries before helping others
+2️⃣  Smell for gas leaks (hissing sound, sulfur smell)
+      → If gas: open windows, evacuate immediately, no flames
+3️⃣  Do NOT use elevators
+4️⃣  Expect aftershocks — be ready to drop again
+5️⃣  Check for structural damage before re-entering
+
+TRAPPED in rubble:
+→ Cover mouth with cloth, tap on pipes rhythmically
+→ Flash phone torch, conserve voice`,
+    sos:false
+  },
+  {
+    id:'snake', tag:'ti', label:'🐍 Snake Bite',
+    tokens:['snake','venom','venomous','fang','bite','reptile','cobra','viper','python','antivenom'],
+    phrases:['snake bite','bitten by snake','snake bit me','snake attack','venomous bite','snake on leg','snake on hand'],
+    answer:`🐍 SNAKE BITE
+
+1️⃣  Keep person STILL and CALM — movement spreads venom
+2️⃣  Immobilize bitten limb at or BELOW heart level
+3️⃣  Remove tight clothing and jewellery near bite
+4️⃣  Clean bite with water gently
+5️⃣  Cover with clean bandage — do NOT apply pressure
+
+DO NOT:
+❌  Cut or suck the wound
+❌  Apply tourniquet or ice
+❌  Give alcohol or aspirin
+❌  Try to catch or kill the snake
+
+Note:
+→ Snake's appearance (color, pattern, head shape)
+→ Time of bite
+→ Any symptoms: swelling, nausea, vision changes
+
+⚠️  All snake bites require antivenom — SOS immediately`,
+    sos:true
+  },
+  {
+    id:'heat', tag:'ti', label:'☀️ Heat / Cold Emergency',
+    tokens:['heat','heatstroke','hyperthermia','dehydrate','dehydration','sunstroke','cold','hypothermia','frostbite','freeze','frozen','dizzy','dizziness','faint','nausea','vomit','pale','sweat'],
+    phrases:['heat stroke','heat exhaustion','too hot','too cold','feeling faint','feel dizzy','dizzy and weak','feel sick','nauseous and dizzy','cold and shivering','soaking wet cold','freezing outside','body temperature','overheated outside'],
+    answer:`☀️ HEAT / COLD EMERGENCY
+
+HEAT STROKE (hot, dry skin, confused, no sweating):
+1️⃣  Move to SHADE immediately
 2️⃣  Remove excess clothing
-3️⃣  Cool rapidly: wet cloths on neck, armpits, and groin
-4️⃣  Fan the person while keeping skin wet
-5️⃣  If conscious: give small sips of water or electrolyte drink
+3️⃣  Cool rapidly: wet cloths on neck, armpits, groin
+4️⃣  Fan while keeping skin wet
+5️⃣  Sip cold water if conscious
 
-⚠️  Confusion, no sweating despite heat, body temp >40°C = SOS`,
-    sos: false
+HEAT EXHAUSTION (heavy sweating, pale, weak):
+1️⃣  Move to cool area, lay down, elevate feet
+2️⃣  Remove excess clothing
+3️⃣  Give water or sports drink slowly
+4️⃣  Apply cool wet cloths to skin
+
+HYPOTHERMIA (shivering, confusion, cold skin):
+1️⃣  Move to warm, dry shelter
+2️⃣  Remove wet clothing
+3️⃣  Wrap in dry blankets — cover head
+4️⃣  Warm center (chest, neck, groin) — NOT limbs
+5️⃣  Warm drinks if conscious
+
+⚠️  Unconscious or not shivering (severe) → SOS`,
+    sos:false
   },
   {
-    id:'poison', tag:'t-sos', label:'Poisoning / Overdose',
-    nouns: ['poison','chemical','toxin','gas','fumes','drug','overdose','bleach','acid','carbon monoxide'],
-    verbs: ['swallow','inhale','ingest','breathe','exposed'],
-    body: [],
-    answer: `☠️ POISONING / OVERDOSE
+    id:'poison', tag:'ts', label:'☠️ Poisoning',
+    tokens:['poison','poisoning','overdose','toxic','toxin','gas','fume','chemical','bleach','acid','carbon','monoxide','drug','medication','pesticide','insecticide'],
+    phrases:['carbon monoxide','gas leak','swallowed poison','drug overdose','chemical spill','inhaled toxic','poisoned by','ate something toxic','overdosed on','breathing fumes','toxic fumes'],
+    answer:`☠️ POISONING / OVERDOSE
 
-Swallowed chemical:
+SWALLOWED chemical/poison:
 1️⃣  Do NOT induce vomiting
-2️⃣  Keep person calm — note what was swallowed and how much
+2️⃣  Note exactly WHAT was swallowed and how much
 3️⃣  If unconscious → recovery position (on side)
+4️⃣  If conscious → keep awake and calm
 
-Inhaled gas / fumes:
-1️⃣  Move to fresh air IMMEDIATELY
+INHALED gas/fumes/carbon monoxide:
+1️⃣  Move to FRESH AIR immediately — do not re-enter
 2️⃣  Open all windows and doors
-3️⃣  Do NOT re-enter until safe
+3️⃣  Fresh air even if symptoms seem mild (CO is invisible)
+4️⃣  If unconscious → CPR
 
-Drug overdose:
-1️⃣  Keep person awake and responsive
-2️⃣  If unconscious, not breathing → CPR + SOS
+DRUG OVERDOSE:
+1️⃣  Keep person awake — talk to them, stimulate
+2️⃣  If opioid (heroin/morphine): administer Naloxone if available
+3️⃣  Recovery position if drowsy
+4️⃣  Do NOT give coffee or water to "sober up"
 
-⚠️  Any poisoning → SOS immediately`,
-    sos: true
+⚠️  All poisoning cases → SOS immediately`,
+    sos:true
   },
   {
-    id:'trapped', tag:'t-sos', label:'Trapped / Buried',
-    nouns: ['rubble','debris','building','room','door','stuck','buried','collapse','confined'],
-    verbs: ['trap','trapped','stuck','buried','locked','collapse','block'],
-    body: [],
-    answer: `🏚️ TRAPPED / BURIED
+    id:'trapped', tag:'ts', label:'🏚️ Trapped',
+    tokens:['trapped','stuck','buried','rubble','debris','locked','confined','collapse','crush','crushed','pin','pinned'],
+    phrases:['trapped inside','stuck inside','cant get out','cannot get out','buried under','under rubble','locked in','door stuck','wall collapsed','ceiling collapsed','cant move','pinned down'],
+    answer:`🏚️ TRAPPED
 
-1️⃣  Stay calm and conserve oxygen — breathe slowly
-2️⃣  Cover mouth with cloth to filter dust
-3️⃣  Tap on pipes or walls rhythmically — rescuers listen for this
-4️⃣  Do NOT shout continuously — wastes energy and oxygen
-5️⃣  Use phone torch to flash on/off as a signal
-6️⃣  If possible, create air space around your face
+1️⃣  Stay CALM — panic uses oxygen and causes poor decisions
+2️⃣  Breathe SLOWLY — cover mouth with cloth for dust
+3️⃣  Assess your situation:
+      → Any exits? Weak walls? Higher ground?
 
-⚠️  Trigger SOS now — keep device powered on`,
-    sos: true
+SIGNALING rescuers:
+→ Tap on metal pipes RHYTHMICALLY (3 taps, pause, repeat)
+→ Flash phone torch on/off
+→ Shout only occasionally — conserve energy
+→ Blow whistle if available
+
+WAITING:
+→ Create air space around face if buried
+→ Stay warm — conserve body heat
+→ Drink water only if safe supply available
+
+→ Trigger SOS now — keep device powered ON`,
+    sos:true
   },
   {
-    id:'lost', tag:'t-ok', label:'Lost / Navigation',
-    nouns: ['location','direction','way','path','area','place'],
-    verbs: ['lost','find','navigate','wander','confused'],
-    body: [],
-    answer: `📍 YOU ARE LOST
+    id:'lost', tag:'tok', label:'📍 Lost',
+    tokens:['lost','navigation','direction','way','path','area','location','coordinate','gps','find','missing','wander'],
+    phrases:['cant find way','cannot find way','dont know where','lost in forest','lost outside','cant navigate','where am i','lost my way','no signal lost','separated from group'],
+    answer:`📍 YOU ARE LOST — STOP Method
 
-1️⃣  STOP — sit down, breathe, do not panic
-2️⃣  Stay in one place — rescuers find stationary people faster
-3️⃣  Your GPS coordinates are tracked in this app (see dashboard)
-4️⃣  Signal every 5 minutes:
-      • 3 whistle blasts (universal distress signal)
-      • Mirror reflection or bright cloth in open area
-5️⃣  Conserve phone battery — airplane mode between signals
-6️⃣  Find or build basic shelter if night approaching`,
-    sos: false
+S — STOP: Sit down, breathe, do not panic
+T — THINK: What do you remember? Landmarks? Direction traveled?
+O — OBSERVE: Look around for trails, water, high ground, shelter
+P — PLAN: Decide safest course of action
+
+STAY PUT (usually best):
+→ Rescuers find stationary people faster
+→ Your GPS coordinates are saved in this app
+
+SIGNALING every 5 minutes:
+→ 3 whistle blasts (international distress signal)
+→ Bright cloth/mirror reflection toward sky
+→ Create large SOS shape on ground with rocks/sticks
+
+BASICS:
+→ Find or build shelter from wind and rain
+→ Stay near water source if safe
+→ Conserve phone battery — airplane mode between signals
+
+→ Trigger SOS so rescuers can track your GPS location`,
+    sos:false
   },
   {
-    id:'panic', tag:'t-ok', label:'Panic / Anxiety',
-    nouns: ['panic','anxiety','fear','stress','breathing','heart','attack'],
-    verbs: ['panic','hyperventilate','shake','tremble','fear','scared','overwhelm'],
-    body: ['chest','heart','breath'],
-    answer: `🧘 PANIC ATTACK
+    id:'panic', tag:'tok', label:'🧘 Panic / Mental Health',
+    tokens:['panic','anxiety','fear','stress','scared','worry','nervous','overwhelm','mental','psychological','trauma','shock'],
+    phrases:['panic attack','anxiety attack','cant calm down','hyperventilating','breathing too fast','feeling scared','very stressed','extreme fear','mental breakdown','emotional crisis','traumatized','in shock'],
+    answer:`🧘 PANIC ATTACK / ANXIETY EMERGENCY
 
-1️⃣  Say calmly: "You are safe. This will pass."
-2️⃣  Guide breathing — BOX BREATHING:
-      • Breathe IN slowly for 4 counts
+1️⃣  Say firmly and calmly: "You are safe. This will pass."
+2️⃣  BOX BREATHING:
+      • IN slowly for 4 counts
       • HOLD for 4 counts
-      • Breathe OUT for 4 counts
-      • Hold for 4 counts — repeat
-3️⃣  GROUNDING: Name 5 things you see, 4 you feel, 3 you hear
-4️⃣  Sit or lie flat — loosen tight clothing
-5️⃣  Do NOT leave the person alone
+      • OUT slowly for 4 counts
+      • Hold OUT for 4 counts
+      • Repeat 4-5 times
 
-Panic attacks feel severe but peak at ~10 minutes and pass.`,
-    sos: false
+3️⃣  GROUNDING (5-4-3-2-1):
+      → 5 things you can SEE
+      → 4 things you can TOUCH
+      → 3 things you can HEAR
+      → 2 things you can SMELL
+      → 1 thing you can TASTE
+
+4️⃣  Physical: Sit or lie flat, loosen tight clothing
+5️⃣  Do NOT leave person alone
+
+Note: Panic attacks peak at 10 minutes then naturally reduce.
+They are NOT dangerous even though they feel severe.`,
+    sos:false
   }
 ];
 
-// ── NLP ENGINE ────────────────────────────────────────────
+// ── TOKENIZER + MATCHER ──────────────────────────────────
 
 let nlpReady = false;
 
 function initNLP() {
-  if (typeof nlp === 'undefined') {
-    document.getElementById('nlpStatus').textContent = 'NLP unavailable — using fallback';
-    nlpReady = false;
-    return;
+  // compromise.js is loaded via script tag as window.nlp
+  const fn = window.nlp || (typeof nlp !== 'undefined' ? nlp : null);
+  if (fn) {
+    try { fn('test'); nlpReady = true; } catch(e) { nlpReady = false; }
   }
-  // Pre-warm compromise
-  nlp('test sentence to warm up the engine');
-  nlpReady = true;
-  document.getElementById('nlpStatus').textContent = 'NLP Ready · Offline';
+  document.getElementById('nlpSt').textContent = nlpReady ? 'NLP Ready · Offline' : 'Offline Mode';
 }
 
-function analyzeWithNLP(text) {
-  if (!nlpReady || typeof nlp === 'undefined') return { nouns:[], verbs:[], adjectives:[], topics:[] };
-  const doc = nlp(text);
-  return {
-    nouns:      doc.nouns().out('array').map(w => w.toLowerCase()),
-    verbs:      doc.verbs().out('array').map(w => w.toLowerCase()),
-    adjectives: doc.adjectives().out('array').map(w => w.toLowerCase()),
-    topics:     doc.topics().out('array').map(w => w.toLowerCase()),
-    isQuestion: doc.questions().length > 0,
-    isNegative: doc.sentences().out('array').some(s => nlp(s).match('(not|no|never|cannot|cant|wont|dont)').found)
-  };
+// Extract all individual words from text + NLP output
+function tokenize(text) {
+  // 1. Raw word split
+  const raw = text.toLowerCase()
+    .replace(/['']/g, '')       // remove apostrophes: can't → cant
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 1);
+
+  // 2. NLP extraction (if available)
+  const nlpFn = window.nlp || (typeof nlp !== 'undefined' ? nlp : null);
+  let nlpWords = [];
+  if (nlpReady && nlpFn) {
+    try {
+      const doc = nlpFn(text);
+      const allNLP = [
+        ...doc.nouns().out('array'),
+        ...doc.verbs().out('array'),
+        ...doc.adjectives().out('array')
+      ];
+      // Split compound NLP terms into individual words
+      for (const term of allNLP) {
+        const parts = term.toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/);
+        nlpWords.push(...parts.filter(w => w.length > 1));
+      }
+    } catch(e) {}
+  }
+
+  return [...new Set([...raw, ...nlpWords])];
 }
 
-function scoreEntry(entry, text, parsed) {
+function scoreEntry(entry, text, tokens) {
   const low = text.toLowerCase();
   let score = 0;
 
-  // 1. Direct noun match (NLP-extracted)
-  for (const n of parsed.nouns) {
-    if (entry.nouns.includes(n)) score += 4;
-    if (entry.body.includes(n)) score += 2;
+  // 1. Phrase matching (highest weight — 3pts each)
+  for (const ph of entry.phrases) {
+    if (low.includes(ph)) score += 3;
   }
-  // 2. Direct verb match (NLP-extracted)
-  for (const v of parsed.verbs) {
-    if (entry.verbs.some(ev => v.includes(ev) || ev.includes(v))) score += 5;
+
+  // 2. Token matching (1pt each)
+  for (const tok of tokens) {
+    if (entry.tokens.includes(tok)) score += 1;
   }
-  // 3. Raw text keyword match (fallback for NLP misses)
-  for (const kw of [...entry.nouns, ...entry.verbs, ...entry.body]) {
-    if (low.includes(kw)) score += 2;
-  }
-  // 4. Topic match
-  for (const t of parsed.topics) {
-    if (entry.nouns.includes(t) || entry.id.includes(t)) score += 3;
-  }
-  // 5. Partial stem match (e.g. "bleed" matches "bleeding")
-  const words = low.split(/\s+/);
-  for (const w of words) {
-    for (const kw of [...entry.nouns, ...entry.verbs]) {
-      if (w.length > 3 && (w.startsWith(kw.slice(0,4)) || kw.startsWith(w.slice(0,4)))) score += 1;
+
+  // 3. Stem matching — partial word prefix (0.5pt each)
+  for (const tok of tokens) {
+    if (tok.length >= 4) {
+      for (const kw of entry.tokens) {
+        if (kw.length >= 4 && tok !== kw &&
+            (tok.startsWith(kw.slice(0,5)) || kw.startsWith(tok.slice(0,5)))) {
+          score += 0.5;
+        }
+      }
     }
   }
+
   return score;
 }
 
-function findBestMatch(text) {
-  const parsed = analyzeWithNLP(text);
+function findBest(text) {
+  const tokens = tokenize(text);
   let best = null, bestScore = 0;
+  const scores = [];
+
   for (const entry of KB) {
-    const s = scoreEntry(entry, text, parsed);
+    const s = scoreEntry(entry, text, tokens);
+    scores.push({ entry, s });
     if (s > bestScore) { bestScore = s; best = entry; }
   }
-  const confidence = Math.min(100, Math.round((bestScore / 12) * 100));
-  return bestScore >= 2 ? { entry: best, confidence, parsed } : { entry: null, confidence: 0, parsed };
+
+  const confidence = Math.min(100, Math.round((bestScore / 8) * 100));
+  return { entry: bestScore >= 1 ? best : null, confidence, tokens };
 }
 
-// ── RESPONSE GENERATOR ────────────────────────────────────
+// ── RESPONSE BUILDER ─────────────────────────────────────
 
-function buildResponse(text) {
-  const { entry, confidence, parsed } = findBestMatch(text);
+function buildReply(text) {
+  const low = text.toLowerCase();
 
-  // Check if it's a follow-up question about previous context
-  const lastContext = context.length > 0 ? context[context.length - 1] : null;
-
-  if (!entry) {
-    // Check for greetings / general
-    const low = text.toLowerCase();
-    if (/^(hi|hello|hey|test|works|working|yo|okay|ok)/.test(low)) {
-      return { html: buildGreeting(), sos: false };
-    }
-    if (parsed.isQuestion && lastContext) {
-      return { html: `Based on the ${lastContext.label} situation you mentioned:\n\n${lastContext.answer}`, sos: lastContext.sos };
-    }
-    return { html: buildFallback(parsed), sos: false };
+  // Greeting / general
+  if (/^(hi|hello|hey|test|yo|ok|okay|hii|helo|namaste|hola)[\s!?]*$/.test(low.trim())) {
+    return { html: greeting(), sos: false };
   }
 
-  context.push(entry);
-  if (context.length > 5) context.shift();
+  const { entry, confidence } = findBest(text);
 
-  const tag = `<div class="nlp-tag ${entry.tag}">${entry.label}</div>`;
-  const confHtml = confidence > 0 ? `<div class="conf-bar"><div class="conf-fill" style="width:${confidence}%"></div></div><div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Confidence: ${confidence}%</div>` : '';
-  const sosCard = entry.sos ? `<div class="sos-card"><div class="sos-card-title">⚠️ SOS RECOMMENDED</div><div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.5;">This situation may need immediate rescue. Broadcast emergency signal?</div><button class="sos-card-btn" onclick="window.location.href='/sos/index.html'">🆘 SEND SOS SIGNAL</button></div>` : '';
+  if (!entry) return { html: fallback(text), sos: false };
 
-  return { html: `${tag}${confHtml}${entry.answer}${sosCard}`, sos: entry.sos };
+  ctx.push(entry);
+  if (ctx.length > 5) ctx.shift();
+
+  const tagHtml = `<div class="tag ${entry.tag}">${entry.label}</div>`;
+  const confHtml = `<div class="conf"><div class="conf-fill" style="width:${confidence}%"></div></div><div class="conf-label">Confidence: ${confidence}%</div>`;
+  const sosCard = entry.sos ? `<div class="sos-card"><div class="sos-card-t">⚠️ SOS RECOMMENDED</div><div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.5;margin-bottom:2px;">This situation may require immediate rescue. Broadcast now?</div><button class="sos-btn" onclick="location.href='/sos/index.html'">🆘 SEND SOS SIGNAL</button></div>` : '';
+
+  return { html: `${tagHtml}${confHtml}${entry.answer}${sosCard}`, sos: entry.sos };
 }
 
-function buildGreeting() {
+function greeting() {
   const name = localStorage.getItem('resq_name') || '';
-  return `👋 Hey${name ? ' ' + name : ''}! I'm RESQ AI — your offline emergency assistant.\n\nI use real NLP to understand what you're saying, even if it's not perfectly worded.\n\nTry describing your situation:\n• "Road metal stuck in my leg"\n• "My friend cannot wake up"\n• "Water coming inside the house"\n• "Building is shaking badly"\n\nI'll give you step-by-step guidance immediately.`;
+  return `👋 Hey${name ? ' '+name : ''}! I'm RESQ AI — offline emergency assistant.\n\nI understand natural language. Just describe the situation:\n\n• "I can't breathe"\n• "Someone has chest pain"\n• "Water is rising fast"\n• "Person collapsed not moving"\n• "Building is on fire"\n• "Snake bit my leg"\n\nI'll give step-by-step guidance immediately.`;
 }
 
-function buildFallback(parsed) {
-  let resp = `I need more detail to help you accurately. Try describing:\n\n`;
-  if (parsed.nouns.length > 0) resp += `• What happened to: ${parsed.nouns.slice(0,3).join(', ')}\n`;
-  resp += `• The type of emergency (fire, flooding, injury, trapped, unconscious)\n• Where the person is hurt (if medical)\n\nOr tap one of the quick buttons below.`;
-  return resp;
+function fallback(text) {
+  // Try to give a helpful hint based on any word match
+  const tokens = tokenize(text);
+  return `I need more detail to give accurate guidance.\n\nTry being more specific:\n• What is happening? (fire, flooding, injury, collapse)\n• Where on the body? (if injury)\n• Is the person conscious?\n\nOr tap a quick button below for instant guidance.\n\nYou typed: "${text.trim()}"`;
 }
 
 // ── CHAT ENGINE ───────────────────────────────────────────
 
 function addMsg(html, from) {
-  const av = from === 'bot' ? '🤖' : '👤';
   const d = document.createElement('div');
   d.className = `row ${from}`;
-  d.innerHTML = `<div class="av">${av}</div><div class="bub">${html}</div>`;
-  chat.appendChild(d);
-  setTimeout(() => chat.scrollTop = chat.scrollHeight, 50);
-  return d;
+  d.innerHTML = `<div class="av">${from==='bot'?'🤖':'👤'}</div><div class="bub">${html}</div>`;
+  chatEl.appendChild(d);
+  setTimeout(() => chatEl.scrollTop = chatEl.scrollHeight, 50);
 }
 
-function typing() {
+function showTyping() {
   const d = document.createElement('div');
   d.className = 'row bot'; d.id = 'typ';
   d.innerHTML = `<div class="av">🤖</div><div class="bub"><div class="typing"><span></span><span></span><span></span></div></div>`;
-  chat.appendChild(d);
-  chat.scrollTop = chat.scrollHeight;
+  chatEl.appendChild(d);
+  chatEl.scrollTop = chatEl.scrollHeight;
 }
 function rmTyping() { const e = document.getElementById('typ'); if(e) e.remove(); }
 
-function autoH(el) { el.style.height='auto'; el.style.height = Math.min(el.scrollHeight,80)+'px'; }
+function autoH(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,80)+'px'; }
 
 function ask(text) { process(text); }
-
 function send() {
-  const inp = document.getElementById('inp');
-  const t = inp.value.trim();
-  if (!t) return;
-  inp.value = ''; inp.style.height = 'auto';
+  const el = document.getElementById('inp');
+  const t = el.value.trim();
+  if(!t) return;
+  el.value = ''; el.style.height = 'auto';
   process(t);
 }
 
 function process(text) {
   addMsg(text, 'user');
-  typing();
-  // Small delay to feel natural
-  const delay = 400 + Math.min(text.length * 8, 800);
+  showTyping();
+  const delay = 300 + Math.min(text.length * 6, 700);
   setTimeout(() => {
     rmTyping();
-    const { html } = buildResponse(text);
+    const { html } = buildReply(text);
     addMsg(html, 'bot');
   }, delay);
 }
 
 // ── VOICE ─────────────────────────────────────────────────
-
 function toggleMic() {
   const btn = document.getElementById('micBtn');
-  const SR2 = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR2) { addMsg('Voice input not supported on this device. Please type.', 'bot'); return; }
+  const SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SRClass) { addMsg('Voice input not supported on this device.', 'bot'); return; }
   if (isListening) { SR && SR.stop(); return; }
-  SR = new SR2(); SR.lang = 'en-US'; SR.interimResults = false;
+  SR = new SRClass(); SR.lang = 'en-US'; SR.interimResults = false;
   SR.onstart = () => { isListening = true; btn.classList.add('on'); };
-  SR.onresult = (e) => {
-    const t = e.results[0][0].transcript;
-    process(t);
-  };
-  SR.onerror = () => { isListening=false; btn.classList.remove('on'); };
-  SR.onend = () => { isListening=false; btn.classList.remove('on'); SR=null; };
+  SR.onresult = (e) => { process(e.results[0][0].transcript); };
+  SR.onerror = () => { isListening = false; btn.classList.remove('on'); };
+  SR.onend = () => { isListening = false; btn.classList.remove('on'); SR = null; };
   SR.start();
 }
 
 // ── INIT ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   initNLP();
-  setTimeout(() => {
-    addMsg(buildGreeting(), 'bot');
-  }, 200);
+  setTimeout(() => addMsg(greeting(), 'bot'), 200);
 });
 </script>
 <script src="../store.js"></script>
