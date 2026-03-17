@@ -10,718 +10,637 @@
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --red: #FF1F1F; --amber: #FFAA00; --green: #00E676; --blue: #2979FF;
-    --white: #F5F5F0; --black: #0A0A0A; --gray: #141414;
-    --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
+    --red:#FF1F1F; --amber:#FFAA00; --green:#00E676; --blue:#2979FF;
+    --white:#F5F5F0; --black:#0A0A0A; --gray2:#1E1E1E; --gray3:#2A2A2A; --muted:#666;
   }
-  html, body { height: 100%; background: #080808; font-family: 'Barlow', sans-serif; }
-  .phone {
-    width: 100%; height: 100%; background: var(--black);
-    display: flex; flex-direction: column; overflow: hidden; position: relative;
-  }
+  html,body { height:100%; background:#080808; font-family:'Barlow',sans-serif; }
+  .phone { width:100%; height:100%; background:var(--black); display:flex; flex-direction:column; overflow:hidden; }
 
   /* HEADER */
-  .header {
-    padding: max(4px, env(safe-area-inset-top)) 16px 12px;
-    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-    border-bottom: 1px solid var(--gray3);
-    background: rgba(10,10,10,0.95); backdrop-filter: blur(10px);
+  .hdr {
+    padding:max(4px,env(safe-area-inset-top)) 16px 10px;
+    display:flex; align-items:center; gap:12px; flex-shrink:0;
+    border-bottom:1px solid var(--gray3);
+    background:rgba(10,10,10,0.97); backdrop-filter:blur(10px);
   }
-  .back-btn {
-    width: 36px; height: 36px; border-radius: 10px;
-    background: var(--gray2); display: flex; align-items: center; justify-content: center;
-    cursor: pointer; text-decoration: none; flex-shrink: 0;
-  }
-  .back-btn svg { width: 18px; height: 18px; fill: var(--white); }
-  .header-info { flex: 1; }
-  .header-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 20px; font-weight: 900; color: var(--white); letter-spacing: 1px;
-  }
-  .header-sub { font-size: 11px; color: var(--green); margin-top: 1px; }
-  .ai-dot {
-    width: 8px; height: 8px; border-radius: 50%; background: var(--green);
-    display: inline-block; margin-right: 5px;
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .header-icon {
-    width: 40px; height: 40px; border-radius: 12px;
-    background: linear-gradient(135deg, rgba(255,31,31,0.2), rgba(41,121,255,0.2));
-    border: 1px solid rgba(255,31,31,0.3);
-    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  .back { width:36px; height:36px; border-radius:10px; background:var(--gray2);
+    display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; }
+  .back svg { width:18px; height:18px; fill:var(--white); }
+  .hdr-info { flex:1; }
+  .hdr-title { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:900; color:var(--white); }
+  .hdr-sub { font-size:10px; color:var(--green); margin-top:1px; display:flex; align-items:center; gap:5px; }
+  .live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:blink 2s infinite; }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+  .hdr-badge {
+    padding:4px 10px; border-radius:100px; font-size:10px; font-weight:700; letter-spacing:1px;
+    background:rgba(41,121,255,0.15); border:1px solid rgba(41,121,255,0.4); color:var(--blue);
   }
 
-  /* CHAT AREA */
-  .chat-area {
-    flex: 1; overflow-y: auto; padding: 16px;
-    display: flex; flex-direction: column; gap: 12px;
-    scrollbar-width: none;
-  }
-  .chat-area::-webkit-scrollbar { display: none; }
+  /* CHAT */
+  .chat { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; scrollbar-width:none; }
+  .chat::-webkit-scrollbar { display:none; }
+  .row { display:flex; gap:8px; max-width:92%; animation:msgIn .2s ease; }
+  @keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .row.bot { align-self:flex-start; }
+  .row.user { align-self:flex-end; flex-direction:row-reverse; }
+  .av { width:30px; height:30px; border-radius:9px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .row.bot .av { background:var(--gray2); border:1px solid var(--gray3); }
+  .row.user .av { background:var(--gray3); }
+  .bub { padding:10px 13px; border-radius:14px; font-size:13.5px; line-height:1.55; white-space:pre-wrap; }
+  .row.bot .bub { background:var(--gray2); border:1px solid var(--gray3); color:var(--white); border-bottom-left-radius:3px; }
+  .row.user .bub { background:linear-gradient(135deg,#1a3060,#102040); border:1px solid rgba(41,121,255,0.3); color:var(--white); border-bottom-right-radius:3px; }
 
-  /* MESSAGES */
-  .msg { display: flex; gap: 8px; max-width: 88%; animation: msgIn 0.25s ease; }
-  @keyframes msgIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
-  .msg.bot  { align-self: flex-start; }
-  .msg-avatar {
-    width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 16px;
-  }
-  .msg.bot .msg-avatar { background: linear-gradient(135deg, #1a0a0a, #0a1a2a); border: 1px solid var(--gray3); }
-  .msg.user .msg-avatar { background: var(--gray3); }
-  .bubble {
-    padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5;
-  }
-  .msg.bot .bubble {
-    background: var(--gray2); border: 1px solid var(--gray3); color: var(--white);
-    border-bottom-left-radius: 4px;
-  }
-  .msg.user .bubble {
-    background: linear-gradient(135deg, #1a3a1a, #1a2a3a);
-    border: 1px solid rgba(41,121,255,0.3); color: var(--white);
-    border-bottom-right-radius: 4px;
-  }
+  /* NLP TAG */
+  .nlp-tag { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:100px;
+    font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; margin-bottom:5px; }
+  .t-sos    { background:rgba(255,31,31,.15);   border:1px solid rgba(255,31,31,.4);   color:var(--red); }
+  .t-injury { background:rgba(255,170,0,.15);   border:1px solid rgba(255,170,0,.4);   color:var(--amber); }
+  .t-fire   { background:rgba(255,100,0,.15);   border:1px solid rgba(255,100,0,.4);   color:#FF6400; }
+  .t-flood  { background:rgba(41,121,255,.15);  border:1px solid rgba(41,121,255,.4);  color:var(--blue); }
+  .t-quake  { background:rgba(255,170,0,.15);   border:1px solid rgba(255,170,0,.4);   color:var(--amber); }
+  .t-ok     { background:rgba(0,230,118,.1);    border:1px solid rgba(0,230,118,.3);   color:var(--green); }
+  .conf-bar { height:3px; border-radius:2px; margin-top:6px; margin-bottom:2px; background:var(--gray3); overflow:hidden; }
+  .conf-fill { height:100%; background:var(--green); transition:width .5s; }
 
-  /* INTENT BADGE */
-  .intent-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px;
-  }
-  .intent-badge.sos     { background: rgba(255,31,31,0.15);   border: 1px solid rgba(255,31,31,0.4);   color: var(--red); }
-  .intent-badge.injury  { background: rgba(255,170,0,0.15);   border: 1px solid rgba(255,170,0,0.4);   color: var(--amber); }
-  .intent-badge.fire    { background: rgba(255,100,0,0.15);   border: 1px solid rgba(255,100,0,0.4);   color: #FF6400; }
-  .intent-badge.flood   { background: rgba(41,121,255,0.15);  border: 1px solid rgba(41,121,255,0.4);  color: var(--blue); }
-  .intent-badge.lost    { background: rgba(0,230,118,0.15);   border: 1px solid rgba(0,230,118,0.4);   color: var(--green); }
-  .intent-badge.safe    { background: rgba(0,230,118,0.15);   border: 1px solid rgba(0,230,118,0.4);   color: var(--green); }
-  .intent-badge.quake   { background: rgba(255,170,0,0.15);   border: 1px solid rgba(255,170,0,0.4);   color: var(--amber); }
-  .intent-badge.general { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); }
+  /* SOS CARD */
+  .sos-card { background:rgba(255,31,31,.08); border:1px solid rgba(255,31,31,.3); border-radius:12px; padding:12px 14px; margin-top:8px; }
+  .sos-card-title { font-size:12px; font-weight:700; color:var(--red); margin-bottom:4px; }
+  .sos-card-btn { width:100%; padding:11px; border-radius:10px; border:none;
+    background:var(--red); color:white; font-family:'Barlow Condensed',sans-serif;
+    font-size:15px; font-weight:900; letter-spacing:2px; cursor:pointer; margin-top:8px; }
 
-  /* DECISION TREE CHOICES */
-  .choices { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; }
-  .choice-btn {
-    background: var(--gray3); border: 1px solid #444; border-radius: 12px;
-    padding: 10px 14px; font-size: 13px; color: var(--white); cursor: pointer;
-    text-align: left; transition: all 0.15s;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .choice-btn:active { transform: scale(0.98); }
-  .choice-btn.danger  { border-color: rgba(255,31,31,0.4);   color: var(--red); }
-  .choice-btn.warning { border-color: rgba(255,170,0,0.4);   color: var(--amber); }
-  .choice-btn.ok      { border-color: rgba(0,230,118,0.4);   color: var(--green); }
+  /* CHOICES */
+  .choices { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+  .ch { background:var(--gray3); border:1px solid #444; border-radius:10px;
+    padding:9px 12px; font-size:13px; color:var(--white); cursor:pointer; text-align:left; transition:all .15s; }
+  .ch:active { transform:scale(.98); }
+  .ch.danger { border-color:rgba(255,31,31,.4); }
+  .ch.ok { border-color:rgba(0,230,118,.4); }
 
-  /* SOS TRIGGER CARD */
-  .sos-trigger {
-    background: rgba(255,31,31,0.08); border: 1px solid rgba(255,31,31,0.3);
-    border-radius: 14px; padding: 14px 16px; margin-top: 8px;
-  }
-  .sos-trigger-title { font-size: 13px; font-weight: 700; color: var(--red); margin-bottom: 6px; }
-  .sos-trigger-text  { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5; margin-bottom: 10px; }
-  .sos-trigger-btn {
-    width: 100%; padding: 12px; border-radius: 12px; border: none;
-    background: var(--red); color: white; font-family: 'Barlow Condensed', sans-serif;
-    font-size: 16px; font-weight: 900; letter-spacing: 2px; cursor: pointer;
-    box-shadow: 0 4px 20px rgba(255,31,31,0.4);
-  }
+  /* TYPING */
+  .typing { display:flex; gap:4px; padding:12px 14px; align-items:center; }
+  .typing span { width:7px; height:7px; border-radius:50%; background:var(--muted); animation:typ 1s infinite; }
+  .typing span:nth-child(2){animation-delay:.2s} .typing span:nth-child(3){animation-delay:.4s}
+  @keyframes typ{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
 
-  /* STEPS LIST */
-  .steps { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; }
-  .step-item {
-    display: flex; align-items: flex-start; gap: 10px;
-    background: rgba(255,255,255,0.03); border: 1px solid var(--gray3);
-    border-radius: 10px; padding: 10px 12px;
-  }
-  .step-num {
-    width: 22px; height: 22px; border-radius: 50%; background: var(--gray3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: var(--white); flex-shrink: 0;
-  }
-  .step-num.urgent { background: rgba(255,31,31,0.3); color: var(--red); }
-  .step-text { font-size: 13px; color: var(--white); line-height: 1.4; }
+  /* INPUT */
+  .inp-bar { flex-shrink:0; padding:10px 14px max(12px,env(safe-area-inset-bottom));
+    background:rgba(10,10,10,.97); border-top:1px solid var(--gray3); display:flex; align-items:flex-end; gap:9px; }
+  .inp-wrap { flex:1; background:var(--gray2); border:1px solid var(--gray3); border-radius:20px;
+    padding:9px 13px; display:flex; align-items:center; gap:7px; transition:border-color .2s; }
+  .inp-wrap:focus-within { border-color:rgba(41,121,255,.5); }
+  .inp { flex:1; background:none; border:none; outline:none; color:var(--white);
+    font-family:'Barlow',sans-serif; font-size:14px; resize:none; max-height:80px; line-height:1.4; }
+  .inp::placeholder { color:var(--muted); }
+  .mic { width:34px; height:34px; border-radius:50%; background:var(--gray3); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .2s; }
+  .mic svg { width:16px; height:16px; fill:var(--muted); }
+  .mic.on { background:rgba(255,31,31,.2); animation:pring 1s ease-in-out infinite; }
+  .mic.on svg { fill:var(--red); }
+  @keyframes pring{0%,100%{box-shadow:0 0 0 0 rgba(255,31,31,.4)}50%{box-shadow:0 0 0 7px rgba(255,31,31,0)}}
+  .send { width:42px; height:42px; border-radius:50%; background:var(--blue); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    box-shadow:0 4px 14px rgba(41,121,255,.4); transition:transform .1s; }
+  .send:active { transform:scale(.91); }
+  .send svg { width:17px; height:17px; fill:white; }
 
-  /* TYPING INDICATOR */
-  .typing { display: flex; gap: 4px; padding: 14px 16px; align-items: center; }
-  .typing span {
-    width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted);
-    animation: typing 1s infinite;
-  }
-  .typing span:nth-child(2) { animation-delay: 0.2s; }
-  .typing span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes typing { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  /* QUICK PILLS */
+  .pills { flex-shrink:0; padding:0 12px 8px; display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; }
+  .pills::-webkit-scrollbar { display:none; }
+  .pill { flex-shrink:0; padding:6px 11px; border-radius:100px; background:var(--gray2);
+    border:1px solid var(--gray3); font-size:12px; color:var(--muted); cursor:pointer; white-space:nowrap; }
+  .pill:active { border-color:var(--blue); color:var(--blue); }
 
-  /* INPUT BAR */
-  .input-bar {
-    flex-shrink: 0; padding: 10px 16px max(14px, env(safe-area-inset-bottom));
-    background: rgba(10,10,10,0.95); border-top: 1px solid var(--gray3);
-    display: flex; align-items: flex-end; gap: 10px;
-  }
-  .input-wrap {
-    flex: 1; background: var(--gray2); border: 1px solid var(--gray3);
-    border-radius: 20px; padding: 10px 14px;
-    display: flex; align-items: center; gap: 8px;
-    transition: border-color 0.2s;
-  }
-  .input-wrap:focus-within { border-color: rgba(41,121,255,0.5); }
-  .msg-input {
-    flex: 1; background: none; border: none; outline: none;
-    color: var(--white); font-family: 'Barlow', sans-serif; font-size: 14px;
-    resize: none; max-height: 80px; line-height: 1.4;
-  }
-  .msg-input::placeholder { color: var(--text-muted); }
-  .voice-btn {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: var(--gray3); border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    transition: background 0.2s;
-  }
-  .voice-btn svg { width: 18px; height: 18px; fill: var(--text-muted); }
-  .voice-btn.listening { background: rgba(255,31,31,0.2); animation: pulse-ring 1s ease-in-out infinite; }
-  .voice-btn.listening svg { fill: var(--red); }
-  @keyframes pulse-ring { 0%,100%{box-shadow:0 0 0 0 rgba(255,31,31,0.4)} 50%{box-shadow:0 0 0 8px rgba(255,31,31,0)} }
-  .send-btn {
-    width: 42px; height: 42px; border-radius: 50%;
-    background: var(--blue); border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    box-shadow: 0 4px 12px rgba(41,121,255,0.4);
-    transition: transform 0.1s;
-  }
-  .send-btn:active { transform: scale(0.92); }
-  .send-btn svg { width: 18px; height: 18px; fill: white; }
-
-  /* QUICK PROMPTS */
-  .quick-prompts {
-    flex-shrink: 0; padding: 0 12px 8px;
-    display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none;
-  }
-  .quick-prompts::-webkit-scrollbar { display: none; }
-  .qp {
-    flex-shrink: 0; padding: 6px 12px; border-radius: 100px;
-    background: var(--gray2); border: 1px solid var(--gray3);
-    font-size: 12px; color: var(--text-muted); cursor: pointer;
-    white-space: nowrap; transition: all 0.15s;
-  }
-  .qp:active { border-color: var(--blue); color: var(--blue); }
+  /* NLP LOADING */
+  .nlp-ready { display:none; }
+  .nlp-loading { font-size:11px; color:var(--muted); text-align:center; padding:6px; }
 </style>
 <link rel="manifest" href="/manifest.json">
 </head>
 <body>
 <div class="phone">
-  <div class="header">
-    <a href="/dashboard/index.html" class="back-btn">
+  <div class="hdr">
+    <a href="/dashboard/index.html" class="back">
       <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </a>
-    <div class="header-info">
-      <div class="header-title">RESQ AI</div>
-      <div class="header-sub"><span class="ai-dot"></span>Offline · Always Ready</div>
+    <div class="hdr-info">
+      <div class="hdr-title">RESQ AI</div>
+      <div class="hdr-sub"><span class="live-dot"></span><span id="nlpStatus">Loading NLP engine…</span></div>
     </div>
-    <div class="header-icon">🤖</div>
+    <div class="hdr-badge">OFFLINE</div>
   </div>
 
-  <div class="chat-area" id="chatArea"></div>
+  <div class="chat" id="chat"></div>
 
-  <div class="quick-prompts" id="quickPrompts">
-    <div class="qp" onclick="sendQuick('I need help urgently')">🆘 Need Help</div>
-    <div class="qp" onclick="sendQuick('I am bleeding badly')">🩸 Bleeding</div>
-    <div class="qp" onclick="sendQuick('There is a fire nearby')">🔥 Fire</div>
-    <div class="qp" onclick="sendQuick('I am trapped')">🏚️ Trapped</div>
-    <div class="qp" onclick="sendQuick('Flood water is rising')">🌊 Flood</div>
-    <div class="qp" onclick="sendQuick('I am lost and cannot find my way')">📍 Lost</div>
-    <div class="qp" onclick="sendQuick('Someone is unconscious')">😵 Unconscious</div>
-    <div class="qp" onclick="sendQuick('Earthquake happened')">🌍 Earthquake</div>
+  <div class="pills">
+    <div class="pill" onclick="ask('I am bleeding badly')">🩸 Bleeding</div>
+    <div class="pill" onclick="ask('There is a fire')">🔥 Fire</div>
+    <div class="pill" onclick="ask('Someone is not breathing')">❤️ Not breathing</div>
+    <div class="pill" onclick="ask('I am trapped inside')">🏚️ Trapped</div>
+    <div class="pill" onclick="ask('Flood water is rising')">🌊 Flood</div>
+    <div class="pill" onclick="ask('Earthquake happened')">🌍 Earthquake</div>
+    <div class="pill" onclick="ask('I am lost')">📍 Lost</div>
+    <div class="pill" onclick="ask('Snake bite on my hand')">🐍 Snake bite</div>
+    <div class="pill" onclick="ask('Someone had a stroke')">🧠 Stroke</div>
+    <div class="pill" onclick="ask('Person is choking')">🫁 Choking</div>
+    <div class="pill" onclick="ask('Severe burns on body')">🔥 Burns</div>
+    <div class="pill" onclick="ask('Broken bone fracture')">🦴 Fracture</div>
   </div>
 
-  <div class="input-bar">
-    <div class="input-wrap">
-      <textarea class="msg-input" id="msgInput" rows="1"
-        placeholder="Describe your emergency…"
-        oninput="autoResize(this)"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
-      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">
-        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+  <div class="inp-bar">
+    <div class="inp-wrap">
+      <textarea class="inp" id="inp" rows="1" placeholder="Describe your emergency…"
+        oninput="autoH(this)"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"></textarea>
+      <button class="mic" id="micBtn" onclick="toggleMic()">
+        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.49 6-3.3 6-6.72h-1.7z"/></svg>
       </button>
     </div>
-    <button class="send-btn" onclick="sendMsg()">
+    <button class="send" onclick="send()">
       <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
     </button>
   </div>
 </div>
 
+<!-- compromise.js NLP engine (~350KB, fully offline) -->
+<script src="../lib/compromise.js"></script>
 <script>
-// ═══════════════════════════════════════
-//  INTENT CLASSIFIER  (pure JS, 0 MB)
-// ═══════════════════════════════════════
-const INTENTS = [
+// ═══════════════════════════════════════════════════════════
+//  RESQ AI — Real NLP Engine using compromise.js
+//  Works 100% offline · No internet needed · ~350KB model
+// ═══════════════════════════════════════════════════════════
+
+const chat = document.getElementById('chat');
+let SR = null, isListening = false;
+let context = []; // conversation memory
+
+// ── KNOWLEDGE BASE ────────────────────────────────────────
+const KB = [
   {
-    id: 'SOS_EMERGENCY',
-    emoji: '🆘',
-    label: 'SOS Emergency',
-    badgeClass: 'sos',
-    keywords: {
-      'help':10,'emergency':10,'save me':15,'save':8,'dying':15,'die':12,
-      'life':8,'critical':10,'danger':10,'rescue':10,'trapped':9,'urgent':8,
-      'please help':15,'sos':15
-    }
+    id:'bleeding', tag:'t-injury', label:'Injury / Bleeding',
+    nouns: ['blood','bleeding','wound','cut','stab','gash','puncture','laceration','injury','rod','nail','glass','metal','spike','knife'],
+    verbs: ['bleed','cut','stab','hurt','injured','stuck','pierce','embedded'],
+    body: ['leg','arm','hand','head','chest','neck','foot','finger','stomach','abdomen','back','shoulder'],
+    answer: `🩸 BLEEDING / WOUND — First Aid
+
+1️⃣  Apply FIRM direct pressure with clean cloth — press hard
+2️⃣  Do NOT remove cloth if blood soaks through — add more on top
+3️⃣  Elevate the limb above heart level if possible
+4️⃣  If object is embedded (rod/nail/glass): do NOT remove it — stabilize it and keep still
+5️⃣  Press continuously for 10+ minutes without releasing
+
+⚠️  Spurting blood or object embedded = LIFE THREATENING
+👉  Trigger SOS immediately`,
+    sos: true
   },
   {
-    id: 'INJURY',
-    emoji: '🩸',
-    label: 'Injury',
-    badgeClass: 'injury',
-    keywords: {
-      'bleeding':12,'blood':10,'hurt':8,'pain':8,'injured':10,'wound':10,
-      'broken':8,'fracture':10,'cut':7,'burn':9,'burned':9,'chest pain':12,
-      'unconscious':12,'not breathing':15,'heart':8,'attack':10
-    }
+    id:'burns', tag:'t-fire', label:'Burns',
+    nouns: ['burn','scald','blister','flame','heat','fire','chemical','acid','steam'],
+    verbs: ['burn','burnt','burned','scalded','melt'],
+    body: ['skin','hand','face','arm','leg','body'],
+    answer: `🔥 BURNS — First Aid
+
+1️⃣  Cool immediately under running water for 20 minutes — NOT ice
+2️⃣  Remove clothing or jewellery near burn (only if not stuck to skin)
+3️⃣  Cover loosely with clean non-stick cloth
+4️⃣  Do NOT use butter, oil, toothpaste, or ice — they make it worse
+5️⃣  Do NOT pop blisters — infection risk
+
+⚠️  Burns larger than your palm, or on face/hands = SOS`,
+    sos: false
   },
   {
-    id: 'FIRE',
-    emoji: '🔥',
-    label: 'Fire',
-    badgeClass: 'fire',
-    keywords: {
-      'fire':12,'smoke':10,'burning':10,'flame':10,'burn':8,'blaze':12,
-      'on fire':15,'fire department':10,'building fire':12
-    }
+    id:'cpr', tag:'t-sos', label:'Unconscious / CPR',
+    nouns: ['cpr','breathing','pulse','heartbeat','chest','cardiac','arrest','resuscitation'],
+    verbs: ['unconscious','unresponsive','collapse','faint','breathe','revive','wake'],
+    body: ['chest','heart'],
+    answer: `❤️ UNCONSCIOUS / CPR
+
+1️⃣  Shout "Are you OK?" and tap shoulder firmly
+2️⃣  Tilt head back, lift chin — open airway
+3️⃣  Check breathing for 10 seconds (look, listen, feel)
+4️⃣  If not breathing → 30 chest compressions:
+      • Place hands center of chest
+      • Push 2 inches deep, fast (100/min)
+5️⃣  Give 2 rescue breaths (pinch nose, seal mouth)
+6️⃣  Repeat 30:2 until breathing returns
+
+⚠️  Do not stop compressions — send SOS immediately`,
+    sos: true
   },
   {
-    id: 'FLOOD',
-    emoji: '🌊',
-    label: 'Flood',
-    badgeClass: 'flood',
-    keywords: {
-      'flood':12,'water rising':15,'drowning':15,'drown':12,'river':8,
-      'water':6,'rain':5,'submerged':12,'swept':10,'boat':6
-    }
+    id:'choking', tag:'t-sos', label:'Choking',
+    nouns: ['throat','airway','food','object','choking','blockage'],
+    verbs: ['choke','choking','swallow','swallowed','breathe','cough'],
+    body: ['throat','mouth','neck'],
+    answer: `🫁 CHOKING
+
+1️⃣  Ask "Are you choking?" — if they can't speak, act immediately
+2️⃣  Lean them forward — give 5 firm BACK BLOWS between shoulder blades
+3️⃣  If not cleared → 5 ABDOMINAL THRUSTS (Heimlich):
+      • Stand behind them
+      • Fist above navel, pull sharply inward and upward
+4️⃣  Alternate back blows and thrusts until cleared
+5️⃣  For infant: face-down on forearm, firm back blows only
+
+⚠️  If unconscious → start CPR and SOS`,
+    sos: true
   },
   {
-    id: 'EARTHQUAKE',
-    emoji: '🌍',
-    label: 'Earthquake',
-    badgeClass: 'quake',
-    keywords: {
-      'earthquake':15,'tremor':12,'quake':12,'shaking':10,'collapsed':10,
-      'building fell':15,'rubble':12,'debris':10,'aftershock':12
-    }
+    id:'fracture', tag:'t-injury', label:'Fracture / Broken Bone',
+    nouns: ['bone','fracture','break','crack','joint','limb','ankle','wrist','spine'],
+    verbs: ['break','broke','broken','snap','snapped','twist','dislocate','fracture'],
+    body: ['leg','arm','wrist','ankle','spine','back','neck','rib'],
+    answer: `🦴 FRACTURE / BROKEN BONE
+
+1️⃣  Do NOT try to straighten or move the bone
+2️⃣  Immobilize with splint:
+      • Two sticks/boards on both sides of the injury
+      • Tie with cloth above AND below fracture site
+3️⃣  Pad between splint and skin for comfort
+4️⃣  Check circulation: pulse, warmth, sensation below injury
+5️⃣  Keep person calm, still, and warm
+
+⚠️  Open fracture (bone through skin) → cover with clean cloth + SOS`,
+    sos: false
   },
   {
-    id: 'LOST',
-    emoji: '📍',
-    label: 'Lost / Navigation',
-    badgeClass: 'lost',
-    keywords: {
-      'lost':12,'cant find':10,'where am i':15,'navigation':8,'direction':7,
-      'location':6,'find me':10,'cannot find':10,'dont know where':12
-    }
+    id:'earthquake', tag:'t-quake', label:'Earthquake',
+    nouns: ['earthquake','tremor','quake','aftershock','rubble','debris','collapse','shaking'],
+    verbs: ['shake','shaking','collapse','crumble','rumble','fall'],
+    body: [],
+    answer: `🌍 EARTHQUAKE
+
+DURING shaking:
+1️⃣  DROP on hands and knees immediately
+2️⃣  COVER under sturdy table, or against interior wall
+3️⃣  HOLD ON and protect head/neck with arms
+4️⃣  Away from windows, glass, and heavy furniture
+
+AFTER shaking stops:
+1️⃣  Check yourself and others for injuries
+2️⃣  Smell for gas — if detected, open windows and evacuate
+3️⃣  Do not use elevators — expect aftershocks
+4️⃣  Move to open area away from buildings`,
+    sos: false
+  },
+  {
+    id:'fire', tag:'t-fire', label:'Fire Emergency',
+    nouns: ['fire','smoke','flame','blaze','fumes','building','room','escape'],
+    verbs: ['burn','catch fire','spread','evacuate','escape','trapped'],
+    body: [],
+    answer: `🔥 FIRE EMERGENCY
+
+1️⃣  Alert everyone — shout FIRE, activate alarm if possible
+2️⃣  Crawl LOW under smoke — cleaner air near the floor
+3️⃣  FEEL door before opening — if hot, find another exit
+4️⃣  Use STAIRS only — never elevator
+5️⃣  Close doors behind you to slow fire spread
+
+If TRAPPED:
+→ Seal door gap with cloth
+→ Signal from window: shout, wave bright cloth
+→ Trigger SOS now`,
+    sos: true
+  },
+  {
+    id:'flood', tag:'t-flood', label:'Flood',
+    nouns: ['flood','water','rain','river','tide','current','stream'],
+    verbs: ['rise','rising','flood','overflow','submerge','drown','swept'],
+    body: [],
+    answer: `🌊 FLOOD SURVIVAL
+
+1️⃣  Move to HIGHEST floor immediately — never go to basement
+2️⃣  Do NOT walk in moving water — 6 inches can knock you down
+3️⃣  Turn off electricity at main breaker if safe to do so
+4️⃣  Do NOT drink floodwater — it is contaminated
+
+If swept into water:
+→ Float on BACK, feet pointing downstream
+→ Grab fixed object to stop moving
+→ Do not fight the current
+
+Signal for rescue from window or roof → Trigger SOS`,
+    sos: true
+  },
+  {
+    id:'snake', tag:'t-injury', label:'Snake Bite',
+    nouns: ['snake','venom','bite','fang','poison','reptile'],
+    verbs: ['bite','bitten','sting','envenomed'],
+    body: ['foot','leg','hand','arm','ankle'],
+    answer: `🐍 SNAKE BITE
+
+1️⃣  Keep the person STILL and CALM — movement spreads venom faster
+2️⃣  Keep bitten limb at or BELOW heart level
+3️⃣  Remove tight clothing and jewellery near bite
+4️⃣  Do NOT cut or suck the wound
+5️⃣  Do NOT apply tourniquet or ice
+6️⃣  Note snake appearance (color, pattern) if safe to do so
+
+⚠️  All snake bites need antivenom — SOS immediately`,
+    sos: true
+  },
+  {
+    id:'stroke', tag:'t-sos', label:'Stroke',
+    nouns: ['stroke','face','arm','speech','headache','paralysis','vision','dizziness'],
+    verbs: ['droop','slur','numb','weak','paralyzed','confused'],
+    body: ['face','arm','leg','mouth'],
+    answer: `🧠 STROKE — Use FAST Test
+
+F — FACE: Ask to smile. One side drooping?
+A — ARMS: Ask to raise both. One drifting down?
+S — SPEECH: Ask to repeat a phrase. Slurred or strange?
+T — TIME: If YES to any → act immediately
+
+What to do:
+1️⃣  Keep person lying still and calm
+2️⃣  Do NOT give food or water
+3️⃣  Note exact time symptoms started
+4️⃣  If unconscious → recovery position (on side)
+5️⃣  Do NOT let them "sleep it off"
+
+⚠️  Every minute matters — brain cells die — SOS immediately`,
+    sos: true
+  },
+  {
+    id:'heat', tag:'t-injury', label:'Heat Stroke',
+    nouns: ['heat','sun','temperature','dehydration','exhaustion'],
+    verbs: ['overheat','faint','sweat','dizzy','collapse'],
+    body: ['body','skin','head'],
+    answer: `☀️ HEAT STROKE
+
+1️⃣  Move person to SHADE or cool area immediately
+2️⃣  Remove excess clothing
+3️⃣  Cool rapidly: wet cloths on neck, armpits, and groin
+4️⃣  Fan the person while keeping skin wet
+5️⃣  If conscious: give small sips of water or electrolyte drink
+
+⚠️  Confusion, no sweating despite heat, body temp >40°C = SOS`,
+    sos: false
+  },
+  {
+    id:'poison', tag:'t-sos', label:'Poisoning / Overdose',
+    nouns: ['poison','chemical','toxin','gas','fumes','drug','overdose','bleach','acid','carbon monoxide'],
+    verbs: ['swallow','inhale','ingest','breathe','exposed'],
+    body: [],
+    answer: `☠️ POISONING / OVERDOSE
+
+Swallowed chemical:
+1️⃣  Do NOT induce vomiting
+2️⃣  Keep person calm — note what was swallowed and how much
+3️⃣  If unconscious → recovery position (on side)
+
+Inhaled gas / fumes:
+1️⃣  Move to fresh air IMMEDIATELY
+2️⃣  Open all windows and doors
+3️⃣  Do NOT re-enter until safe
+
+Drug overdose:
+1️⃣  Keep person awake and responsive
+2️⃣  If unconscious, not breathing → CPR + SOS
+
+⚠️  Any poisoning → SOS immediately`,
+    sos: true
+  },
+  {
+    id:'trapped', tag:'t-sos', label:'Trapped / Buried',
+    nouns: ['rubble','debris','building','room','door','stuck','buried','collapse','confined'],
+    verbs: ['trap','trapped','stuck','buried','locked','collapse','block'],
+    body: [],
+    answer: `🏚️ TRAPPED / BURIED
+
+1️⃣  Stay calm and conserve oxygen — breathe slowly
+2️⃣  Cover mouth with cloth to filter dust
+3️⃣  Tap on pipes or walls rhythmically — rescuers listen for this
+4️⃣  Do NOT shout continuously — wastes energy and oxygen
+5️⃣  Use phone torch to flash on/off as a signal
+6️⃣  If possible, create air space around your face
+
+⚠️  Trigger SOS now — keep device powered on`,
+    sos: true
+  },
+  {
+    id:'lost', tag:'t-ok', label:'Lost / Navigation',
+    nouns: ['location','direction','way','path','area','place'],
+    verbs: ['lost','find','navigate','wander','confused'],
+    body: [],
+    answer: `📍 YOU ARE LOST
+
+1️⃣  STOP — sit down, breathe, do not panic
+2️⃣  Stay in one place — rescuers find stationary people faster
+3️⃣  Your GPS coordinates are tracked in this app (see dashboard)
+4️⃣  Signal every 5 minutes:
+      • 3 whistle blasts (universal distress signal)
+      • Mirror reflection or bright cloth in open area
+5️⃣  Conserve phone battery — airplane mode between signals
+6️⃣  Find or build basic shelter if night approaching`,
+    sos: false
+  },
+  {
+    id:'panic', tag:'t-ok', label:'Panic / Anxiety',
+    nouns: ['panic','anxiety','fear','stress','breathing','heart','attack'],
+    verbs: ['panic','hyperventilate','shake','tremble','fear','scared','overwhelm'],
+    body: ['chest','heart','breath'],
+    answer: `🧘 PANIC ATTACK
+
+1️⃣  Say calmly: "You are safe. This will pass."
+2️⃣  Guide breathing — BOX BREATHING:
+      • Breathe IN slowly for 4 counts
+      • HOLD for 4 counts
+      • Breathe OUT for 4 counts
+      • Hold for 4 counts — repeat
+3️⃣  GROUNDING: Name 5 things you see, 4 you feel, 3 you hear
+4️⃣  Sit or lie flat — loosen tight clothing
+5️⃣  Do NOT leave the person alone
+
+Panic attacks feel severe but peak at ~10 minutes and pass.`,
+    sos: false
   }
 ];
 
-function classifyIntent(text) {
-  const lower = text.toLowerCase();
-  let best = { id: 'GENERAL', score: 0, intent: null };
-  for (const intent of INTENTS) {
-    let score = 0;
-    for (const [kw, weight] of Object.entries(intent.keywords)) {
-      if (lower.includes(kw)) score += weight;
-    }
-    if (score > best.score) best = { id: intent.id, score, intent };
-  }
-  return best.score >= 7 ? best.intent : null;
-}
+// ── NLP ENGINE ────────────────────────────────────────────
 
-// ═══════════════════════════════════════
-//  DECISION TREE  (pure JS, 0 MB)
-// ═══════════════════════════════════════
-const DECISION_TREES = {
-  INJURY: {
-    q: 'Is the person conscious and breathing?',
-    choices: [
-      { label: '✅ Yes, conscious', next: 'INJURY_TYPE' },
-      { label: '❌ No / Unconscious', next: 'UNCONSCIOUS', cls: 'danger' }
-    ]
-  },
-  UNCONSCIOUS: {
-    steps: [
-      { text: 'Call out loudly — "Are you okay?" Tap shoulder', urgent: true },
-      { text: 'Tilt head back gently to open airway' },
-      { text: 'Check for breathing (look, listen, feel for 10 seconds)' },
-      { text: 'If not breathing — start CPR: 30 chest compressions, 2 rescue breaths' },
-      { text: 'Do not move if spinal injury suspected' }
-    ],
-    sos: true
-  },
-  INJURY_TYPE: {
-    q: 'What type of injury?',
-    choices: [
-      { label: '🩸 Severe bleeding', next: 'BLEEDING_SEVERE', cls: 'danger' },
-      { label: '🦴 Broken bone', next: 'FRACTURE' },
-      { label: '🔥 Burns', next: 'BURNS' },
-      { label: '💊 Minor cut/wound', next: 'MINOR_WOUND', cls: 'ok' }
-    ]
-  },
-  BLEEDING_SEVERE: {
-    steps: [
-      { text: 'Apply FIRM direct pressure with clean cloth immediately', urgent: true },
-      { text: 'Do NOT remove cloth — add more on top if soaking through' },
-      { text: 'Elevate the limb above heart level if possible' },
-      { text: 'For limb: twist cloth tightly above wound as tourniquet' },
-      { text: 'Keep pressing for minimum 10 minutes without stopping' }
-    ],
-    sos: true
-  },
-  FRACTURE: {
-    steps: [
-      { text: 'DO NOT straighten the bone', urgent: true },
-      { text: 'Immobilize with splint (sticks, boards) tied on both sides' },
-      { text: 'Pad splint with cloth for comfort' },
-      { text: 'Check circulation: pulse, warmth, sensation below injury' },
-      { text: 'Keep person still and warm' }
-    ],
-    sos: false
-  },
-  BURNS: {
-    steps: [
-      { text: 'Cool with running water for 20 minutes', urgent: true },
-      { text: 'Remove clothing/jewellery near burn (if not stuck)' },
-      { text: 'Cover loosely with clean non-stick cloth' },
-      { text: 'Do NOT use ice, butter, toothpaste, or oil' },
-      { text: 'For large burns (>palm size) or face burns — trigger SOS' }
-    ],
-    sos: false
-  },
-  MINOR_WOUND: {
-    steps: [
-      { text: 'Clean wound thoroughly with clean water' },
-      { text: 'Remove visible debris gently' },
-      { text: 'Apply pressure to stop bleeding (5–10 min)' },
-      { text: 'Cover with bandage or clean cloth' },
-      { text: 'Monitor for signs of infection (heat, pus, fever)' }
-    ],
-    sos: false
-  },
-  FIRE: {
-    q: 'Where is the fire?',
-    choices: [
-      { label: '🏠 In the same building', next: 'FIRE_INSIDE', cls: 'danger' },
-      { label: '🌲 Outside / nearby', next: 'FIRE_OUTSIDE', cls: 'warning' }
-    ]
-  },
-  FIRE_INSIDE: {
-    steps: [
-      { text: 'Alert everyone — shout FIRE and activate alarm', urgent: true },
-      { text: 'Crawl low under smoke — air is cleaner near floor' },
-      { text: 'Feel door with back of hand before opening — if hot, find another exit' },
-      { text: 'Use stairs NEVER elevator — close doors behind you' },
-      { text: 'If trapped: seal gaps, signal from window, call for help' }
-    ],
-    sos: true
-  },
-  FIRE_OUTSIDE: {
-    steps: [
-      { text: 'Move upwind and uphill away from fire' },
-      { text: 'Wet cloth over nose and mouth to filter smoke' },
-      { text: 'Close windows and doors to block smoke' },
-      { text: 'Prepare to evacuate — gather essentials only' }
-    ],
-    sos: false
-  },
-  FLOOD: {
-    q: 'Are you currently in floodwater?',
-    choices: [
-      { label: '💧 Yes, in water now', next: 'FLOOD_IN_WATER', cls: 'danger' },
-      { label: '🏠 Safe inside building', next: 'FLOOD_INSIDE' }
-    ]
-  },
-  FLOOD_IN_WATER: {
-    steps: [
-      { text: 'Never walk in moving floodwater — 6 inches can knock you down', urgent: true },
-      { text: 'If swept away: float on back, feet downstream as shock absorbers' },
-      { text: 'Grab fixed object to stop — do not fight the current' },
-      { text: 'Move to high ground immediately' },
-      { text: 'Avoid drains, channels — suction can trap you' }
-    ],
-    sos: true
-  },
-  FLOOD_INSIDE: {
-    steps: [
-      { text: 'Move to highest floor — do not go to basement' },
-      { text: 'Turn off electricity at breaker if water rising' },
-      { text: 'Signal for help from window or roof' },
-      { text: 'Do not drink floodwater — contaminated' }
-    ],
-    sos: false
-  },
-  EARTHQUAKE: {
-    q: 'Is the shaking still happening?',
-    choices: [
-      { label: '📳 Yes, still shaking', next: 'QUAKE_DURING', cls: 'danger' },
-      { label: '✅ Shaking stopped', next: 'QUAKE_AFTER' }
-    ]
-  },
-  QUAKE_DURING: {
-    steps: [
-      { text: 'DROP — get on hands and knees immediately', urgent: true },
-      { text: 'COVER — under sturdy desk/table or against interior wall' },
-      { text: 'HOLD ON — stay until shaking stops' },
-      { text: 'Away from windows, exterior walls, heavy objects' },
-      { text: 'If outdoors: open area away from buildings and power lines' }
-    ],
-    sos: false
-  },
-  QUAKE_AFTER: {
-    steps: [
-      { text: 'Check yourself and others for injuries' },
-      { text: 'Expect aftershocks — stay alert' },
-      { text: 'Check for gas leaks: smell, hissing — open windows and leave' },
-      { text: 'Do not use elevators or re-enter damaged structures' },
-      { text: 'Move to open area away from buildings' }
-    ],
-    sos: false
-  },
-  LOST: {
-    steps: [
-      { text: 'STOP — Stay calm, stop moving to conserve energy' },
-      { text: 'Your GPS location is saved in this app — check the dashboard' },
-      { text: 'Stay in one place — rescuers can find stationary people easier' },
-      { text: 'Signal with bright cloth, mirror reflection, or loud sound every 5 min' },
-      { text: 'Find or create shelter from elements' }
-    ],
-    sos: false
-  }
-};
+let nlpReady = false;
 
-// ═══════════════════════════════════════
-//  AI RESPONSE ENGINE
-// ═══════════════════════════════════════
-const RESPONSES = {
-  SOS_EMERGENCY: {
-    text: "I've detected a critical emergency. Let me guide you step by step. What type of emergency are you facing?",
-    tree: 'SOS_TYPE'
-  },
-  FIRE: {
-    text: "🔥 Fire emergency detected. Let me guide you.",
-    tree: 'FIRE'
-  },
-  FLOOD: {
-    text: "🌊 Flood situation detected. Let me assess your situation.",
-    tree: 'FLOOD'
-  },
-  INJURY: {
-    text: "🩸 Medical emergency detected. Let me help you with first aid.",
-    tree: 'INJURY'
-  },
-  EARTHQUAKE: {
-    text: "🌍 Earthquake situation detected.",
-    tree: 'EARTHQUAKE'
-  },
-  LOST: {
-    text: "📍 You're lost. Here are the critical steps to stay safe and get found.",
-    tree: 'LOST'
-  }
-};
-
-const SOS_TYPE_TREE = {
-  q: 'Select your emergency type:',
-  choices: [
-    { label: '🩸 Medical / Injury', next: 'INJURY' },
-    { label: '🔥 Fire', next: 'FIRE' },
-    { label: '🌊 Flood', next: 'FLOOD' },
-    { label: '🌍 Earthquake', next: 'EARTHQUAKE' },
-    { label: '📍 Lost / Trapped', next: 'LOST' }
-  ]
-};
-
-// ═══════════════════════════════════════
-//  CHAT ENGINE
-// ═══════════════════════════════════════
-const chatArea = document.getElementById('chatArea');
-let voiceRecognition = null;
-let isListening = false;
-
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 80) + 'px';
-}
-
-function scrollBottom() {
-  setTimeout(() => chatArea.scrollTop = chatArea.scrollHeight, 100);
-}
-
-function addMsg(html, from = 'bot') {
-  const avatar = from === 'bot' ? '🤖' : '👤';
-  const div = document.createElement('div');
-  div.className = `msg ${from}`;
-  div.innerHTML = `
-    <div class="msg-avatar">${avatar}</div>
-    <div class="bubble">${html}</div>
-  `;
-  chatArea.appendChild(div);
-  scrollBottom();
-  return div;
-}
-
-function showTyping() {
-  const div = document.createElement('div');
-  div.className = 'msg bot';
-  div.id = 'typingIndicator';
-  div.innerHTML = `<div class="msg-avatar">🤖</div>
-    <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
-  chatArea.appendChild(div);
-  scrollBottom();
-}
-
-function removeTyping() {
-  const el = document.getElementById('typingIndicator');
-  if (el) el.remove();
-}
-
-function renderTree(nodeId) {
-  const node = nodeId === 'SOS_TYPE' ? SOS_TYPE_TREE : DECISION_TREES[nodeId];
-  if (!node) return '';
-  if (node.q) {
-    const choicesHtml = node.choices.map(c => `
-      <button class="choice-btn ${c.cls || ''}" onclick="choiceSelected('${c.next}', this)">
-        ${c.label}
-      </button>`).join('');
-    return `<div style="margin-top:8px;font-size:13px;color:var(--text-muted);margin-bottom:6px;">${node.q}</div>
-            <div class="choices">${choicesHtml}</div>`;
-  }
-  if (node.steps) {
-    const stepsHtml = node.steps.map((s, i) => `
-      <div class="step-item">
-        <div class="step-num ${s.urgent ? 'urgent' : ''}">${i + 1}</div>
-        <div class="step-text">${s.text}</div>
-      </div>`).join('');
-    const sosPart = node.sos ? `
-      <div class="sos-trigger">
-        <div class="sos-trigger-title">⚠️ SOS RECOMMENDED</div>
-        <div class="sos-trigger-text">This situation may require immediate rescue. Broadcast emergency signal?</div>
-        <button class="sos-trigger-btn" onclick="goSOS()">🆘 SEND SOS SIGNAL</button>
-      </div>` : '';
-    return `<div class="steps">${stepsHtml}</div>${sosPart}`;
-  }
-  return '';
-}
-
-function choiceSelected(nextNode, btn) {
-  // Disable all buttons in this bubble
-  btn.closest('.bubble').querySelectorAll('.choice-btn').forEach(b => {
-    b.style.opacity = '0.4';
-    b.style.pointerEvents = 'none';
-  });
-  btn.style.opacity = '1';
-  btn.style.borderColor = 'rgba(41,121,255,0.6)';
-  btn.style.color = 'var(--white)';
-
-  addMsg(btn.textContent.trim(), 'user');
-  showTyping();
-  setTimeout(() => {
-    removeTyping();
-    const node = nextNode === 'SOS_TYPE' ? SOS_TYPE_TREE : DECISION_TREES[nextNode];
-    if (!node) return;
-    let label = nextNode.replace(/_/g, ' ');
-    addMsg(renderTree(nextNode));
-  }, 600);
-}
-
-function goSOS() {
-  window.location.href = '/sos/index.html';
-}
-
-function processInput(text) {
-  if (!text.trim()) return;
-  addMsg(text.trim(), 'user');
-  document.getElementById('msgInput').value = '';
-  document.getElementById('msgInput').style.height = 'auto';
-
-  showTyping();
-
-  setTimeout(() => {
-    removeTyping();
-    const intent = classifyIntent(text);
-
-    if (!intent) {
-      // General help
-      addMsg(`I'm here to help in emergencies. Describe your situation and I'll guide you with first aid steps, evacuation routes, or send an SOS signal.<br><br>You can also use the quick buttons below. 👇`);
-      return;
-    }
-
-    const badgeHtml = `<div class="intent-badge ${intent.badgeClass}">${intent.emoji} ${intent.label} Detected</div>`;
-    const resp = RESPONSES[intent.id];
-
-    if (resp) {
-      const treeHtml = resp.tree ? renderTree(resp.tree) : '';
-      addMsg(`${badgeHtml}${resp.text}${treeHtml}`);
-    } else {
-      addMsg(`${badgeHtml}I understand this is a serious situation. ${renderTree(intent.id)}`);
-    }
-  }, 900);
-}
-
-function sendMsg() {
-  const input = document.getElementById('msgInput');
-  processInput(input.value);
-}
-
-function sendQuick(text) {
-  processInput(text);
-}
-
-// ═══════════════════════════════════════
-//  VOICE INPUT  (Web Speech API, 0 MB)
-// ═══════════════════════════════════════
-function toggleVoice() {
-  const btn = document.getElementById('voiceBtn');
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    addMsg('Voice input is not supported on this device. Please type your message.');
+function initNLP() {
+  if (typeof nlp === 'undefined') {
+    document.getElementById('nlpStatus').textContent = 'NLP unavailable — using fallback';
+    nlpReady = false;
     return;
   }
-  if (isListening) {
-    voiceRecognition && voiceRecognition.stop();
-    return;
-  }
-  voiceRecognition = new SpeechRecognition();
-  voiceRecognition.lang = 'en-US';
-  voiceRecognition.interimResults = false;
-  voiceRecognition.maxAlternatives = 1;
-
-  voiceRecognition.onstart = () => {
-    isListening = true;
-    btn.classList.add('listening');
-    addMsg('🎙️ <em style="color:var(--text-muted)">Listening… speak now</em>');
-  };
-  voiceRecognition.onresult = (e) => {
-    const spoken = e.results[0][0].transcript;
-    // Remove the "listening" message
-    const msgs = chatArea.querySelectorAll('.msg.bot');
-    msgs[msgs.length - 1].remove();
-    processInput(spoken);
-  };
-  voiceRecognition.onerror = () => {
-    const msgs = chatArea.querySelectorAll('.msg.bot');
-    msgs[msgs.length - 1].remove();
-    addMsg('Could not hear clearly. Please try again or type your message.');
-  };
-  voiceRecognition.onend = () => {
-    isListening = false;
-    btn.classList.remove('listening');
-    voiceRecognition = null;
-  };
-  voiceRecognition.start();
+  // Pre-warm compromise
+  nlp('test sentence to warm up the engine');
+  nlpReady = true;
+  document.getElementById('nlpStatus').textContent = 'NLP Ready · Offline';
 }
 
-// ═══════════════════════════════════════
-//  INIT — Welcome message
-// ═══════════════════════════════════════
+function analyzeWithNLP(text) {
+  if (!nlpReady || typeof nlp === 'undefined') return { nouns:[], verbs:[], adjectives:[], topics:[] };
+  const doc = nlp(text);
+  return {
+    nouns:      doc.nouns().out('array').map(w => w.toLowerCase()),
+    verbs:      doc.verbs().out('array').map(w => w.toLowerCase()),
+    adjectives: doc.adjectives().out('array').map(w => w.toLowerCase()),
+    topics:     doc.topics().out('array').map(w => w.toLowerCase()),
+    isQuestion: doc.questions().length > 0,
+    isNegative: doc.sentences().out('array').some(s => nlp(s).match('(not|no|never|cannot|cant|wont|dont)').found)
+  };
+}
+
+function scoreEntry(entry, text, parsed) {
+  const low = text.toLowerCase();
+  let score = 0;
+
+  // 1. Direct noun match (NLP-extracted)
+  for (const n of parsed.nouns) {
+    if (entry.nouns.includes(n)) score += 4;
+    if (entry.body.includes(n)) score += 2;
+  }
+  // 2. Direct verb match (NLP-extracted)
+  for (const v of parsed.verbs) {
+    if (entry.verbs.some(ev => v.includes(ev) || ev.includes(v))) score += 5;
+  }
+  // 3. Raw text keyword match (fallback for NLP misses)
+  for (const kw of [...entry.nouns, ...entry.verbs, ...entry.body]) {
+    if (low.includes(kw)) score += 2;
+  }
+  // 4. Topic match
+  for (const t of parsed.topics) {
+    if (entry.nouns.includes(t) || entry.id.includes(t)) score += 3;
+  }
+  // 5. Partial stem match (e.g. "bleed" matches "bleeding")
+  const words = low.split(/\s+/);
+  for (const w of words) {
+    for (const kw of [...entry.nouns, ...entry.verbs]) {
+      if (w.length > 3 && (w.startsWith(kw.slice(0,4)) || kw.startsWith(w.slice(0,4)))) score += 1;
+    }
+  }
+  return score;
+}
+
+function findBestMatch(text) {
+  const parsed = analyzeWithNLP(text);
+  let best = null, bestScore = 0;
+  for (const entry of KB) {
+    const s = scoreEntry(entry, text, parsed);
+    if (s > bestScore) { bestScore = s; best = entry; }
+  }
+  const confidence = Math.min(100, Math.round((bestScore / 12) * 100));
+  return bestScore >= 2 ? { entry: best, confidence, parsed } : { entry: null, confidence: 0, parsed };
+}
+
+// ── RESPONSE GENERATOR ────────────────────────────────────
+
+function buildResponse(text) {
+  const { entry, confidence, parsed } = findBestMatch(text);
+
+  // Check if it's a follow-up question about previous context
+  const lastContext = context.length > 0 ? context[context.length - 1] : null;
+
+  if (!entry) {
+    // Check for greetings / general
+    const low = text.toLowerCase();
+    if (/^(hi|hello|hey|test|works|working|yo|okay|ok)/.test(low)) {
+      return { html: buildGreeting(), sos: false };
+    }
+    if (parsed.isQuestion && lastContext) {
+      return { html: `Based on the ${lastContext.label} situation you mentioned:\n\n${lastContext.answer}`, sos: lastContext.sos };
+    }
+    return { html: buildFallback(parsed), sos: false };
+  }
+
+  context.push(entry);
+  if (context.length > 5) context.shift();
+
+  const tag = `<div class="nlp-tag ${entry.tag}">${entry.label}</div>`;
+  const confHtml = confidence > 0 ? `<div class="conf-bar"><div class="conf-fill" style="width:${confidence}%"></div></div><div style="font-size:10px;color:var(--muted);margin-bottom:6px;">Confidence: ${confidence}%</div>` : '';
+  const sosCard = entry.sos ? `<div class="sos-card"><div class="sos-card-title">⚠️ SOS RECOMMENDED</div><div style="font-size:12px;color:rgba(255,255,255,0.7);line-height:1.5;">This situation may need immediate rescue. Broadcast emergency signal?</div><button class="sos-card-btn" onclick="window.location.href='/sos/index.html'">🆘 SEND SOS SIGNAL</button></div>` : '';
+
+  return { html: `${tag}${confHtml}${entry.answer}${sosCard}`, sos: entry.sos };
+}
+
+function buildGreeting() {
+  const name = localStorage.getItem('resq_name') || '';
+  return `👋 Hey${name ? ' ' + name : ''}! I'm RESQ AI — your offline emergency assistant.\n\nI use real NLP to understand what you're saying, even if it's not perfectly worded.\n\nTry describing your situation:\n• "Road metal stuck in my leg"\n• "My friend cannot wake up"\n• "Water coming inside the house"\n• "Building is shaking badly"\n\nI'll give you step-by-step guidance immediately.`;
+}
+
+function buildFallback(parsed) {
+  let resp = `I need more detail to help you accurately. Try describing:\n\n`;
+  if (parsed.nouns.length > 0) resp += `• What happened to: ${parsed.nouns.slice(0,3).join(', ')}\n`;
+  resp += `• The type of emergency (fire, flooding, injury, trapped, unconscious)\n• Where the person is hurt (if medical)\n\nOr tap one of the quick buttons below.`;
+  return resp;
+}
+
+// ── CHAT ENGINE ───────────────────────────────────────────
+
+function addMsg(html, from) {
+  const av = from === 'bot' ? '🤖' : '👤';
+  const d = document.createElement('div');
+  d.className = `row ${from}`;
+  d.innerHTML = `<div class="av">${av}</div><div class="bub">${html}</div>`;
+  chat.appendChild(d);
+  setTimeout(() => chat.scrollTop = chat.scrollHeight, 50);
+  return d;
+}
+
+function typing() {
+  const d = document.createElement('div');
+  d.className = 'row bot'; d.id = 'typ';
+  d.innerHTML = `<div class="av">🤖</div><div class="bub"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+}
+function rmTyping() { const e = document.getElementById('typ'); if(e) e.remove(); }
+
+function autoH(el) { el.style.height='auto'; el.style.height = Math.min(el.scrollHeight,80)+'px'; }
+
+function ask(text) { process(text); }
+
+function send() {
+  const inp = document.getElementById('inp');
+  const t = inp.value.trim();
+  if (!t) return;
+  inp.value = ''; inp.style.height = 'auto';
+  process(t);
+}
+
+function process(text) {
+  addMsg(text, 'user');
+  typing();
+  // Small delay to feel natural
+  const delay = 400 + Math.min(text.length * 8, 800);
+  setTimeout(() => {
+    rmTyping();
+    const { html } = buildResponse(text);
+    addMsg(html, 'bot');
+  }, delay);
+}
+
+// ── VOICE ─────────────────────────────────────────────────
+
+function toggleMic() {
+  const btn = document.getElementById('micBtn');
+  const SR2 = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR2) { addMsg('Voice input not supported on this device. Please type.', 'bot'); return; }
+  if (isListening) { SR && SR.stop(); return; }
+  SR = new SR2(); SR.lang = 'en-US'; SR.interimResults = false;
+  SR.onstart = () => { isListening = true; btn.classList.add('on'); };
+  SR.onresult = (e) => {
+    const t = e.results[0][0].transcript;
+    process(t);
+  };
+  SR.onerror = () => { isListening=false; btn.classList.remove('on'); };
+  SR.onend = () => { isListening=false; btn.classList.remove('on'); SR=null; };
+  SR.start();
+}
+
+// ── INIT ──────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  const name = localStorage.getItem('resq_name') || 'there';
+  initNLP();
   setTimeout(() => {
-    addMsg(`Hey ${name} 👋 I'm RESQ AI — your <strong>offline emergency assistant</strong>.<br><br>
-I can guide you through <strong>first aid</strong>, <strong>fire evacuation</strong>, <strong>flood survival</strong>, and more — even with zero internet.<br><br>
-<span style="color:var(--text-muted);font-size:13px;">Describe your emergency or tap a quick button below.</span>`);
-  }, 300);
+    addMsg(buildGreeting(), 'bot');
+  }, 200);
 });
 </script>
 <script src="../store.js"></script>
