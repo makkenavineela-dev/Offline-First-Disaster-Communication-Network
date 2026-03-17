@@ -611,13 +611,75 @@
   function openHelp() { document.getElementById('helpModal').classList.add('open'); }
   function closeHelp() { document.getElementById('helpModal').classList.remove('open'); }
   
-  const botAnswers = [
-    { keywords: ['burn', 'burnt', 'fire'], ans: "For burns: 1. Cool the burn immediately under cool (not ice cold) running water for at least 10 minutes. 2. Remove tight clothing or jewelry near the area. 3. Cover lightly with a sterile gauze or clean cloth. Do not pop blisters." },
-    { keywords: ['bleed', 'blood', 'cut'], ans: "For heavy bleeding: 1. Apply direct, firm pressure to the wound with a clean cloth. 2. Elevate the injured area above the heart if possible. 3. Keep applying pressure. If blood soaks through, do not remove the cloth—put another one on top." },
-    { keywords: ['cpr', 'breath', 'heart'], ans: "CPR Basics: 1. Place hands in center of chest. 2. Push hard and fast (100-120 beats per min, 2 inches deep). 3. If trained, give 2 rescue breaths after every 30 compressions. Keep going until help arrives." },
-    { keywords: ['choke', 'choking'], ans: "For choking: Stand behind the person. Give 5 back blows between the shoulder blades. Then 5 abdominal thrusts (Heimlich maneuver) pulling inwards and upwards. Repeat until the object is clear." },
-    { keywords: ['network', 'connect', 'signal', 'offline'], ans: "Your device is functioning as a mesh node. Even without standard cell service, messages will hop through nearby devices via Bluetooth/WiFi Direct. Just keep your device powered on to maintain the network." }
+  const botKB = [
+    // BLEEDING / WOUNDS
+    { k: ['bleed','blood','bleeding','cut','wound','gash','slash','stab','puncture','struck','stuck','rod','nail','glass','sharp','injury','injured','leg','arm','hand','finger','head'],
+      a: "🩸 BLEEDING / WOUND\n1. Apply FIRM direct pressure with clean cloth — press hard\n2. Do NOT remove cloth if soaking — add more on top\n3. Elevate limb above heart level if possible\n4. For deep puncture (rod/nail/glass): do NOT remove object — stabilize it and keep still\n5. Press continuously for 10+ minutes\n⚠️ If bleeding won't stop or object is embedded — trigger SOS" },
+    // BURNS
+    { k: ['burn','burns','burnt','burning','hot','scald','scalded','fire','flame','boil','steam'],
+      a: "🔥 BURNS\n1. Cool under running water for 20 minutes — NOT ice\n2. Remove clothing/jewellery near burn (if not stuck)\n3. Cover loosely with clean non-sticky cloth\n4. Do NOT use butter, oil, toothpaste, or ice\n5. Do NOT pop blisters\n⚠️ Burns larger than palm, or on face/hands/genitals → SOS immediately" },
+    // CPR / UNCONSCIOUS
+    { k: ['cpr','cardiac','heart attack','not breathing','no breath','unconscious','unresponsive','faint','fainted','collapse','collapsed','pulse','heartbeat'],
+      a: "❤️ CPR / UNCONSCIOUS\n1. Shout 'Are you OK?' and tap shoulder\n2. Tilt head back, lift chin to open airway\n3. Check breathing for 10 seconds\n4. If not breathing: 30 chest compressions (center of chest, 2 inches deep, fast)\n5. Give 2 rescue breaths (pinch nose, seal mouth)\n6. Repeat until breathing resumes\n⚠️ Do not stop — send SOS immediately" },
+    // CHOKING
+    { k: ['choke','choking','stuck throat','cant breathe','can\'t breathe','throat','swallow','swallowed'],
+      a: "🫁 CHOKING\n1. Ask 'Are you choking?' — if they can't speak/cough, act now\n2. Give 5 firm back blows between shoulder blades\n3. Give 5 abdominal thrusts: wrap arms around waist, pull sharp inward+upward\n4. Alternate back blows and abdominal thrusts\n5. For infant: face-down back blows only\n⚠️ If object not cleared → SOS immediately" },
+    // FRACTURE / BROKEN BONE
+    { k: ['fracture','broken','break','bone','snap','snapped','sprain','twisted','dislocated','dislocation'],
+      a: "🦴 FRACTURE / BROKEN BONE\n1. Do NOT try to straighten the bone\n2. Immobilize with splint: two sticks/boards on both sides, tie with cloth\n3. Pad between splint and skin for comfort\n4. Check circulation: feel for pulse, warmth below injury\n5. Keep person calm and still\n⚠️ Open fracture (bone through skin) → SOS, cover with clean cloth" },
+    // EARTHQUAKE
+    { k: ['earthquake','quake','tremor','shaking','shake','aftershock','magnitude','seismic'],
+      a: "🌍 EARTHQUAKE\nDURING shaking:\n1. DROP to hands and knees\n2. COVER under sturdy table or against interior wall\n3. HOLD ON until shaking stops\n4. Away from windows, bookcases, heavy objects\n\nAFTER:\n1. Check for injuries and gas leaks (smell/hiss)\n2. Open windows, evacuate if gas suspected\n3. Expect aftershocks — stay in open area" },
+    // FIRE / SMOKE
+    { k: ['fire','smoke','burning building','evacuate','escape','trapped fire','flame'],
+      a: "🔥 FIRE EMERGENCY\n1. Alert everyone — shout FIRE, activate alarm\n2. Crawl low under smoke — cleaner air near floor\n3. Feel door with back of hand — if hot, find another way\n4. Use stairs NEVER elevator\n5. Close doors behind you to slow fire spread\n6. If trapped: seal door gap with cloth, signal from window\n⚠️ Call SOS if trapped" },
+    // FLOOD
+    { k: ['flood','flooding','water rising','submerged','drown','drowning','swept','river overflow','rain'],
+      a: "🌊 FLOOD\n1. Move to highest floor immediately — never basement\n2. Do NOT walk in moving water (6 inches can knock you down)\n3. If swept: float on back, feet downstream as bumpers\n4. Turn off electricity at breaker if water rising inside\n5. Do NOT drink floodwater — contaminated\n6. Signal from window/roof for rescue" },
+    // SNAKE BITE
+    { k: ['snake','snakebite','bite','bitten','venom','venomous','reptile'],
+      a: "🐍 SNAKE BITE\n1. Keep calm and still — movement spreads venom faster\n2. Immobilize bitten limb at or below heart level\n3. Remove tight clothing/jewellery near bite\n4. Do NOT cut, suck, or apply tourniquet\n5. Do NOT apply ice\n6. Note snake appearance if safe to do so\n⚠️ Get to medical help ASAP — SOS if remote" },
+    // HEAT STROKE
+    { k: ['heat','heatstroke','heat stroke','overheated','sunstroke','hot','dehydrate','dehydration','dizzy','dizziness','faint heat'],
+      a: "☀️ HEAT STROKE\n1. Move person to shade or cool area immediately\n2. Remove excess clothing\n3. Cool rapidly: wet cloths on neck, armpits, groin\n4. Fan while keeping skin wet\n5. If conscious: give small sips of water\n6. Do NOT give water if unconscious\n⚠️ Confusion, no sweating, high temp → SOS" },
+    // HYPOTHERMIA
+    { k: ['cold','hypothermia','freezing','shiver','shivering','wet cold','exposure','frostbite'],
+      a: "🥶 HYPOTHERMIA / COLD\n1. Move to warm, dry shelter immediately\n2. Remove wet clothing\n3. Wrap in dry blankets, cover head\n4. Warm center of body first (chest, neck, groin) — not limbs\n5. Give warm (not hot) drinks if conscious\n6. Do NOT rub limbs — can cause heart problems\n⚠️ Unconscious or severe shivering → SOS" },
+    // LOST / NAVIGATION
+    { k: ['lost','where am i','cant find','can\'t find','navigation','direction','location','find me','missing','dont know where'],
+      a: "📍 YOU ARE LOST\n1. STOP — stay calm, sit down, don't panic\n2. Stay in one place — rescuers find stationary people faster\n3. Your GPS location is tracked in this app — check dashboard\n4. Signal: bright cloth, mirror reflection, whistle 3 times every 5 min\n5. Create shelter from wind and rain\n6. Conserve phone battery — airplane mode when not signaling" },
+    // TRAPPED
+    { k: ['trapped','stuck','buried','rubble','debris','collapse','building collapse','cant move','can\'t move','trapped inside'],
+      a: "🏚️ TRAPPED / BURIED\n1. Stay calm and conserve oxygen\n2. Cover mouth with cloth to filter dust\n3. Tap on pipes or walls — rescuers listen for sounds\n4. Do NOT shout continuously — wastes energy\n5. Turn phone torch on and off to signal\n6. If possible, create air space around face\n⚠️ Trigger SOS immediately — keep device powered on" },
+    // ELECTRIC SHOCK
+    { k: ['electric','shock','electrocuted','power line','live wire','voltage','shocked'],
+      a: "⚡ ELECTRIC SHOCK\n1. Do NOT touch the person while still in contact with electricity\n2. Turn off power source first OR use non-conductive stick/dry wood to push wire away\n3. Once safe: check for breathing → start CPR if needed\n4. Treat burns with cool water\n5. Keep person lying down and still\n⚠️ All electric shocks need medical evaluation — SOS" },
+    // ALLERGIC REACTION
+    { k: ['allergy','allergic','reaction','swelling','swollen','sting','bee','wasp','anaphylaxis','rash','hives','throat swelling'],
+      a: "🐝 ALLERGIC REACTION\nMILD (rash, hives):\n1. Remove allergen if known\n2. Apply cold pack to reduce swelling\n3. Antihistamine if available\n\nSEVERE (throat swelling, can't breathe):\n1. Use EpiPen if available — outer thigh\n2. Lay person flat, legs raised\n3. If unconscious and not breathing → CPR\n⚠️ Throat swelling = life threatening → SOS immediately" },
+    // NETWORK / APP
+    { k: ['network','connect','signal','offline','mesh','bluetooth','wifi','internet','not working','app'],
+      a: "📡 MESH NETWORK\nThis app works offline via mesh networking:\n• Messages hop device-to-device via Bluetooth/WiFi\n• No internet or cell towers needed\n• Keep app open and screen on to be a relay node\n• Green bar at top = connected to local mesh\n• Your GPS location is saved locally even without internet" },
+    // HELP / GENERAL
+    { k: ['help','emergency','sos','danger','save','rescue','urgent','critical','serious','bad','please'],
+      a: "🆘 EMERGENCY DETECTED\nI can guide you through:\n• 🩸 Bleeding & wounds\n• 🔥 Burns & fire\n• ❤️ CPR & unconscious\n• 🌊 Flood survival\n• 🌍 Earthquake\n• 🦴 Fractures\n• 📍 If you're lost\n• 🏚️ If you're trapped\n\nDescribe your situation and I'll give step-by-step help.\nOr press the SOS button to broadcast emergency signal." },
+    // HOW TO USE
+    { k: ['how','what','work','working','use','test','hello','hi','hey','who are you'],
+      a: "👋 I'm RESQ AI — your offline emergency assistant.\n\nI give first aid & survival guidance with zero internet.\n\nTry asking me:\n• 'I am bleeding badly'\n• 'There is a fire'\n• 'Someone is unconscious'\n• 'I am trapped'\n• 'Flood water is rising'\n• 'I am lost'\n\nI understand natural language — just describe what's happening." }
   ];
+
+  function aiBestMatch(text) {
+    const low = text.toLowerCase();
+    let best = null, bestScore = 0;
+    for (const item of botKB) {
+      let score = 0;
+      for (const kw of item.k) {
+        if (low.includes(kw)) score += kw.split(' ').length; // multi-word phrases score higher
+      }
+      if (score > bestScore) { bestScore = score; best = item; }
+    }
+    return bestScore > 0 ? best.a : null;
+  }
 
   function sendInput() {
     const input = document.getElementById('chatInput');
@@ -636,20 +698,16 @@
 
     setTimeout(() => {
       const body2 = document.getElementById('chatBody');
-      if (!body2) return; // modal may have closed
-      let reply = "I'm sorry, I don't have offline medical data for that specific situation. Please prioritize reaching a medical professional or broadcasting a high-priority SOS via the Dashboard.";
-      const lowText = text.toLowerCase();
-      for(let item of botAnswers) {
-        if(item.keywords.some(k => lowText.includes(k))) {
-          reply = item.ans; break;
-        }
-      }
+      if (!body2) return;
+      const matched = aiBestMatch(text);
+      const reply = matched || "I understand you need help. Try describing more specifically — for example: 'I am bleeding', 'there is a fire', 'someone is unconscious', or 'I am trapped'. I have offline guides for all emergencies.";
       const botBubble = document.createElement('div');
       botBubble.className = 'chat-msg bot';
+      botBubble.style.whiteSpace = 'pre-line';
       botBubble.textContent = reply;
       body2.appendChild(botBubble);
       body2.scrollTop = body2.scrollHeight;
-    }, 600);
+    }, 500);
   }
 </script>
 <script src="../i18n.js"></script>
