@@ -66,11 +66,20 @@
 
   /* Form card */
   .form-card {
-    flex: 1; overflow-y: auto; padding: 24px 20px 32px;
+    flex: 1; overflow-y: auto; padding: 24px 20px 100px;
     z-index: 10; scrollbar-width: none;
     display: flex; flex-direction: column; gap: 16px;
   }
   .form-card::-webkit-scrollbar { display: none; }
+
+  /* Fixed bottom bar with CTA */
+  .bottom-cta {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 12px 20px 28px;
+    background: linear-gradient(to top, var(--black) 75%, transparent);
+    z-index: 20;
+    display: flex; flex-direction: column; gap: 8px;
+  }
 
   .section-title {
     font-family: 'Barlow Condensed', sans-serif;
@@ -322,8 +331,10 @@
       </div>
     </div>
 
-    <div class="divider-row">SECURE OFFLINE JOIN</div>
+  </div>
 
+  <!-- Fixed bottom CTA — always visible -->
+  <div class="bottom-cta">
     <button class="btn-join" id="joinBtn" onclick="handleJoin()">
       <div class="spinner"></div>
       <span class="btn-text" style="display:flex;align-items:center;gap:8px">
@@ -331,10 +342,8 @@
         JOIN NETWORK
       </span>
     </button>
-
     <div class="privacy-note">
-      Your mobile number is <strong>never sent to any server</strong>.<br>
-      It is stored locally on your device for mesh identification.
+      Your number is <strong>never sent to any server</strong> — stored locally only.
     </div>
   </div>
 </div>
