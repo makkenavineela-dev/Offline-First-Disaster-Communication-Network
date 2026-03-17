@@ -66,19 +66,20 @@
 
   /* Form card */
   .form-card {
-    flex: 1; overflow-y: auto; padding: 24px 20px 100px;
+    flex: 1; overflow-y: auto; padding: 24px 20px 16px;
     z-index: 10; scrollbar-width: none;
     display: flex; flex-direction: column; gap: 16px;
   }
   .form-card::-webkit-scrollbar { display: none; }
 
-  /* Fixed bottom bar with CTA */
+  /* Bottom CTA — always in view, never scrolls away */
   .bottom-cta {
-    position: absolute; bottom: 0; left: 0; right: 0;
+    flex-shrink: 0;
     padding: 12px 20px 28px;
-    background: linear-gradient(to top, var(--black) 75%, transparent);
-    z-index: 20;
+    background: var(--black);
+    border-top: 1px solid var(--gray3);
     display: flex; flex-direction: column; gap: 8px;
+    z-index: 20;
   }
 
   .section-title {
