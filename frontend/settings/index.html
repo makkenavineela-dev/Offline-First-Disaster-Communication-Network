@@ -180,7 +180,7 @@
       <div class="profile-avatar">YO<div class="profile-online"></div></div>
       <div class="profile-info">
         <div class="profile-name" data-i18n="your_profile">Your Profile</div>
-        <div class="profile-id">Node ID: RESQ-7F3A-K9 · Zone B</div>
+        <div class="profile-id" id="profileNodeId">Node ID: -- · --</div>
         <span class="profile-role" data-i18n="first_responder">First Responder</span>
       </div>
       <div class="profile-edit">
@@ -193,23 +193,23 @@
       <div class="net-title" data-i18n="network_status">Network Status</div>
       <div class="net-row">
         <div class="net-label"><div class="net-dot green"></div><span class="net-name" data-i18n="mesh_network">Mesh Network</span></div>
-        <span class="net-value green">ACTIVE · 12 nodes</span>
+        <span class="net-value green" id="netMeshStatus">SEARCHING…</span>
       </div>
       <div class="net-row">
         <div class="net-label"><div class="net-dot red"></div><span class="net-name">Internet / Cellular</span></div>
-        <span class="net-value" style="color:var(--red)">OFFLINE</span>
+        <span class="net-value" id="netInternet" style="color:var(--red)">OFFLINE</span>
       </div>
       <div class="net-row">
         <div class="net-label"><div class="net-dot green"></div><span class="net-name">Bluetooth</span></div>
-        <span class="net-value green">ON · 2.4km range</span>
+        <span class="net-value green" id="netBluetooth">--</span>
       </div>
       <div class="net-row">
         <div class="net-label"><div class="net-dot amber"></div><span class="net-name">WiFi Direct</span></div>
-        <span class="net-value amber">Scanning…</span>
+        <span class="net-value amber" id="netWifi">Scanning…</span>
       </div>
       <div class="net-row">
         <div class="net-label"><div class="net-dot green"></div><span class="net-name">GPS Location</span></div>
-        <span class="net-value green">±4m accuracy</span>
+        <span class="net-value green" id="netGps">--</span>
       </div>
     </div>
 
@@ -268,6 +268,27 @@
     <!-- Mesh settings -->
     <div class="settings-group">
       <div class="settings-group-title">Mesh Network</div>
+
+      <!-- Server IP — critical for LAN-only offline operation -->
+      <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;width:100%;">
+          <div class="setting-icon blue">🖥️</div>
+          <div class="setting-info">
+            <div class="setting-name">Server IP Address</div>
+            <div class="setting-sub" id="meshConnStatus">Searching for local server…</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;width:100%;padding-left:50px;">
+          <input id="serverIpInput" type="text" placeholder="e.g. 192.168.1.100:5000"
+            style="flex:1;background:var(--gray3);border:1px solid var(--gray2);border-radius:10px;
+                   padding:8px 12px;color:var(--white);font-size:13px;outline:none;font-family:'Barlow',sans-serif;"
+            value="">
+          <button onclick="applyServerIp()"
+            style="background:var(--blue);border:none;border-radius:10px;padding:8px 14px;
+                   color:white;font-size:12px;font-weight:600;cursor:pointer;">Connect</button>
+        </div>
+      </div>
+
       <div class="setting-row">
         <div class="setting-icon blue">📡</div>
         <div class="setting-info">
@@ -350,6 +371,77 @@
 </div>
 
 <script src="../i18n.js"></script>
-  <script src="../store.js"></script>
+<script src="../store.js"></script>
+<script src="../mesh.js"></script>
+<script>
+(function() {
+  // Pre-fill stored server IP
+  const stored = localStorage.getItem('resq_server_ip') || '';
+  const input  = document.getElementById('serverIpInput');
+  if (input && stored) input.value = stored.replace(/^https?:\/\//, '');
+
+  function applyServerIp() {
+    const val = (input ? input.value.trim() : '');
+    if (!val) return;
+    const url = val.startsWith('http') ? val : 'http://' + val;
+    if (window.RESQ_Mesh) {
+      RESQ_Mesh.setServerUrl(url);
+    } else {
+      localStorage.setItem('resq_server_ip', url);
+    }
+    const sub = document.getElementById('meshConnStatus');
+    if (sub) sub.textContent = 'Connecting to ' + val + '…';
+  }
+  window.applyServerIp = applyServerIp;
+
+  // Allow Enter key in IP input
+  if (input) input.addEventListener('keypress', e => { if (e.key === 'Enter') applyServerIp(); });
+
+  function updateNetStatus(s) {
+    const meshEl   = document.getElementById('netMeshStatus');
+    const statusEl = document.getElementById('meshConnStatus');
+    const nodesEl  = document.getElementById('meshNodes'); // dashboard elem not here, skip
+
+    if (meshEl) {
+      meshEl.textContent = s.connected
+        ? 'ACTIVE · ' + (s.nodeCount || 0) + ' nodes'
+        : 'SEARCHING…';
+      meshEl.style.color = s.connected ? 'var(--green)' : 'var(--amber)';
+    }
+    if (statusEl) {
+      statusEl.textContent = s.connected
+        ? 'Connected · ' + (s.nodeCount || 0) + ' node' + (s.nodeCount !== 1 ? 's' : '') + ' on mesh'
+        : 'Not connected — enter server IP above';
+    }
+
+    // Update GPS display from location.js cache
+    const gpsEl = document.getElementById('netGps');
+    if (gpsEl && window.RESQ_Location) {
+      const loc = RESQ_Location.getLast();
+      gpsEl.textContent = loc ? '±' + loc.accuracy + 'm accuracy' : 'Acquiring…';
+    }
+  }
+
+  function wireMesh() {
+    if (!window.RESQ_Mesh) { setTimeout(wireMesh, 200); return; }
+    RESQ_Mesh.on('status', updateNetStatus);
+    updateNetStatus({ connected: RESQ_Mesh.isConnected(), nodeCount: RESQ_Mesh.getNodes().length });
+
+    // Show node ID from localStorage
+    const nodeIdEl = document.getElementById('profileNodeId');
+    if (nodeIdEl) {
+      const uid  = localStorage.getItem('resq_uid') || '--';
+      const zone = localStorage.getItem('resq_zone') || '--';
+      nodeIdEl.textContent = 'Node ID: ' + uid.slice(0, 8).toUpperCase() + ' · ' + zone;
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireMesh);
+  } else {
+    wireMesh();
+  }
+})();
+</script>
 </body>
 </html>

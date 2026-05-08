@@ -1,4 +1,6 @@
 const express = require('express');
+const { createServer } = require('http');
+const { Server: SocketIO } = require('socket.io');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -10,6 +12,7 @@ const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const path = require('path');
 const compression = require('compression');
+const initSocket = require('./src/socket/socketHandler');
  
 // Route Imports
 const authRoutes = require('./src/routes/authRoutes');
@@ -45,6 +48,16 @@ if (!process.env.MONGO_URI) {
 }
 
 const app = express();
+const httpServer = createServer(app);
+
+// ─── Socket.io (offline-mesh real-time layer) ─────────────────────────────────
+// Allow any origin so every device on the LAN hotspot can connect.
+const io = new SocketIO(httpServer, {
+  cors: { origin: '*', methods: ['GET', 'POST'] },
+  // Prefer WebSocket; fall back to polling for captive-portal environments.
+  transports: ['websocket', 'polling'],
+});
+initSocket(io);
 
 // ─── Compression ──────────────────────────────────────────────────────────────
 app.use(compression());
@@ -199,15 +212,19 @@ if (process.env.NODE_ENV !== 'test') {
     .then(() => {
       logger.info('✅ Connected to MongoDB');
       initCronJobs();
-      // Bind to 0.0.0.0 so all local network interfaces are reachable
-      server = app.listen(PORT, '0.0.0.0', () => {
-        logger.info(`🚀 RESQ API running on port ${PORT}`);
+      // Use httpServer (not app) so Socket.io shares the same port.
+      // Bind to 0.0.0.0 so all LAN/hotspot devices can reach us.
+      server = httpServer.listen(PORT, '0.0.0.0', () => {
+        logger.info(`🚀 RESQ API + Socket.io running on port ${PORT}`);
         logger.info(`📡 Swagger docs: http://localhost:${PORT}/api-docs`);
       });
     })
     .catch((err) => {
       logger.error(`❌ MongoDB connection failed: ${err.message}`);
-      process.exit(1);
+      // Start the HTTP/Socket.io server anyway so mesh works without MongoDB
+      server = httpServer.listen(PORT, '0.0.0.0', () => {
+        logger.warn(`⚠️  Running WITHOUT MongoDB — mesh/socket only on port ${PORT}`);
+      });
     });
 }
  
@@ -215,6 +232,7 @@ if (process.env.NODE_ENV !== 'test') {
 const gracefulShutdown = (signal) => {
   logger.info(`${signal} received — shutting down gracefully`);
   if (server) {
+    io.close(); // close all socket connections first
     server.close(() => {
       // Mongoose 9: connection.close() returns a Promise; no callback arg.
       mongoose.connection.close().then(() => {

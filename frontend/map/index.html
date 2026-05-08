@@ -122,6 +122,7 @@
   .offline-dl-btn svg { width: 20px; height: 20px; fill: var(--green); }
   .offline-dl-btn.syncing { animation: pulse 1s infinite; }
   @keyframes pulse { 50% { opacity: 0.5; } }
+  @keyframes sosPulse { 0%,100% { box-shadow: 0 0 6px #FF1F1F88; } 50% { box-shadow: 0 0 18px #FF1F1F; } }
 
   /* Bottom panel */
   .bottom-panel {
@@ -242,11 +243,11 @@
   </div>
 
   <div class="filter-chips">
-    <div class="chip all"><div class="chip-dot"></div><span data-i18n="filter_all">All (24)</span></div>
-    <div class="chip shelters"><div class="chip-dot"></div><span data-i18n="filter_shelters">Shelters (3)</span></div>
-    <div class="chip people"><div class="chip-dot"></div><span data-i18n="filter_people">People (12)</span></div>
-    <div class="chip hazards"><div class="chip-dot"></div><span data-i18n="filter_hazards">Hazards (5)</span></div>
-    <div class="chip nodes"><div class="chip-dot"></div><span data-i18n="filter_nodes">Nodes (4)</span></div>
+    <div class="chip all"><div class="chip-dot"></div><span data-i18n="filter_all">All</span></div>
+    <div class="chip shelters"><div class="chip-dot"></div><span data-i18n="filter_shelters">Shelters</span></div>
+    <div class="chip people"><div class="chip-dot"></div><span data-i18n="filter_people">People</span></div>
+    <div class="chip hazards"><div class="chip-dot"></div><span data-i18n="filter_hazards">Hazards</span></div>
+    <div class="chip nodes"><div class="chip-dot"></div><span data-i18n="filter_nodes">Nodes</span></div>
   </div>
 
   <div class="zoom-controls">
@@ -266,47 +267,24 @@
     <div class="panel-handle"></div>
     <div class="stats-row">
       <div class="stat-pill">
-        <div class="stat-pill-val green">3</div>
+        <div class="stat-pill-val green" id="mapStatShelters">0</div>
         <div class="stat-pill-label" data-i18n="val_shelters">Shelters</div>
       </div>
       <div class="stat-pill">
-        <div class="stat-pill-val red">2</div>
+        <div class="stat-pill-val red" id="mapStatSOS">0</div>
         <div class="stat-pill-label" data-i18n="val_sos">SOS Active</div>
       </div>
       <div class="stat-pill">
-        <div class="stat-pill-val amber">5</div>
+        <div class="stat-pill-val amber" id="mapStatHazards">0</div>
         <div class="stat-pill-label" data-i18n="val_hazards">Hazards</div>
       </div>
       <div class="stat-pill">
-        <div class="stat-pill-val">12</div>
+        <div class="stat-pill-val" id="mapStatPeople">0</div>
         <div class="stat-pill-label" data-i18n="filter_people">People</div>
       </div>
     </div>
-    <div class="nearby-list">
-      <div class="nearby-item" onclick="openMapDetail('map_shelter_title', '🏫', 'shelter', 'map_shelter_dist', 'map_shelter_desc')">
-        <div class="nearby-icon shelter">🏫</div>
-        <div class="nearby-info">
-          <div class="nearby-name" data-i18n="map_shelter_title">High School Shelter</div>
-          <div class="nearby-dist" data-i18n="map_shelter_dist_short">0.4km · 60 people · Open</div>
-        </div>
-        <div class="nearby-arrow"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>
-      </div>
-      <div class="nearby-item" onclick="openMapDetail('map_sos_title', '🆘', 'sos', 'map_sos_dist', 'map_sos_desc')">
-        <div class="nearby-icon sos">🆘</div>
-        <div class="nearby-info">
-          <div class="nearby-name" data-i18n="map_sos_title">SOS — Unknown Person</div>
-          <div class="nearby-dist" data-i18n="map_sos_dist_short">0.6km · Medical emergency</div>
-        </div>
-        <div class="nearby-arrow"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>
-      </div>
-      <div class="nearby-item" onclick="openMapDetail('map_hazard_title', '⚡', 'hazard', 'map_hazard_dist', 'map_hazard_desc')">
-        <div class="nearby-icon hazard">⚡</div>
-        <div class="nearby-info">
-          <div class="nearby-name" data-i18n="map_hazard_title">Hazard — Downed Power Line</div>
-          <div class="nearby-dist" data-i18n="map_hazard_dist_short">0.9km · Avoid Oak St</div>
-        </div>
-        <div class="nearby-arrow"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>
-      </div>
+    <div class="nearby-list" id="mapNearbyList">
+      <div style="text-align:center; padding:20px 0; color:var(--text-muted); font-size:12px;">No nearby items detected</div>
     </div>
   </div>
 
@@ -372,47 +350,14 @@ function initMap() {
 
   setTimeout(() => { map.invalidateSize(); }, 400);
 
-  // My Location Marker
+  // My Location Marker (starts hidden until GPS fix)
   const myIcon = L.divIcon({
     className: 'custom-div-icon',
-    html: `<div style="width:20px;height:20px;background:rgba(255,170,0,0.8);border:2px solid white;border-radius:50%;box-shadow:0 0 15px rgba(255,170,0,0.8);"></div>`,
+    html: `<div style="width:20px;height:20px;background:rgba(255,170,0,0.9);border:2px solid white;border-radius:50%;box-shadow:0 0 15px rgba(255,170,0,0.8);"></div>`,
     iconSize: [20, 20],
     iconAnchor: [10, 10]
   });
-  myLocationMarker = L.marker([12.941487207089997, 77.56582967529805], {icon: myIcon}).addTo(map);
-
-  // Demo Shelter
-  const shelterIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: `<div style="background:rgba(0,230,118,0.2);backdrop-filter:blur(4px);border:2px solid #00E676;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;">🏫</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
-  });
-  L.marker([12.9450, 77.5700], {icon: shelterIcon})
-    .addTo(map)
-    .on('click', () => openMapDetail('map_shelter_title', '🏫', 'shelter', 'map_shelter_dist', 'map_shelter_desc'));
-
-  // SOS Alert
-  const sosIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: `<div style="background:rgba(255,31,31,0.2);backdrop-filter:blur(4px);border:2px solid #FF1F1F;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#FF1F1F;">SOS</div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14]
-  });
-  L.marker([12.9380, 77.5620], {icon: sosIcon})
-    .addTo(map)
-    .on('click', () => openMapDetail('map_sos_title', '🆘', 'sos', 'map_sos_dist', 'map_sos_desc'));
-
-  // Hazard Node
-  const hazardIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: `<div style="background:rgba(255,170,0,0.2);backdrop-filter:blur(4px);border:2px solid #FFAA00;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;">⚡</div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-  });
-  L.marker([12.9430, 77.5600], {icon: hazardIcon})
-    .addTo(map)
-    .on('click', () => openMapDetail('map_hazard_title', '⚡', 'hazard', 'map_hazard_dist', 'map_hazard_desc'));
+  myLocationMarker = L.marker([0, 0], { icon: myIcon, opacity: 0 }).addTo(map);
 
   // Zoom Controls
   const zoomBtns = document.querySelectorAll('.zoom-btn');
@@ -488,6 +433,149 @@ async function setupGPS() {
 window.onload = initMap;
 if (document.readyState === 'complete') initMap();
 
+// ── Mesh map layer ────────────────────────────────────────────────────────────
+const _nodeMarkers = {};  // userId → Leaflet marker
+const _sosMarkers  = [];  // SOS markers
+
+function _roleColor(role) {
+  if (role === 'responder' || role === 'first_responder') return '#2979FF';
+  if (role === 'medical')   return '#00E676';
+  if (role === 'coordinator') return '#FFAA00';
+  return '#F5F5F0'; // civilian
+}
+
+function _makeNodeIcon(name, role) {
+  const initials = (name || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+  const color = _roleColor(role);
+  return L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="width:30px;height:30px;background:rgba(10,10,10,0.85);border:2px solid ${color};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${color};box-shadow:0 0 8px ${color}55;">${initials}</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+  });
+}
+
+function _makeSosIcon() {
+  return L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="width:32px;height:32px;background:rgba(255,31,31,0.2);border:2px solid #FF1F1F;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#FF1F1F;animation:sosPulse 1s ease-in-out infinite;">SOS</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+}
+
+function _addNodeMarker(node) {
+  if (!map || node.lat == null || node.lng == null) return;
+  if (_nodeMarkers[node.userId]) {
+    _nodeMarkers[node.userId].setLatLng([node.lat, node.lng]);
+    return;
+  }
+  const marker = L.marker([node.lat, node.lng], { icon: _makeNodeIcon(node.name, node.role) })
+    .addTo(map)
+    .bindPopup(`<b>${node.name || 'Unknown'}</b><br>${node.role || 'civilian'}`);
+  _nodeMarkers[node.userId] = marker;
+}
+
+function _removeNodeMarker(userId) {
+  if (_nodeMarkers[userId]) {
+    map.removeLayer(_nodeMarkers[userId]);
+    delete _nodeMarkers[userId];
+  }
+}
+
+function _addSosMarker(alert) {
+  if (!map || alert.lat == null || alert.lng == null) return;
+  const marker = L.marker([alert.lat, alert.lng], { icon: _makeSosIcon() })
+    .addTo(map)
+    .bindPopup(`<b>SOS — ${alert.fromName || 'Unknown'}</b><br>${alert.message || alert.alertType || ''}`);
+  _sosMarkers.push(marker);
+}
+
+// Update stats row and nearby list
+function _refreshMapStats(nodes) {
+  const sosCount = _sosMarkers.length;
+  document.getElementById('mapStatShelters').textContent = 0;
+  document.getElementById('mapStatSOS').textContent      = sosCount;
+  document.getElementById('mapStatHazards').textContent  = 0;
+  document.getElementById('mapStatPeople').textContent   = nodes.length;
+
+  const list = document.getElementById('mapNearbyList');
+  if (!list) return;
+  list.innerHTML = '';
+
+  if (!nodes.length) {
+    list.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--text-muted);font-size:12px;">No nearby nodes detected</div>';
+    return;
+  }
+
+  for (const node of nodes) {
+    const item = document.createElement('div');
+    item.className = 'nearby-item';
+    item.innerHTML = `
+      <div class="nearby-icon people" style="background:rgba(41,121,255,0.15);border:1px solid rgba(41,121,255,0.3);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#2979FF;">
+        ${(node.name||'?').slice(0,2).toUpperCase()}
+      </div>
+      <div class="nearby-info">
+        <div class="nearby-name">${node.name || 'Unknown'}</div>
+        <div class="nearby-dist">${node.role || 'civilian'} · ${node.status || 'active'}</div>
+      </div>
+      <div class="nearby-arrow"><svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></div>`;
+    if (node.lat != null) {
+      item.onclick = () => map && map.setView([node.lat, node.lng], 16);
+    }
+    list.appendChild(item);
+  }
+}
+
+// Wire mesh once loaded
+function wireMeshMap() {
+  if (!window.RESQ_Mesh) { setTimeout(wireMeshMap, 200); return; }
+
+  // Load already-known nodes
+  const nodes = RESQ_Mesh.getNodes();
+  nodes.forEach(_addNodeMarker);
+  _refreshMapStats(nodes);
+
+  // Load SOS history markers
+  RESQ_Mesh.getSOSHistory().forEach(_addSosMarker);
+
+  RESQ_Mesh.on('nodes', (nodes) => {
+    nodes.forEach(_addNodeMarker);
+    _refreshMapStats(nodes);
+  });
+
+  RESQ_Mesh.on('node_joined', (node) => {
+    _addNodeMarker(node);
+    _refreshMapStats(RESQ_Mesh.getNodes());
+  });
+
+  RESQ_Mesh.on('node_left', (data) => {
+    _removeNodeMarker(data.userId);
+    _refreshMapStats(RESQ_Mesh.getNodes());
+  });
+
+  RESQ_Mesh.on('location_update', (data) => {
+    if (_nodeMarkers[data.userId]) {
+      _nodeMarkers[data.userId].setLatLng([data.lat, data.lng]);
+    } else {
+      _addNodeMarker(data);
+    }
+  });
+
+  RESQ_Mesh.on('sos', (alert) => {
+    _addSosMarker(alert);
+    _refreshMapStats(RESQ_Mesh.getNodes());
+    // Pan to SOS location
+    if (map && alert.lat != null) map.setView([alert.lat, alert.lng], 15);
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', wireMeshMap);
+} else {
+  wireMeshMap();
+}
+
 function openMapDetail(titleKey, iconHtml, type, distKey, descKey) {
     document.getElementById('detailTitle').setAttribute('data-i18n', titleKey);
     document.getElementById('detailIcon').innerText = iconHtml;
@@ -506,5 +594,6 @@ function closeMapDetail() {
 </script>
 <script src="../i18n.js"></script>
 <script src="../store.js"></script>
+<script src="../mesh.js"></script>
 </body>
 </html>

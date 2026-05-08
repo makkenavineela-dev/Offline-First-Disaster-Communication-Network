@@ -299,31 +299,8 @@
 
     <!-- Nearby SOS -->
     <div class="section-label" data-i18n="sos_nearby">Nearby Alerts</div>
-    <div class="sos-history">
-      <div class="history-item">
-        <div class="hist-dot pending"></div>
-        <div class="hist-info">
-          <div class="hist-name">Unknown — Medical Emergency</div>
-          <div class="hist-detail">0.4km away · 3 nodes relayed</div>
-        </div>
-        <div class="hist-time">2m</div>
-      </div>
-      <div class="history-item">
-        <div class="hist-dot"></div>
-        <div class="hist-info">
-          <div class="hist-name">Sarah L. — Trapped, 4th Floor</div>
-          <div class="hist-detail">1.1km away · Resolved</div>
-        </div>
-        <div class="hist-time">18m</div>
-      </div>
-      <div class="history-item">
-        <div class="hist-dot"></div>
-        <div class="hist-info">
-          <div class="hist-name">Group B — Flood, Request Boat</div>
-          <div class="hist-detail">2.3km away · Rescue dispatched</div>
-        </div>
-        <div class="hist-time">34m</div>
-      </div>
+    <div class="sos-history" id="sosNearbyList">
+      <div style="text-align:center; padding:20px 0; color:var(--text-muted); font-size:12px;">No nearby alerts</div>
     </div>
   </div>
 
@@ -433,46 +410,27 @@
   if (navigator.onLine) flushSOSQueue();
 
   async function broadcastSOS() {
-    const type = document.querySelector('.alert-type.active .alert-type-label').textContent;
-    const content = document.querySelector('.msg-textarea').value || `Emergency SOS: ${type}`;
-    const user = window.appStore ? window.appStore.getState().user : { id: 'UNKNOWN', zone: 'all' };
+    const typeEl  = document.querySelector('.alert-type.active .alert-type-label');
+    const alertType = typeEl ? typeEl.textContent.trim() : 'General';
+    const message   = document.querySelector('.msg-textarea').value.trim() || ('Emergency SOS: ' + alertType);
 
-    const payload = {
-      type: 'sos',
-      content: content,
-      zone: user.zone,
-      locationTag: currentCoords
-    };
-
-    console.log('Broadcasting SOS:', payload);
-
-    // 0. Get Auth Token
-    const token = window.appStore?.getState()?.user?.token || localStorage.getItem('resq_token');
-
-    // 1. Save to local history immediately (Offline First)
-    if (window.appStore) {
-      const state = window.appStore.getState();
-      const newMsg = { ...payload, id: Date.now(), timestamp: new Date(), sender: user.name || 'Me' };
-      window.appStore.updateState({ messages: [newMsg, ...state.messages] });
-    }
-
-    // 2. Attempt network broadcast
-    try {
-      const response = await fetch(`${window.RESQ_CONFIG.API_BASE_URL}/api/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
+    // Use mesh layer — works offline over LAN, queues when no network at all
+    if (window.RESQ_Mesh) {
+      RESQ_Mesh.sendSOS(alertType, message, currentCoords);
+      // Show our own SOS in the nearby list immediately
+      renderSOSItem({
+        id: 'my-' + Date.now(),
+        fromName: localStorage.getItem('resq_name') || 'Me',
+        alertType,
+        message,
+        lat: currentCoords.lat,
+        lng: currentCoords.lng,
+        timestamp: Date.now(),
+        _mine: true,
       });
-      return response.ok;
-    } catch (e) {
-      // 3. Offline — add to persistent queue, will retry on reconnect
-      console.warn('Network offline, SOS queued for retry', e);
-      enqueueSOSPayload(payload);
-      return false;
+      return true;
     }
+    return false;
   }
 
   // Use Pointer Events to avoid the touch+mouse double-fire on Android.
@@ -538,8 +496,61 @@
   function setMsg(el) {
     document.querySelector('.msg-textarea').value = el.textContent;
   }
+
+  // ── Mesh integration ─────────────────────────────────────────────────────────
+  function timeAgo(ts) {
+    const d = Math.floor((Date.now() - ts) / 1000);
+    if (d < 60)   return d + 's';
+    if (d < 3600) return Math.floor(d / 60) + 'm';
+    return Math.floor(d / 3600) + 'h';
+  }
+
+  function renderSOSItem(alert) {
+    const list = document.getElementById('sosNearbyList');
+    if (!list) return;
+
+    // Remove placeholder
+    const ph = list.querySelector('div[style]');
+    if (ph) ph.remove();
+
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.dataset.sosId = alert.id;
+    item.innerHTML = `
+      <div class="hist-dot ${alert._mine ? '' : 'pending'}"></div>
+      <div class="hist-info">
+        <div class="hist-name">${alert.fromName || 'Unknown'} — ${alert.alertType || 'Emergency'}</div>
+        <div class="hist-detail">${alert.message || ''}${alert.lat ? ' · ' + alert.lat.toFixed(3) + ', ' + alert.lng.toFixed(3) : ''}</div>
+      </div>
+      <div class="hist-time">${timeAgo(alert.timestamp)}</div>`;
+
+    // Prepend so newest is at top
+    list.insertBefore(item, list.firstChild);
+  }
+
+  function loadSOSHistory() {
+    if (!window.RESQ_Mesh) return;
+    const history = RESQ_Mesh.getSOSHistory();
+    for (const alert of [...history].reverse()) renderSOSItem(alert);
+  }
+
+  function wireMesh() {
+    if (!window.RESQ_Mesh) { setTimeout(wireMesh, 200); return; }
+    RESQ_Mesh.on('sos', (alert) => {
+      renderSOSItem(alert);
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    });
+    loadSOSHistory();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireMesh);
+  } else {
+    wireMesh();
+  }
 </script>
 <script src="../i18n.js"></script>
-  <script src="../store.js"></script>
+<script src="../store.js"></script>
+<script src="../mesh.js"></script>
 </body>
 </html>
