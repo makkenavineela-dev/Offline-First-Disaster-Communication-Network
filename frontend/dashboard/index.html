@@ -371,15 +371,15 @@
     </div>
   </div>
 
-  <div class="alert-banner">
+  <div class="alert-banner" id="alertBanner" style="display:none;">
     <div class="alert-icon">
       <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2V10z"/></svg>
     </div>
     <div class="alert-text">
-      <div class="alert-title" data-i18n="alert_title">⚡ EARTHQUAKE ALERT — Magnitude 5.8</div>
-      <div class="alert-sub" data-i18n="alert_sub">3.2km from your location · Zone B</div>
+      <div class="alert-title" id="alertTitle"></div>
+      <div class="alert-sub" id="alertSub"></div>
     </div>
-    <div class="alert-time">2m ago</div>
+    <div class="alert-time" id="alertTime"></div>
   </div>
 
   <div class="scroll-area">
@@ -429,19 +429,19 @@
       </div>
       <div class="mesh-stats">
         <div class="mesh-stat">
-          <div class="mesh-stat-val green">12</div>
+          <div class="mesh-stat-val green" id="meshNodes">--</div>
           <div class="mesh-stat-label" data-i18n="mesh_nodes">Nodes</div>
         </div>
         <div class="mesh-stat">
-          <div class="mesh-stat-val">2.4km</div>
+          <div class="mesh-stat-val" id="meshRange">--</div>
           <div class="mesh-stat-label" data-i18n="mesh_range">Range</div>
         </div>
         <div class="mesh-stat">
-          <div class="mesh-stat-val amber">94%</div>
+          <div class="mesh-stat-val amber" id="meshBattery">--</div>
           <div class="mesh-stat-label" data-i18n="mesh_battery">Battery</div>
         </div>
         <div class="mesh-stat">
-          <div class="mesh-stat-val">18ms</div>
+          <div class="mesh-stat-val" id="meshLatency">--</div>
           <div class="mesh-stat-label" data-i18n="mesh_latency">Latency</div>
         </div>
       </div>
@@ -466,7 +466,7 @@
         </div>
         <div class="action-text">
           <div class="action-title" data-i18n="action_messages">Messages</div>
-          <div class="action-sub" data-i18n="msg_unread">3 unread</div>
+          <div class="action-sub" data-i18n="msg_unread" id="dashMsgSub"></div>
         </div>
       </a>
       <a href="/map/index.html" class="action-card map">
@@ -475,7 +475,7 @@
         </div>
         <div class="action-text">
           <div class="action-title" data-i18n="live_map">Live Map</div>
-          <div class="action-sub" data-i18n="map_nearby">12 nearby</div>
+          <div class="action-sub" data-i18n="map_nearby" id="dashMapSub"></div>
         </div>
       </a>
       <a href="/ai/index.html" class="action-card" style="background:linear-gradient(135deg,rgba(41,121,255,0.12),rgba(255,31,31,0.08));border-color:rgba(41,121,255,0.3);">
@@ -511,40 +511,8 @@
 
     <!-- Recent messages -->
     <div class="section-label" data-i18n="recent_messages">Recent Messages</div>
-    <div class="msg-list">
-      <a href="/messaging/index.html" class="msg-item">
-        <div class="msg-avatar emergency">⚠</div>
-        <div class="msg-body">
-          <div class="msg-name" data-i18n="msg_broadcast">BROADCAST — Zone B</div>
-          <div class="msg-preview" data-i18n="msg_emerg_preview">Road to shelter blocked. Use alt route via Park Ave...</div>
-        </div>
-        <div class="msg-meta">
-          <div class="msg-time">4m</div>
-          <div class="msg-badge">!</div>
-        </div>
-      </a>
-      <a href="/messaging/index.html" class="msg-item">
-        <div class="msg-avatar">MR</div>
-        <div class="msg-body">
-          <div class="msg-name" data-i18n="msg_maria">Maria Rodriguez</div>
-          <div class="msg-preview" data-i18n="msg_maria_preview">We made it to the high school gym. There's room for more...</div>
-        </div>
-        <div class="msg-meta">
-          <div class="msg-time">11m</div>
-          <div class="msg-badge">2</div>
-        </div>
-      </a>
-      <a href="/messaging/index.html" class="msg-item">
-        <div class="msg-avatar">JK</div>
-        <div class="msg-body">
-          <div class="msg-name" data-i18n="msg_james">James Kim</div>
-          <div class="msg-preview" data-i18n="msg_james_preview">Anyone have insulin? Urgent for elderly neighbor</div>
-        </div>
-        <div class="msg-meta">
-          <div class="msg-time">22m</div>
-          <div class="msg-badge">1</div>
-        </div>
-      </a>
+    <div class="msg-list" id="dashMsgList">
+      <div style="text-align:center; padding:24px 0; color:var(--text-muted); font-size:12px;">No recent messages</div>
     </div>
   </div>
 
@@ -746,6 +714,106 @@
 <script src="../i18n.js"></script>
 <script src="../store.js"></script>
 <script src="../location.js"></script>
+<script src="../mesh.js"></script>
+<script>
+// ── Dashboard mesh wiring ─────────────────────────────────────────────────────
+(function() {
+  function timeAgo(ts) {
+    const d = Math.floor((Date.now() - ts) / 1000);
+    if (d < 60)   return d + 's ago';
+    if (d < 3600) return Math.floor(d / 60) + 'm ago';
+    return Math.floor(d / 3600) + 'h ago';
+  }
+
+  function onStatus(s) {
+    const nodesEl   = document.getElementById('meshNodes');
+    const statusDot = document.querySelector('.mesh-dot');
+    const statusTxt = document.querySelector('.mesh-status-text');
+
+    if (nodesEl) nodesEl.textContent = s.nodeCount || 0;
+
+    if (s.connected) {
+      if (statusDot) statusDot.style.background = 'var(--green)';
+      if (statusTxt) statusTxt.textContent = 'CONNECTED';
+      document.getElementById('meshLatency') && (document.getElementById('meshLatency').textContent = '--');
+    } else {
+      if (statusDot) statusDot.style.background = 'var(--amber)';
+      if (statusTxt) statusTxt.textContent = 'SEARCHING';
+      if (nodesEl) nodesEl.textContent = '0';
+    }
+
+    // Messages action sub
+    const msgSub = document.getElementById('dashMsgSub');
+    if (msgSub) {
+      const hist = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
+      msgSub.textContent = hist.length ? hist.length + ' message' + (hist.length !== 1 ? 's' : '') : '';
+    }
+
+    // Map action sub
+    const mapSub = document.getElementById('dashMapSub');
+    if (mapSub) mapSub.textContent = (s.nodeCount || 0) + ' nearby';
+  }
+
+  function renderMsgItem(msg) {
+    const isSOS = msg.type === 'sos';
+    const initials = (msg.fromName || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const a = document.createElement('a');
+    a.href = '/messaging/index.html';
+    a.className = 'msg-item';
+    a.innerHTML = `
+      <div class="msg-avatar${isSOS ? ' emergency' : ''}">${isSOS ? '⚠' : initials}</div>
+      <div class="msg-body">
+        <div class="msg-name">${msg.fromName || 'Unknown'}</div>
+        <div class="msg-preview">${msg.content || ''}</div>
+      </div>
+      <div class="msg-meta">
+        <div class="msg-time">${timeAgo(msg.timestamp)}</div>
+      </div>`;
+    return a;
+  }
+
+  function refreshMsgList() {
+    const list = document.getElementById('dashMsgList');
+    if (!list || !window.RESQ_Mesh) return;
+    const myId   = localStorage.getItem('resq_uid');
+    const hist   = RESQ_Mesh.getHistory().filter(m => m.from !== myId).slice(0, 3);
+    list.innerHTML = '';
+    if (!hist.length) {
+      list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:12px;">No recent messages</div>';
+      return;
+    }
+    hist.forEach(m => list.appendChild(renderMsgItem(m)));
+  }
+
+  function onSOS(alert) {
+    const banner  = document.getElementById('alertBanner');
+    const titleEl = document.getElementById('alertTitle');
+    const subEl   = document.getElementById('alertSub');
+    const timeEl  = document.getElementById('alertTime');
+    if (!banner) return;
+    titleEl.textContent = '🆘 SOS — ' + (alert.fromName || 'Unknown') + ' · ' + (alert.alertType || 'Emergency');
+    subEl.textContent   = alert.message || ('Lat: ' + (alert.lat || '--') + ' Lng: ' + (alert.lng || '--'));
+    timeEl.textContent  = 'just now';
+    banner.style.display = '';
+  }
+
+  function wireMesh() {
+    if (!window.RESQ_Mesh) { setTimeout(wireMesh, 200); return; }
+    RESQ_Mesh.on('status',  onStatus);
+    RESQ_Mesh.on('message', () => refreshMsgList());
+    RESQ_Mesh.on('sos',     onSOS);
+    // Initialise with current values
+    onStatus({ connected: RESQ_Mesh.isConnected(), nodeCount: RESQ_Mesh.getNodes().length });
+    refreshMsgList();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireMesh);
+  } else {
+    wireMesh();
+  }
+})();
+</script>
 <script>
   // ── Greet user by name ──
   (function() {

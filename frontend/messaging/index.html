@@ -243,7 +243,7 @@
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab(this)" data-i18n="tab_all">All (7)</div>
+    <div class="tab active" onclick="switchTab(this)" data-i18n="tab_all">All</div>
     <div class="tab" onclick="switchTab(this)" data-i18n="tab_groups">Groups</div>
     <div class="tab" onclick="switchTab(this)" data-i18n="tab_broadcast">Broadcast</div>
     <div class="tab" onclick="switchTab(this)" data-i18n="tab_direct">Direct</div>
@@ -251,98 +251,14 @@
 
   <div class="mesh-badge">
     <div class="mesh-dot"></div>
-    <div class="mesh-text"><span data-i18n="chat_offline_badge">Offline Mesh Active · 12 nodes ·</span> <span data-i18n="chat_offline_span">Msgs route without internet</span></div>
+    <div class="mesh-text"><span data-i18n="chat_offline_badge">Offline Mesh Active · <span id="msgNodeCount">--</span> nodes ·</span> <span data-i18n="chat_offline_span">Msgs route without internet</span></div>
   </div>
 
-  <div class="chat-list">
-    <div class="chat-group-label">🚨 Emergency</div>
-
-    <div class="chat-item emergency" onclick="openConversation('msg_broadcast', '📡', 'msg_emerg_prev2')">
-      <div class="chat-avatar group">📡</div>
-      <div class="chat-body">
-        <div class="chat-name"><span data-i18n="msg_broadcast">ZONE B BROADCAST</span> <span class="chat-badge emergency">EMERGENCY</span></div>
-        <div class="chat-preview unread" data-i18n="msg_emerg_prev2">⚠ Road 4 blocked — use alt route Park Ave N to shelter</div>
-      </div>
-      <div class="chat-meta">
-        <div class="chat-time">4m</div>
-        <div class="unread-count red">!</div>
-      </div>
-    </div>
-
-    <div class="chat-group-label">Groups</div>
-
-    <div class="chat-item unread" onclick="openConversation('map_shelter_title', '🏫', 'msg_maria_preview')">
-      <div class="chat-avatar group">🏫</div>
-      <div class="chat-body">
-        <div class="chat-name">High School Shelter <span class="chat-badge broadcast">SHELTER</span></div>
-        <div class="chat-preview unread" data-i18n="msg_maria_preview">Maria: We have 60 people here, need more water...</div>
-      </div>
-      <div class="chat-meta">
-        <div class="chat-time">11m</div>
-        <div class="unread-count">5</div>
-      </div>
-    </div>
-
-    <div class="chat-item" onclick="openConversation('Block 14 Neighbors', '🏘️', 'msg_david')">
-      <div class="chat-avatar group">🏘️</div>
-      <div class="chat-body">
-        <div class="chat-name">Block 14 Neighbors <span class="chat-badge mesh">MESH</span></div>
-        <div class="chat-preview" data-i18n="msg_david">David: Anyone seen the Johnsons? They didn't show up</div>
-      </div>
-      <div class="chat-meta">
-        <div class="chat-time">23m</div>
-        <div class="delivery-icon">✓✓</div>
-      </div>
-    </div>
-
-    <div class="chat-group-label">Direct Messages</div>
-
-    <div class="chat-item unread" onclick="openConversation('msg_james', 'JK', 'msg_james_preview')">
-      <div class="chat-avatar">JK<div class="online-indicator"></div></div>
-      <div class="chat-body">
-        <div class="chat-name" data-i18n="msg_james">James Kim</div>
-        <div class="chat-preview unread" data-i18n="msg_james_preview">Anyone have insulin? Urgent for elderly neighbor</div>
-      </div>
-      <div class="chat-meta">
-        <div class="chat-time">22m</div>
-        <div class="unread-count">1</div>
-      </div>
-    </div>
-
-    <div class="chat-item" onclick="openConversation('msg_maria', 'MR', 'msg_maria2')">
-      <div class="chat-avatar">MR</div>
-      <div class="chat-body">
-        <div class="chat-name" data-i18n="msg_maria">Maria Rodriguez</div>
-        <div class="chat-preview" data-i18n="msg_maria2">Already at shelter, 2nd floor is dry. Come fast</div>
-      </div>
-      <div class="chat-meta">
-        <div class="chat-time">35m</div>
-        <div class="delivery-icon">✓✓</div>
-      </div>
-    </div>
-
-    <div class="chat-item" onclick="openConversation('Raj Patel', 'RP', 'msg_raj')">
-      <div class="chat-avatar">RP</div>
-      <div class="chat-body">
-        <div class="chat-name">Raj Patel</div>
-        <div class="chat-preview" data-i18n="msg_raj">My family is safe. Heading north on Elm</div>
-      </div>
-      <div class="chat-meta">
-        <div class="chat-time">52m</div>
-        <div class="delivery-icon">✓</div>
-      </div>
-    </div>
-
-    <div class="chat-item" onclick="openConversation('Amy Wong', 'AW', 'msg_amy')">
-      <div class="chat-avatar">AW</div>
-      <div class="chat-body">
-        <div class="chat-name">Amy Wong</div>
-        <div class="chat-preview" data-i18n="msg_amy">You: I have first aid supplies if needed</div>
-      </div>
-      <div class="chat-meta">
-        <div class="chat-time">1h</div>
-        <div class="delivery-icon">✓✓</div>
-      </div>
+  <div class="chat-list" id="chatList">
+    <div id="emptyState" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 24px; gap:12px; text-align:center;">
+      <div style="font-size:40px; opacity:0.3;">💬</div>
+      <div style="font-size:14px; font-weight:600; color:var(--text-muted);">No messages yet</div>
+      <div style="font-size:12px; color:var(--text-muted); max-width:220px; line-height:1.5;">Messages from nearby mesh nodes will appear here when received.</div>
     </div>
   </div>
 
@@ -461,15 +377,6 @@
 
   function sendQuickMsg(text, isEmergency=false) {
     addBubble(text, isEmergency ? 'emergency' : 'sent');
-    
-    // Fake interactive demo replies
-    setTimeout(() => {
-       addBubble('System: Alert broadcasted to 12 nearby devices over mesh.', 'system');
-    }, 600);
-    
-    setTimeout(() => {
-       addBubble('Responder: We copy that. Help is on the way.', 'received');
-    }, 2500);
   }
 
   function shareLocation() {
@@ -492,17 +399,144 @@
   function sendOverlayMsg() {
     const input = document.getElementById('overlayInput');
     const text = input.value.trim();
-    if(text) {
-      addBubble(text, 'sent');
-      input.value = '';
-      if(window.appStore) {
-        const payload = { type: 'broadcast', content: text, zone: 'all' };
-        window.appStore.updateState({ messages: [{...payload, id:Date.now(), timestamp:new Date(), sender:'Me'}, ...window.appStore.getState().messages] });
-      }
+    if (!text) return;
+    input.value = '';
+    addBubble(text, 'sent');
+    if (window.RESQ_Mesh) {
+      RESQ_Mesh.sendMessage('all', text, 'broadcast');
     }
+  }
+
+  // ── Mesh integration ─────────────────────────────────────────────────────────
+  function timeAgo(ts) {
+    const d = Math.floor((Date.now() - ts) / 1000);
+    if (d < 60) return d + 's';
+    if (d < 3600) return Math.floor(d/60) + 'm';
+    return Math.floor(d/3600) + 'h';
+  }
+
+  function initials(name) {
+    if (!name) return '??';
+    return name.trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase();
+  }
+
+  // Render a chat-list item for a thread (by sender)
+  function renderChatItem(msg, unread) {
+    const isEmerg = msg.type === 'sos';
+    const el = document.createElement('div');
+    el.className = 'chat-item' + (unread ? ' unread' : '') + (isEmerg ? ' emergency' : '');
+    el.innerHTML = `
+      <div class="chat-avatar${msg.fromName ? '' : ' group'}">${initials(msg.fromName || 'ALL')}</div>
+      <div class="chat-body">
+        <div class="chat-name">${msg.fromName || 'Broadcast'}</div>
+        <div class="chat-preview${unread ? ' unread' : ''}">${msg.content}</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">${timeAgo(msg.timestamp)}</div>
+        ${unread ? '<div class="unread-count">1</div>' : '<div class="delivery-icon">✓✓</div>'}
+      </div>`;
+    el.onclick = () => openDirectConversation(msg.fromName || 'Broadcast', initials(msg.fromName || 'ALL'), msg.from);
+    return el;
+  }
+
+  // Open a conversation thread by userId
+  function openDirectConversation(name, avatar, fromId) {
+    document.getElementById('convName').innerText = name;
+    document.getElementById('convAvatar').innerText = avatar;
+    document.getElementById('convAvatar').style.background = 'var(--blue)';
+
+    const area = document.getElementById('convMessages');
+    area.innerHTML = '';
+
+    // Show all history messages with this sender
+    const history = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
+    const myId = localStorage.getItem('resq_uid');
+    const thread = history.filter(m => m.from === fromId || m.from === myId || m.to === 'all').slice(0, 50).reverse();
+
+    for (const m of thread) {
+      const isMine = m.from === myId;
+      addBubble(m.content, isMine ? 'sent' : 'received');
+    }
+    if (!thread.length) addBubble('Start of conversation', 'system');
+
+    document.getElementById('chatOverlay').classList.add('open');
+  }
+
+  // Re-render chat list from history
+  let _seenIds = new Set();
+  function refreshChatList() {
+    const list  = document.getElementById('chatList');
+    const empty = document.getElementById('emptyState');
+    const history = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
+
+    if (!history.length) {
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    // Build thread list: one entry per sender
+    const seen = new Map();
+    for (const m of history) {
+      if (!seen.has(m.from)) seen.set(m.from, m);
+    }
+
+    // Remove old items
+    list.querySelectorAll('.chat-item').forEach(el => el.remove());
+
+    // Add newest-first
+    const myId = localStorage.getItem('resq_uid');
+    for (const [fromId, msg] of seen) {
+      if (fromId === myId) continue; // skip my own
+      const isNew = !_seenIds.has(msg.id);
+      list.appendChild(renderChatItem(msg, isNew));
+    }
+  }
+
+  // Incoming message handler
+  function onMeshMessage(msg) {
+    const myId = localStorage.getItem('resq_uid');
+    if (msg.from === myId) return; // don't show my own in list
+
+    _seenIds.clear(); // mark all existing as old after refresh
+    refreshChatList();
+
+    // If overlay is open and shows this sender, append bubble
+    const convName = document.getElementById('convName');
+    if (document.getElementById('chatOverlay').classList.contains('open') &&
+        convName && convName.innerText === (msg.fromName || 'Broadcast')) {
+      addBubble(msg.content, 'received');
+    }
+  }
+
+  // Status handler — update mesh badge node count
+  function onMeshStatus(s) {
+    const el = document.getElementById('msgNodeCount');
+    if (el) el.textContent = s.nodeCount || 0;
+  }
+
+  // Wire mesh once available (mesh.js loads after this script)
+  function wireMesh() {
+    if (!window.RESQ_Mesh) { setTimeout(wireMesh, 200); return; }
+    RESQ_Mesh.on('message', onMeshMessage);
+    RESQ_Mesh.on('status',  onMeshStatus);
+    // Also listen for SOS alerts in chat list
+    RESQ_Mesh.on('sos', (alert) => {
+      onMeshMessage({ ...alert, fromName: alert.fromName, content: '🆘 SOS: ' + (alert.message || alert.alertType), type: 'sos' });
+    });
+    // Load existing history
+    refreshChatList();
+    onMeshStatus({ nodeCount: RESQ_Mesh.getNodes().length });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireMesh);
+  } else {
+    wireMesh();
   }
 </script>
 <script src="../i18n.js"></script>
-  <script src="../store.js"></script>
+<script src="../store.js"></script>
+<script src="../mesh.js"></script>
 </body>
 </html>

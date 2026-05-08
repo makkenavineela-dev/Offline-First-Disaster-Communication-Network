@@ -200,9 +200,9 @@
 
   <div class="scroll-area">
     <!-- Alert -->
-    <div class="resource-alert">
+    <div class="resource-alert" id="resAlert" style="display:none;">
       <div class="res-alert-icon">⚠️</div>
-      <div class="res-alert-text"><strong>Medical supplies critically low.</strong> Nearest resupply 1.4km at Community Center.</div>
+      <div class="res-alert-text" id="resAlertText"></div>
     </div>
 
     <!-- RESOURCES WITH ME TAB -->
@@ -213,7 +213,7 @@
       <div class="sum-item"><div class="sum-icon">🩹</div><div class="sum-info"><div class="sum-label" data-i18n="res_medical">Medical</div><div class="sum-val red" data-i18n="res_critical">CRITICAL</div></div></div>
       <div class="sum-item"><div class="sum-icon">💧</div><div class="sum-info"><div class="sum-label" data-i18n="res_water">Water</div><div class="sum-val amber" data-i18n="res_low">LOW</div></div></div>
       <div class="sum-item"><div class="sum-icon">🥫</div><div class="sum-info"><div class="sum-label" data-i18n="res_food">Food</div><div class="sum-val green" data-i18n="res_ok">OK</div></div></div>
-      <div class="sum-item"><div class="sum-icon">🔦</div><div class="sum-info"><div class="sum-label" data-i18n="res_power">Power</div><div class="sum-val amber">45%</div></div></div>
+      <div class="sum-item"><div class="sum-icon">🔦</div><div class="sum-info"><div class="sum-label" data-i18n="res_power">Power</div><div class="sum-val amber" id="sumPower">--</div></div></div>
     </div>
 
     <div class="section-label" data-i18n="res_details">Resource Details</div>
@@ -229,14 +229,14 @@
         <span class="res-badge critical" data-i18n="res_critical">CRITICAL</span>
       </div>
       <div class="progress-row">
-        <div class="progress-track"><div class="progress-fill red" style="width:12%"></div></div>
-        <div class="progress-pct red">12%</div>
+        <div class="progress-track"><div class="progress-fill red" id="medBar" style="width:0%"></div></div>
+        <div class="progress-pct red" id="medPct">--%</div>
       </div>
       <div class="details-row">
-        <div class="detail-chip"><div class="detail-val">3</div><div class="detail-label" data-i18n="res_bandages">Bandages</div></div>
-        <div class="detail-chip"><div class="detail-val">0</div><div class="detail-label" data-i18n="res_insulin">Insulin</div></div>
-        <div class="detail-chip"><div class="detail-val">2</div><div class="detail-label" data-i18n="res_kits">Kits</div></div>
-        <div class="detail-chip"><div class="detail-val">8</div><div class="detail-label" data-i18n="res_pills">Pills</div></div>
+        <div class="detail-chip"><div class="detail-val" id="medBandages">--</div><div class="detail-label" data-i18n="res_bandages">Bandages</div></div>
+        <div class="detail-chip"><div class="detail-val" id="medInsulin">--</div><div class="detail-label" data-i18n="res_insulin">Insulin</div></div>
+        <div class="detail-chip"><div class="detail-val" id="medKits">--</div><div class="detail-label" data-i18n="res_kits">Kits</div></div>
+        <div class="detail-chip"><div class="detail-val" id="medPills">--</div><div class="detail-label" data-i18n="res_pills">Pills</div></div>
       </div>
       <div class="res-action-row">
         <button class="res-btn" onclick="handleRequest(this, 'Medical Supplies')" data-i18n="res_btn_request">Request</button>
@@ -255,14 +255,14 @@
         <span class="res-badge low" data-i18n="res_low">LOW</span>
       </div>
       <div class="progress-row">
-        <div class="progress-track"><div class="progress-fill amber" style="width:28%"></div></div>
-        <div class="progress-pct amber">28%</div>
+        <div class="progress-track"><div class="progress-fill amber" id="waterBar" style="width:0%"></div></div>
+        <div class="progress-pct amber" id="waterPct">--%</div>
       </div>
       <div class="details-row">
-        <div class="detail-chip"><div class="detail-val">14</div><div class="detail-label" data-i18n="res_liters">Liters</div></div>
-        <div class="detail-chip"><div class="detail-val">60</div><div class="detail-label" data-i18n="res_people_short">People</div></div>
-        <div class="detail-chip"><div class="detail-val">~5h</div><div class="detail-label" data-i18n="res_remaining">Remaining</div></div>
-        <div class="detail-chip"><div class="detail-val">0</div><div class="detail-label" data-i18n="res_filters">Filters</div></div>
+        <div class="detail-chip"><div class="detail-val" id="waterLiters">--</div><div class="detail-label" data-i18n="res_liters">Liters</div></div>
+        <div class="detail-chip"><div class="detail-val" id="waterPeople">--</div><div class="detail-label" data-i18n="res_people_short">People</div></div>
+        <div class="detail-chip"><div class="detail-val" id="waterRemaining">--</div><div class="detail-label" data-i18n="res_remaining">Remaining</div></div>
+        <div class="detail-chip"><div class="detail-val" id="waterFilters">--</div><div class="detail-label" data-i18n="res_filters">Filters</div></div>
       </div>
       <div class="res-action-row">
         <button class="res-btn" onclick="handleRequest(this, 'Drinking Water')" data-i18n="res_btn_request">Request</button>
@@ -281,14 +281,14 @@
         <span class="res-badge ok" data-i18n="res_ok">ADEQUATE</span>
       </div>
       <div class="progress-row">
-        <div class="progress-track"><div class="progress-fill green" style="width:65%"></div></div>
-        <div class="progress-pct green">65%</div>
+        <div class="progress-track"><div class="progress-fill green" id="foodBar" style="width:0%"></div></div>
+        <div class="progress-pct green" id="foodPct">--%</div>
       </div>
       <div class="details-row">
-        <div class="detail-chip"><div class="detail-val">180</div><div class="detail-label" data-i18n="res_meals">Meals</div></div>
-        <div class="detail-chip"><div class="detail-val">3d</div><div class="detail-label" data-i18n="res_supply">Supply</div></div>
-        <div class="detail-chip"><div class="detail-val">12</div><div class="detail-label" data-i18n="res_veg">Veg</div></div>
-        <div class="detail-chip"><div class="detail-val">4</div><div class="detail-label" data-i18n="res_allergy">Allergy</div></div>
+        <div class="detail-chip"><div class="detail-val" id="foodMeals">--</div><div class="detail-label" data-i18n="res_meals">Meals</div></div>
+        <div class="detail-chip"><div class="detail-val" id="foodSupply">--</div><div class="detail-label" data-i18n="res_supply">Supply</div></div>
+        <div class="detail-chip"><div class="detail-val" id="foodVeg">--</div><div class="detail-label" data-i18n="res_veg">Veg</div></div>
+        <div class="detail-chip"><div class="detail-val" id="foodAllergy">--</div><div class="detail-label" data-i18n="res_allergy">Allergy</div></div>
       </div>
       <div class="res-action-row">
         <button class="res-btn" onclick="handleRequest(this, 'Non-Perishable Food')" data-i18n="res_btn_share">Share</button>
@@ -301,38 +301,27 @@
     <div id="tab-shelter" class="tab-content" style="display: none;">
       <div class="summary-card" style="grid-template-columns: 1fr; gap:8px;">
         <div style="font-size: 14px; color: var(--white); font-weight: 600;">Shelter Aggregated Stock</div>
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom:10px;">Data from 4 connected households in your shelter via mesh.</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom:10px;" id="shelterHouseholdCount">No connected households yet.</div>
         <div class="progress-row">
           <div style="width: 40px; font-size:12px; color:var(--text-muted);">Water</div>
-          <div class="progress-track"><div class="progress-fill amber" style="width:40%"></div></div>
-          <div class="progress-pct amber" style="font-size:14px;">40%</div>
+          <div class="progress-track"><div class="progress-fill amber" id="shelterWaterBar" style="width:0%"></div></div>
+          <div class="progress-pct amber" id="shelterWaterPct" style="font-size:14px;">--%</div>
         </div>
         <div class="progress-row">
           <div style="width: 40px; font-size:12px; color:var(--text-muted);">Food</div>
-          <div class="progress-track"><div class="progress-fill green" style="width:75%"></div></div>
-          <div class="progress-pct green" style="font-size:14px;">75%</div>
+          <div class="progress-track"><div class="progress-fill green" id="shelterFoodBar" style="width:0%"></div></div>
+          <div class="progress-pct green" id="shelterFoodPct" style="font-size:14px;">--%</div>
         </div>
         <div class="progress-row">
           <div style="width: 40px; font-size:12px; color:var(--text-muted);">Meds</div>
-          <div class="progress-track"><div class="progress-fill red" style="width:15%"></div></div>
-          <div class="progress-pct red" style="font-size:14px;">15%</div>
+          <div class="progress-track"><div class="progress-fill red" id="shelterMedsBar" style="width:0%"></div></div>
+          <div class="progress-pct red" id="shelterMedsPct" style="font-size:14px;">--%</div>
         </div>
       </div>
-      
+
       <div class="section-label">Other Households in Shelter</div>
-      
-      <!-- Another Household -->
-      <div class="resource-card">
-        <div class="res-top" style="margin-bottom:6px;">
-          <div class="res-emoji">🏠</div>
-          <div class="res-info">
-            <div class="res-name">Johnson Family</div>
-            <div class="res-location">0.2km away · Connected Mesh Node</div>
-          </div>
-          <span class="res-badge ok">EXCESS MEDS</span>
-        </div>
-        <div class="detail-label" style="font-size:11px; margin-bottom: 12px;">Surplus of bandages and first aid kits available for transfer.</div>
-        <button class="res-btn primary" style="width:100%" onclick="handleRequest(this, 'Meds Transfer')">Request Transfer</button>
+      <div id="shelterHouseholdList">
+        <div style="text-align:center; padding:24px 0; color:var(--text-muted); font-size:12px;">No households connected via mesh</div>
       </div>
 
     </div><!-- End Zone B Tab -->
@@ -340,31 +329,8 @@
     <!-- REQUESTS TAB -->
     <div id="tab-requests" class="tab-content" style="display: none;">
       <div class="section-label">Active Requests</div>
-    <div style="margin-bottom: 80px;">
-      <div class="request-item">
-        <div class="req-icon">💊</div>
-        <div class="req-info">
-          <div class="req-name">Insulin — Urgent</div>
-          <div class="req-detail">James Kim · 0.4km · For elderly</div>
-        </div>
-        <button class="req-fulfill" onclick="handleFulfill(this)">Fulfill</button>
-      </div>
-      <div class="request-item">
-        <div class="req-icon">💧</div>
-        <div class="req-info">
-          <div class="req-name">Water (5L)</div>
-          <div class="req-detail">Zone C Shelter · 1.2km</div>
-        </div>
-        <button class="req-fulfill" onclick="handleFulfill(this)">Fulfill</button>
-      </div>
-      <div class="request-item">
-        <div class="req-icon">🔦</div>
-        <div class="req-info">
-          <div class="req-name">Flashlight / Torch</div>
-          <div class="req-detail">Block 14 Group · 0.8km</div>
-        </div>
-        <button class="req-fulfill" onclick="handleFulfill(this)">Fulfill</button>
-      </div>
+    <div style="margin-bottom: 80px;" id="requestsList">
+      <div style="text-align:center; padding:24px 0; color:var(--text-muted); font-size:12px;">No active requests</div>
     </div>
     </div><!-- End Requests Tab -->
   </div>
