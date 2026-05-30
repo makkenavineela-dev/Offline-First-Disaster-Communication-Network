@@ -4,7 +4,8 @@ const {
   registerUser,
   loginUser,
   getUserProfile,
-  updateLocation
+  updateLocation,
+  phoneRegister,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const { body } = require('express-validator');
@@ -30,6 +31,8 @@ const locationValidation = [
 // Auth endpoints
 router.post('/auth/register', registerValidation, registerUser);
 router.post('/auth/login', loginValidation, loginUser);
+// Phone-OTP-based registration (no password required — OTP verified on client)
+router.post('/users/phone-register', phoneRegister);
 
 // User endpoints
 router.route('/users/profile')

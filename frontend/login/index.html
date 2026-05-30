@@ -193,6 +193,97 @@
     text-align: center; font-size: 11px; color: var(--text-muted); line-height: 1.5;
   }
   .privacy-note strong { color: var(--white); font-weight: 500; }
+
+  /* ── Multi-step wizard ─────────────────────────────────────────────────── */
+  .step { display: none; flex-direction: column; height: 100%; }
+  .step.active { display: flex; }
+
+  /* OTP screen */
+  .otp-screen {
+    flex: 1; overflow-y: auto; padding: 0 24px 16px;
+    display: flex; flex-direction: column; gap: 16px;
+    z-index: 10; scrollbar-width: none;
+  }
+  .otp-screen::-webkit-scrollbar { display: none; }
+  .otp-icon-wrap {
+    align-self: center; margin-top: 20px;
+    width: 80px; height: 80px; border-radius: 24px;
+    background: rgba(255,31,31,0.12); border: 1px solid rgba(255,31,31,0.3);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .otp-icon-wrap svg { width: 42px; height: 42px; fill: var(--red); }
+  .otp-target {
+    text-align: center; font-size: 13px; color: var(--text-muted); line-height: 1.6;
+  }
+  .otp-target strong { color: var(--white); font-weight: 600; }
+  .otp-channel-badge {
+    align-self: center; padding: 4px 10px; border-radius: 12px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  }
+  .otp-channel-badge.online { background: rgba(41,121,255,0.15); color: var(--blue); }
+  .otp-channel-badge.self   { background: rgba(255,170,0,0.15);  color: var(--amber); }
+  .otp-channel-badge.error  { background: rgba(255,31,31,0.15);  color: var(--red); }
+
+  .otp-boxes {
+    display: flex; gap: 8px; justify-content: center; margin: 8px 0;
+  }
+  .otp-box {
+    width: 44px; height: 56px; text-align: center;
+    background: var(--gray2); border: 2px solid var(--gray3);
+    border-radius: 12px; font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px; font-weight: 700; color: var(--white);
+    outline: none; transition: border-color 0.15s;
+  }
+  .otp-box:focus { border-color: var(--red); }
+  .otp-box.filled { border-color: var(--green); }
+  .otp-box.error  { border-color: var(--red); animation: shake 0.4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .otp-resend-row {
+    display: flex; justify-content: center; gap: 12px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .otp-resend-row a { color: var(--blue); cursor: pointer; font-weight: 600; }
+  .otp-resend-row a.disabled { color: var(--text-muted); cursor: not-allowed; pointer-events: none; }
+
+  .otp-emergency {
+    text-align: center; font-size: 11px; margin-top: 8px;
+    color: var(--text-muted); padding: 8px;
+  }
+  .otp-emergency a { color: var(--amber); cursor: pointer; text-decoration: underline; }
+
+  /* Activation success screen */
+  .activate-screen {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 16px; padding: 40px 24px;
+    z-index: 10;
+  }
+  .activate-check {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: var(--green); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 60px rgba(0,230,118,0.4);
+    animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop {
+    0%   { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+  .activate-check svg { width: 64px; height: 64px; fill: var(--black); }
+  .activate-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 32px; font-weight: 900; letter-spacing: 3px;
+    color: var(--green); text-align: center;
+  }
+  .activate-name { font-size: 16px; font-weight: 600; color: var(--white); }
+  .activate-detail { font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+  .activate-loader {
+    margin-top: 16px; font-size: 11px; color: var(--text-muted);
+    letter-spacing: 2px; text-transform: uppercase;
+  }
 </style>
 <link rel="manifest" href="/manifest.json">
 </head>
@@ -200,6 +291,8 @@
 <div class="phone-frame">
   <div class="grid-bg"></div>
 
+  <!-- ─── STEP 1: Phone + details ──────────────────────────────────────── -->
+  <div class="step active" id="step1">
   <div class="header">
     <div class="logo-icon">
       <svg viewBox="0 0 24 24"><path d="M12 2L4 7v5c0 5 3.5 9.5 8 11 4.5-1.5 8-6 8-11V7L12 2zm0 4l5 3v4c0 3-1.8 5.8-5 7.2C8.8 18.8 7 16 7 13V9l5-3z"/></svg>
@@ -219,9 +312,9 @@
       <div class="field-label">Mobile Number</div>
       <div class="phone-row">
         <select class="country-select" id="countryCode">
+          <option value="+91" selected>+91 IN</option>
           <option value="+1">+1 US</option>
           <option value="+44">+44 UK</option>
-          <option value="+91">+91 IN</option>
           <option value="+92">+92 PK</option>
           <option value="+880">+880 BD</option>
           <option value="+62">+62 ID</option>
@@ -254,7 +347,7 @@
           type="tel"
           id="phoneInput"
           class="text-input"
-          placeholder="03XX-XXXXXXX"
+          placeholder="10 digits starting with 6-9"
           inputmode="numeric"
           autocomplete="tel-national"
           maxlength="15"
@@ -327,9 +420,78 @@
       </span>
     </button>
     <div class="privacy-note">
-      Your number is <strong>never sent to any server</strong> — stored locally only.
+      We'll send a 6-digit code to verify your number.
     </div>
   </div>
+  </div><!-- /step1 -->
+
+  <!-- ─── STEP 2: OTP verification ─────────────────────────────────────── -->
+  <div class="step" id="step2">
+    <div class="header" style="padding-top:24px;">
+      <div class="app-name">RE<span>S</span>Q</div>
+      <div class="header-sub">Verify Your Number</div>
+    </div>
+
+    <div class="otp-screen">
+      <div class="otp-icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      </div>
+
+      <div class="otp-target">
+        Code sent to<br><strong id="otpPhoneDisplay">+1 555 123 4567</strong>
+      </div>
+
+      <div class="otp-channel-badge" id="otpChannelBadge">SENDING...</div>
+
+      <div class="otp-boxes" id="otpBoxes">
+        <input class="otp-box" type="tel" inputmode="numeric" maxlength="1" data-idx="0">
+        <input class="otp-box" type="tel" inputmode="numeric" maxlength="1" data-idx="1">
+        <input class="otp-box" type="tel" inputmode="numeric" maxlength="1" data-idx="2">
+        <input class="otp-box" type="tel" inputmode="numeric" maxlength="1" data-idx="3">
+        <input class="otp-box" type="tel" inputmode="numeric" maxlength="1" data-idx="4">
+        <input class="otp-box" type="tel" inputmode="numeric" maxlength="1" data-idx="5">
+      </div>
+
+      <div class="field-error" id="otpError" style="text-align:center;">Wrong code — try again</div>
+
+      <div class="otp-resend-row">
+        <span>Didn't receive it?</span>
+        <a id="otpResendBtn" class="disabled">Resend (30s)</a>
+      </div>
+
+      <div class="otp-emergency">
+        Cannot receive SMS during emergency?<br>
+        <a id="otpEmergencyBypass">Continue without verification</a>
+      </div>
+    </div>
+
+    <div class="bottom-cta">
+      <button class="btn-join" id="otpVerifyBtn" onclick="verifyOtp()" disabled>
+        <div class="spinner"></div>
+        <span class="btn-text">VERIFY &amp; ACTIVATE</span>
+      </button>
+      <div class="privacy-note">
+        <a onclick="goToStep(1)" style="color:var(--blue);cursor:pointer;">← Change number</a>
+      </div>
+    </div>
+  </div><!-- /step2 -->
+
+  <!-- ─── STEP 3: Activation success ───────────────────────────────────── -->
+  <div class="step" id="step3">
+    <div class="activate-screen">
+      <div class="activate-check">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      </div>
+      <div class="activate-title">ACCOUNT ACTIVATED</div>
+      <div class="activate-name" id="activateName">User</div>
+      <div class="activate-detail">
+        You're now connected to the<br>
+        <strong style="color:var(--red);">RESQ Disaster Network</strong>
+      </div>
+      <div class="activate-loader">Connecting to mesh<span id="activateDots">...</span></div>
+    </div>
+  </div><!-- /step3 -->
+
 </div>
 
 <script>
@@ -348,10 +510,42 @@
     document.getElementById('gpsConsent').classList.toggle('active', gpsEnabled);
   }
 
-  // Phone number validation
-  function validatePhone(num) {
+  // Per-country phone validation rules
+  const PHONE_RULES = {
+    '+91':  { len: [10,10],  pattern: /^[6-9]\d{9}$/,        hint: '10 digits starting with 6-9' },
+    '+1':   { len: [10,10],  pattern: /^\d{10}$/,             hint: '10 digits' },
+    '+44':  { len: [10,11],  pattern: /^[07]\d{9,10}$/,       hint: '10-11 digits starting with 07' },
+    '+92':  { len: [10,10],  pattern: /^3\d{9}$/,             hint: '10 digits starting with 3' },
+    '+880': { len: [10,11],  pattern: /^[01]\d{9,10}$/,       hint: '10-11 digits' },
+    '+62':  { len: [9,13],   pattern: /^0?8\d{8,12}$/,        hint: '9-13 digits starting with 08' },
+    '+55':  { len: [10,11],  pattern: /^\d{10,11}$/,          hint: '10-11 digits' },
+    '+52':  { len: [10,10],  pattern: /^\d{10}$/,             hint: '10 digits' },
+    '+81':  { len: [10,11],  pattern: /^0\d{9,10}$/,          hint: '10-11 digits starting with 0' },
+    '+86':  { len: [11,11],  pattern: /^1[3-9]\d{9}$/,        hint: '11 digits starting with 1' },
+    '+234': { len: [10,11],  pattern: /^[07]\d{9,10}$/,       hint: '10-11 digits' },
+    '+254': { len: [9,9],    pattern: /^[7]\d{8}$/,           hint: '9 digits starting with 7' },
+    '+27':  { len: [9,9],    pattern: /^[678]\d{8}$/,         hint: '9 digits' },
+    '+20':  { len: [10,10],  pattern: /^[01]\d{9}$/,          hint: '10 digits' },
+    '+971': { len: [9,9],    pattern: /^[0-9]\d{8}$/,         hint: '9 digits' },
+    '+966': { len: [9,9],    pattern: /^[0-9]\d{8}$/,         hint: '9 digits' },
+    '+90':  { len: [10,10],  pattern: /^[0-9]\d{9}$/,         hint: '10 digits' },
+    '+63':  { len: [10,10],  pattern: /^[09]\d{9}$/,          hint: '10 digits' },
+    '+66':  { len: [9,10],   pattern: /^[089]\d{8,9}$/,       hint: '9-10 digits' },
+    '+84':  { len: [9,10],   pattern: /^[03-9]\d{8,9}$/,      hint: '9-10 digits' },
+    '+60':  { len: [9,11],   pattern: /^[0-9]\d{8,10}$/,      hint: '9-11 digits' },
+  };
+
+  function validatePhone(num, countryCode) {
     const cleaned = num.replace(/[\s\-\(\)\.]/g, '');
-    return /^\d{7,15}$/.test(cleaned);
+    if (!/^\d+$/.test(cleaned)) return false;
+    const rule = PHONE_RULES[countryCode || '+91'];
+    if (rule) return rule.pattern.test(cleaned);
+    return cleaned.length >= 7 && cleaned.length <= 15;
+  }
+
+  function phoneHint(countryCode) {
+    const rule = PHONE_RULES[countryCode || '+91'];
+    return rule ? rule.hint : '7–15 digits';
   }
 
   function formatPhone(raw, countryCode) {
@@ -359,8 +553,22 @@
     return countryCode + cleaned;
   }
 
-  // Main join handler
-  function handleJoin() {
+  // ── Wizard state ─────────────────────────────────────────────────────────
+  const STATE = {
+    fullPhone:   '',
+    displayName: '',
+    selfCode:    null,   // code generated locally when in self-SMS fallback mode
+    channel:     null,   // 'backend' | 'self-sms' | 'bypass'
+    resendAt:    0,
+  };
+
+  function goToStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+  }
+
+  // ── Step 1 → 2: send OTP via hybrid path ────────────────────────────────
+  async function handleJoin() {
     const phoneRaw = document.getElementById('phoneInput').value.trim();
     const nameRaw = document.getElementById('nameInput').value.trim();
     const countryCode = document.getElementById('countryCode').value;
@@ -368,44 +576,224 @@
     const phoneInput = document.getElementById('phoneInput');
     const btn = document.getElementById('joinBtn');
 
-    // Validate
     phoneErr.classList.remove('show');
     phoneInput.classList.remove('error');
 
-    if (!validatePhone(phoneRaw)) {
+    if (!validatePhone(phoneRaw, countryCode)) {
+      phoneErr.textContent = `Invalid number — ${phoneHint(countryCode)}`;
       phoneErr.classList.add('show');
       phoneInput.classList.add('error');
       phoneInput.focus();
       return;
     }
 
-    // Loading state
     btn.classList.add('loading');
     btn.disabled = true;
 
     const fullPhone = formatPhone(phoneRaw, countryCode);
     const displayName = nameRaw || ('User-' + fullPhone.slice(-4));
 
-    // Save to localStorage
-    localStorage.setItem('resq_mobile', fullPhone);
-    localStorage.setItem('resq_name', displayName);
+    STATE.fullPhone   = fullPhone;
+    STATE.displayName = displayName;
+
+    STATE.fullPhone   = fullPhone;
+    STATE.displayName = displayName;
+    STATE.channel     = 'bypass';
+    await persistUserAndActivate();
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+
+  // ── Send OTP via self-SMS (free, uses the user's own cellular SMS) ────────
+  async function sendOtpHybrid() {
+    setOtpChannel('SENDING...', null);
+
+    // Generate the code locally
+    STATE.selfCode = String(Math.floor(100000 + Math.random() * 900000));
+    STATE.channel  = 'self-sms';
+
+    if (window.RESQ_SMS && RESQ_SMS.available) {
+      // Real path on Android — send SMS from this phone to itself
+      const body = `RESQ verification: ${STATE.selfCode}`;
+      const result = await RESQ_SMS.send(STATE.fullPhone, body);
+      if (result.success) {
+        setOtpChannel('VIA CELLULAR SMS', 'self');
+        // Auto-fill code when the SMS receiver picks it up
+        RESQ_SMS.onReceive((sms) => {
+          const m = (sms.message || '').match(/RESQ verification:\s*(\d{6})/i);
+          if (m) autoFillOtp(m[1]);
+        });
+        startResendTimer(30);
+      } else {
+        setOtpChannel('SMS FAILED — USE BYPASS', 'error');
+      }
+    } else {
+      // Web / iOS — show the code on screen (preview / fallback mode)
+      setOtpChannel(`PREVIEW MODE — CODE: ${STATE.selfCode}`, 'self');
+      startResendTimer(30);
+    }
+  }
+
+  function setOtpChannel(text, type) {
+    const el = document.getElementById('otpChannelBadge');
+    el.textContent = text;
+    el.className = 'otp-channel-badge' + (type ? ' ' + type : '');
+  }
+
+  // ── Resend timer ────────────────────────────────────────────────────────
+  function startResendTimer(seconds) {
+    const link = document.getElementById('otpResendBtn');
+    STATE.resendAt = Date.now() + seconds * 1000;
+    link.classList.add('disabled');
+    const tick = () => {
+      const left = Math.ceil((STATE.resendAt - Date.now()) / 1000);
+      if (left <= 0) {
+        link.classList.remove('disabled');
+        link.textContent = 'Resend code';
+        return;
+      }
+      link.textContent = `Resend (${left}s)`;
+      setTimeout(tick, 1000);
+    };
+    tick();
+  }
+
+  document.getElementById('otpResendBtn').addEventListener('click', async () => {
+    if (document.getElementById('otpResendBtn').classList.contains('disabled')) return;
+    // Clear inputs
+    document.querySelectorAll('.otp-box').forEach(b => { b.value = ''; b.classList.remove('filled', 'error'); });
+    await sendOtpHybrid();
+  });
+
+  // ── OTP input UX ────────────────────────────────────────────────────────
+  const otpBoxes = document.querySelectorAll('.otp-box');
+  otpBoxes.forEach((box, i) => {
+    box.addEventListener('input', () => {
+      box.value = box.value.replace(/\D/g, '').slice(0, 1);
+      box.classList.toggle('filled', !!box.value);
+      box.classList.remove('error');
+      if (box.value && i < otpBoxes.length - 1) otpBoxes[i + 1].focus();
+      updateOtpVerifyButton();
+    });
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !box.value && i > 0) otpBoxes[i - 1].focus();
+      if (e.key === 'Enter' && currentOtp().length === 6) verifyOtp();
+    });
+    box.addEventListener('paste', (e) => {
+      const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+      if (text.length === 6) {
+        e.preventDefault();
+        autoFillOtp(text);
+      }
+    });
+  });
+
+  function currentOtp() {
+    return Array.from(otpBoxes).map(b => b.value).join('');
+  }
+
+  function updateOtpVerifyButton() {
+    document.getElementById('otpVerifyBtn').disabled = currentOtp().length !== 6;
+  }
+
+  function autoFillOtp(code) {
+    otpBoxes.forEach((b, i) => {
+      b.value = code[i] || '';
+      b.classList.toggle('filled', !!b.value);
+    });
+    updateOtpVerifyButton();
+    // Auto-submit
+    setTimeout(verifyOtp, 200);
+  }
+
+  // ── Verify code (local compare against the self-generated code) ─────────
+  function verifyOtp() {
+    const code = currentOtp();
+    if (code.length !== 6) return;
+
+    const btn = document.getElementById('otpVerifyBtn');
+    const err = document.getElementById('otpError');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    err.classList.remove('show');
+
+    if (code !== STATE.selfCode) {
+      err.classList.add('show');
+      otpBoxes.forEach(b => b.classList.add('error'));
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      return;
+    }
+
+    persistUserAndActivate();
+  }
+
+  // ── Emergency bypass ────────────────────────────────────────────────────
+  document.getElementById('otpEmergencyBypass').addEventListener('click', () => {
+    if (!confirm('Skip verification?\n\nUse this only in actual emergencies when SMS is unavailable. Your number will not be verified.')) return;
+    STATE.channel = 'bypass';
+    persistUserAndActivate();
+  });
+
+  // ── Persist user, run activation animation, navigate ───────────────────
+  async function persistUserAndActivate() {
+    localStorage.setItem('resq_mobile', STATE.fullPhone);
+    localStorage.setItem('resq_name', STATE.displayName);
     localStorage.setItem('resq_role', selectedRole);
     localStorage.setItem('resq_gps_enabled', gpsEnabled ? '1' : '0');
+    localStorage.setItem('resq_verified', STATE.channel === 'bypass' ? '0' : '1');
+    localStorage.setItem('resq_verify_channel', STATE.channel || 'unknown');
+    localStorage.setItem('resq_verified_at', String(Date.now()));
 
-    // Update app store user info
     try {
       const storeState = JSON.parse(localStorage.getItem('resq_app_state') || '{}');
       if (!storeState.user) storeState.user = {};
-      storeState.user.name = displayName;
-      storeState.user.role = selectedRole;
-      storeState.user.mobile = fullPhone;
+      storeState.user.name   = STATE.displayName;
+      storeState.user.role   = selectedRole;
+      storeState.user.mobile = STATE.fullPhone;
       localStorage.setItem('resq_app_state', JSON.stringify(storeState));
     } catch (e) {}
 
-    // Short delay for UX feedback then navigate
+    document.getElementById('activateName').textContent = STATE.displayName;
+    goToStep(3);
+
+    // Animate dots
+    let dotCount = 0;
+    const dotEl = document.getElementById('activateDots');
+    const dotTimer = setInterval(() => {
+      dotCount = (dotCount + 1) % 4;
+      dotEl.textContent = '.'.repeat(dotCount);
+    }, 400);
+
+    // Register phone in backend DB (non-blocking — app works even if offline)
+    try {
+      const serverBase = localStorage.getItem('resq_server_ip') ||
+        (window.location.hostname && !['localhost','127.0.0.1'].includes(window.location.hostname)
+          ? 'http://' + window.location.hostname + ':5000'
+          : 'http://localhost:5000');
+      const res = await fetch(serverBase + '/api/users/phone-register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          phone: STATE.fullPhone,
+          name:  STATE.displayName,
+          role:  selectedRole,
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.userId)  localStorage.setItem('resq_uid',   String(data.userId));
+        if (data.token)   localStorage.setItem('resq_token', data.token);
+      }
+    } catch (e) {
+      // Server unreachable — still proceed offline
+    }
+
     setTimeout(() => {
+      clearInterval(dotTimer);
       window.location.href = '/dashboard/index.html';
-    }, 600);
+    }, 2200);
   }
 
   // Allow Enter key on inputs to submit
@@ -416,20 +804,32 @@
     if (e.key === 'Enter') handleJoin();
   });
 
+  // Update placeholder + hint when country changes
+  document.getElementById('countryCode').addEventListener('change', function() {
+    const rule = PHONE_RULES[this.value];
+    const input = document.getElementById('phoneInput');
+    input.placeholder = rule ? rule.hint : '7–15 digits';
+    input.value = '';
+    input.classList.remove('error');
+    document.getElementById('phoneError').classList.remove('show');
+  });
+
   // Format phone input: digits only while typing
   document.getElementById('phoneInput').addEventListener('input', function() {
     this.value = this.value.replace(/[^\d\s\-\(\)\.]/g, '');
-    if (this.classList.contains('error') && validatePhone(this.value)) {
+    const cc = document.getElementById('countryCode').value;
+    if (this.classList.contains('error') && validatePhone(this.value, cc)) {
       this.classList.remove('error');
       document.getElementById('phoneError').classList.remove('show');
     }
   });
 
-  // If already logged in, skip to dashboard
-  if (localStorage.getItem('resq_mobile')) {
+  // If already logged in AND verified (or emergency bypass), skip to dashboard
+  if (localStorage.getItem('resq_mobile') && localStorage.getItem('resq_verify_channel')) {
     window.location.replace('/dashboard/index.html');
   }
 </script>
 <script src="../store.js"></script>
+<script src="../sms-bridge.js"></script>
 </body>
 </html>

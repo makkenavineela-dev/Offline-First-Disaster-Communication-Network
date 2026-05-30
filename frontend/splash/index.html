@@ -237,8 +237,11 @@
   <script>
     function handleActivate(e) {
       e.preventDefault();
-      // If user has already registered (mobile number stored), go straight to dashboard
-      if (localStorage.getItem('resq_mobile')) {
+      // Only skip login if the user is registered AND has completed OTP verification.
+      // Otherwise push them through the new OTP wizard so their number gets verified.
+      const hasMobile   = localStorage.getItem('resq_mobile');
+      const isVerified  = localStorage.getItem('resq_verify_channel');
+      if (hasMobile && isVerified) {
         window.location.href = '/dashboard/index.html';
       } else {
         window.location.href = '/login/index.html';

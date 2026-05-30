@@ -32,7 +32,8 @@ messageSchema.index({ senderId: 1, receiverId: 1, createdAt: -1 });
 // Optimize broadcast / SOS pulls
 messageSchema.index({ type: 1, zone: 1, createdAt: -1 });
  
-// Optimize delta-sync pull (fetching everything since a timestamp)
-messageSchema.index({ createdAt: 1 });
+// Optimize delta-sync pull and auto-delete messages older than 30 days.
+// One TTL index covers both purposes — no separate plain index needed.
+messageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
  
 module.exports = mongoose.model('Message', messageSchema);

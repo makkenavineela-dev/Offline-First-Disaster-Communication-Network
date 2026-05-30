@@ -140,4 +140,48 @@ const updateLocation = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, getUserProfile, updateLocation };
+// @desc    Register or re-join via phone number (OTP already verified on client)
+// @route   POST /api/users/phone-register
+// @access  Public
+const phoneRegister = async (req, res) => {
+  try {
+    const { phone, name, role } = req.body;
+    if (!phone) return res.status(400).json({ message: 'phone is required' });
+
+    const safeName = (name || '').trim() || ('User-' + phone.slice(-4));
+    // Use phone as the stable deviceId; generate a strong internal password if new
+    let user = await User.findOne({ deviceId: phone });
+    if (user) {
+      // Update name/role on re-join
+      user.name = safeName;
+      if (role) user.role = role.toLowerCase().replace(' ', '_');
+      user.phone = phone;
+      user.lastSeen = new Date();
+      await user.save();
+    } else {
+      const crypto = require('crypto');
+      const internalPwd = crypto.randomBytes(24).toString('hex');
+      user = await User.create({
+        name:     safeName,
+        phone,
+        deviceId: phone,
+        password: internalPwd,
+        role:     (role || 'civilian').toLowerCase().replace(' ', '_'),
+      });
+    }
+
+    return res.status(200).json({
+      userId:   user._id,
+      name:     user.name,
+      phone:    user.phone,
+      role:     user.role,
+      deviceId: user.deviceId,
+      token:    generateToken(user._id),
+    });
+  } catch (error) {
+    console.error('phoneRegister error:', error);
+    res.status(500).json({ message: 'Registration failed' });
+  }
+};
+
+module.exports = { registerUser, loginUser, getUserProfile, updateLocation, phoneRegister };

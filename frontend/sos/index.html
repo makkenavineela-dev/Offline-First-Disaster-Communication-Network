@@ -419,14 +419,15 @@
       RESQ_Mesh.sendSOS(alertType, message, currentCoords);
       // Show our own SOS in the nearby list immediately
       renderSOSItem({
-        id: 'my-' + Date.now(),
-        fromName: localStorage.getItem('resq_name') || 'Me',
+        id:        'my-' + Date.now(),
+        fromName:  localStorage.getItem('resq_name')   || 'Me',
+        fromPhone: localStorage.getItem('resq_mobile') || null,
         alertType,
         message,
-        lat: currentCoords.lat,
-        lng: currentCoords.lng,
+        lat:       currentCoords.lat,
+        lng:       currentCoords.lng,
         timestamp: Date.now(),
-        _mine: true,
+        _mine:     true,
       });
       return true;
     }
@@ -459,24 +460,57 @@
     }, 3000);
   }
 
+  // ── SMS Alert ────────────────────────────────────────────────────────────────
+  function sendSMSAlert(alertType, message, coords) {
+    const contacts = JSON.parse(localStorage.getItem('resq_emergency_contacts') || '[]');
+    if (!contacts.length) return; // no contacts saved — skip silently
+
+    const name    = localStorage.getItem('resq_name') || 'Unknown';
+    const lat     = coords && coords.lat != null ? coords.lat.toFixed(5) : null;
+    const lng     = coords && coords.lng != null ? coords.lng.toFixed(5) : null;
+    const locPart = lat ? `Location: ${lat},${lng}` : 'Location unavailable';
+    const text    = `RESQ SOS from ${name}\nType: ${alertType}\n${message}\n${locPart}\nTime: ${new Date().toLocaleTimeString()}`;
+
+    // Build SMS URI — Android supports semicolon-separated numbers
+    const numbersStr = contacts.join(';');
+    const uri = `sms:${numbersStr}?body=${encodeURIComponent(text)}`;
+
+    // Capacitor opens it in the native SMS app; browser falls back to same
+    if (window.Capacitor) {
+      window.Capacitor.Plugins.App
+        ? window.Capacitor.Plugins.App.openUrl({ url: uri }).catch(() => window.open(uri, '_system'))
+        : window.open(uri, '_system');
+    } else {
+      window.open(uri, '_system');
+    }
+  }
+
   async function confirmSOS() {
-      const modal = document.getElementById('sosConfirm');
-      const btn = document.getElementById('sosBtn');
+      const modal    = document.getElementById('sosConfirm');
+      const btn      = document.getElementById('sosBtn');
       modal.classList.remove('open');
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
 
       btn.style.background = 'linear-gradient(145deg, #ff6666, #ff1f1f)';
       btn.querySelector('.sos-btn-text').textContent = 'SENDING';
-      
+
+      const typeEl    = document.querySelector('.alert-type.active .alert-type-label');
+      const alertType = typeEl ? typeEl.textContent.trim() : 'General';
+      const message   = document.querySelector('.msg-textarea').value.trim() || ('Emergency SOS: ' + alertType);
+
+      // 1. Broadcast over mesh (WiFi LAN)
       const success = await broadcastSOS();
-      
+
+      // 2. Also send SMS via cellular (works even without WiFi)
+      sendSMSAlert(alertType, message, currentCoords);
+
       btn.querySelector('.sos-btn-text').textContent = success ? 'SENT!' : 'QUEUED';
-      btn.querySelector('.sos-btn-sub').textContent = success ? 'Signal broadcast' : 'Saved for mesh';
-      
+      btn.querySelector('.sos-btn-sub').textContent  = success ? 'Mesh + SMS sent' : 'Queued · SMS sent';
+
       setTimeout(() => {
         btn.style.background = 'linear-gradient(145deg, #FF3333, #CC0000)';
         btn.querySelector('.sos-btn-text').textContent = 'SOS';
-        btn.querySelector('.sos-btn-sub').textContent = 'Hold 3 seconds';
+        btn.querySelector('.sos-btn-sub').textContent  = 'Hold 3 seconds';
       }, 3000);
   }
 
@@ -516,11 +550,19 @@
     const item = document.createElement('div');
     item.className = 'history-item';
     item.dataset.sosId = alert.id;
+
+    const phoneHtml = alert.fromPhone
+      ? `<span style="font-size:10px;color:var(--amber);margin-left:6px;">📞 ${alert.fromPhone}</span>`
+      : '';
+    const locHtml = alert.lat
+      ? `<a href="https://maps.google.com/?q=${alert.lat},${alert.lng}" target="_blank" style="color:var(--amber);text-decoration:none;font-size:10px;">📍 ${alert.lat.toFixed(4)}, ${alert.lng.toFixed(4)}</a>`
+      : '';
+
     item.innerHTML = `
       <div class="hist-dot ${alert._mine ? '' : 'pending'}"></div>
       <div class="hist-info">
-        <div class="hist-name">${alert.fromName || 'Unknown'} — ${alert.alertType || 'Emergency'}</div>
-        <div class="hist-detail">${alert.message || ''}${alert.lat ? ' · ' + alert.lat.toFixed(3) + ', ' + alert.lng.toFixed(3) : ''}</div>
+        <div class="hist-name">${alert.fromName || 'Unknown'} — ${alert.alertType || 'Emergency'}${phoneHtml}</div>
+        <div class="hist-detail">${alert.message || ''}${locHtml ? (alert.message ? ' · ' : '') + locHtml : ''}</div>
       </div>
       <div class="hist-time">${timeAgo(alert.timestamp)}</div>`;
 
@@ -552,5 +594,7 @@
 <script src="../i18n.js"></script>
 <script src="../store.js"></script>
 <script src="../mesh.js"></script>
+<script src="../sms-bridge.js"></script>
+<script src="/js/resq-auth.js"></script>
 </body>
 </html>

@@ -3,567 +3,548 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0d1117">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>RESQ — Resources</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  :root {
-    --red: #FF1F1F; --amber: #FFAA00; --green: #00E676; --blue: #2979FF;
-    --white: #F5F5F0; --black: #0A0A0A; --gray: #141414;
-    --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
-  }
-  html, body { height: 100%; background: #080808; font-family: 'Barlow', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-  .phone {
-    width: 100%; height: 100%; background: var(--black);
-    overflow: hidden; position: relative;
-    display: flex; flex-direction: column;
-    
-  }
-  .header { padding: max(4px, env(safe-area-inset-top)) 24px 12px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-  .back-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--gray2); display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; }
-  .back-btn svg { width: 18px; height: 18px; fill: var(--white); }
-  .header-title { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; color: var(--white); letter-spacing: 2px; }
-  .header-title span { color: var(--green); }
-  .add-btn { margin-left: auto; width: 36px; height: 36px; border-radius: 10px; background: var(--green); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-  .add-btn svg { width: 20px; height: 20px; fill: #000; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --red: #FF1F1F; --amber: #FFAA00; --green: #00E676; --blue: #2979FF;
+  --white: #F5F5F0; --black: #0A0A0A; --gray: #141414;
+  --gray2: #1E1E1E; --gray3: #2A2A2A; --text-muted: #666;
+}
+html, body { height: 100%; background: var(--black); font-family: 'Barlow', sans-serif; -webkit-font-smoothing: antialiased; }
 
-  /* Tabs */
-  .tabs { display: flex; padding: 0 16px 12px; gap: 6px; flex-shrink: 0; }
-  .tab { flex: 1; padding: 8px 4px; border-radius: 10px; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; border: 1px solid var(--gray3); color: var(--text-muted); transition: all 0.15s; }
-  .tab.active { background: var(--green); border-color: var(--green); color: #000; }
+.phone {
+  width: 100%; max-width: 480px; margin: 0 auto; height: 100%;
+  position: relative; overflow: hidden;
+  background: var(--black); display: flex; flex-direction: column;
+}
 
-  .scroll-area { flex: 1; overflow-y: auto; padding: 0 16px 140px; scrollbar-width: none; }
-  .scroll-area::-webkit-scrollbar { display: none; }
+.header {
+  padding: max(12px, env(safe-area-inset-top)) 20px 12px;
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  border-bottom: 1px solid var(--gray3);
+}
+.back-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--gray2); display: flex; align-items: center;
+  justify-content: center; cursor: pointer; text-decoration: none; flex-shrink: 0;
+}
+.back-btn svg { width: 18px; height: 18px; fill: var(--white); }
+.header-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 24px; font-weight: 900; color: var(--white); letter-spacing: 2px; flex: 1;
+}
+.header-title span { color: var(--green); }
+.add-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--green); border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.add-btn svg { width: 20px; height: 20px; fill: #000; }
 
-  /* Summary */
-  .summary-card {
-    background: var(--gray); border: 1px solid var(--gray3);
-    border-radius: 20px; padding: 16px; margin-bottom: 14px;
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-  }
-  .sum-item { display: flex; align-items: center; gap: 10px; }
-  .sum-icon { font-size: 22px; }
+.tabs { display: flex; padding: 10px 16px 8px; gap: 6px; flex-shrink: 0; }
+.tab {
+  flex: 1; padding: 8px 4px; border-radius: 10px;
+  font-size: 12px; font-weight: 600; text-align: center; cursor: pointer;
+  border: 1px solid var(--gray3); color: var(--text-muted); transition: all 0.15s;
+}
+.tab.active { background: var(--green); border-color: var(--green); color: #000; }
 
-  .sum-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
-  .sum-val { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; margin-top: 1px; }
-  .sum-val.red { color: var(--red); }
-  .sum-val.amber { color: var(--amber); }
-  .sum-val.green { color: var(--green); }
+.content { flex: 1; overflow-y: auto; padding: 0 16px 100px; scrollbar-width: none; }
+.content::-webkit-scrollbar { display: none; }
 
-  /* Alert banner */
-  .resource-alert {
-    background: rgba(255,31,31,0.08); border: 1px solid rgba(255,31,31,0.3);
-    border-radius: 12px; padding: 10px 14px;
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 14px;
-  }
-  .res-alert-icon { font-size: 18px; flex-shrink: 0; }
-  .res-alert-text { font-size: 12px; color: rgba(255,100,100,0.9); }
-  .res-alert-text strong { color: var(--red); }
+.summary-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px 0 6px; }
+.sum-card { background: var(--gray2); border: 1px solid var(--gray3); border-radius: 12px; padding: 10px 8px; text-align: center; }
+.sum-icon  { font-size: 20px; }
+.sum-label { font-size: 9px; letter-spacing: 1px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; }
+.sum-val   { font-size: 11px; font-weight: 700; margin-top: 3px; }
+.sum-val.ok       { color: var(--green); }
+.sum-val.low      { color: var(--amber); }
+.sum-val.critical { color: var(--red); }
 
-  .section-label { font-size: 11px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; margin-top: 4px; }
+.section-label { font-size: 10px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin: 14px 0 8px; }
 
-  /* Resource cards */
-  .resource-card {
-    background: var(--gray2); border: 1px solid var(--gray3);
-    border-radius: 18px; padding: 16px;
-    margin-bottom: 10px;
-  }
-  .resource-card.critical { border-color: rgba(255,31,31,0.3); }
-  .resource-card.low { border-color: rgba(255,170,0,0.3); }
-  .res-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .res-emoji { font-size: 24px; }
-  .res-info { flex: 1; }
-  .res-name { font-size: 15px; font-weight: 600; color: var(--white); }
-  .res-location { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-  .res-badge { padding: 3px 10px; border-radius: 100px; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
-  .res-badge.critical { background: rgba(255,31,31,0.15); color: var(--red); }
-  .res-badge.low { background: rgba(255,170,0,0.15); color: var(--amber); }
-  .res-badge.ok { background: rgba(0,230,118,0.15); color: var(--green); }
+.res-card { background: var(--gray2); border: 1px solid var(--gray3); border-radius: 16px; padding: 14px; margin-bottom: 10px; }
+.res-card.mine { border-color: rgba(0,230,118,0.3); }
+.res-top { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.res-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.res-info { flex: 1; min-width: 0; }
+.res-name { font-size: 15px; font-weight: 700; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.res-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.res-status { font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 3px 8px; border-radius: 6px; flex-shrink: 0; }
+.res-status.OK       { background: rgba(0,230,118,0.15); color: var(--green); }
+.res-status.LOW      { background: rgba(255,170,0,0.15);  color: var(--amber); }
+.res-status.CRITICAL { background: rgba(255,31,31,0.15);  color: var(--red); }
 
-  /* Progress bar */
-  .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .progress-track { flex: 1; height: 8px; background: var(--gray3); border-radius: 4px; overflow: hidden; }
-  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
-  .progress-fill.red { background: linear-gradient(90deg, #FF1F1F, #FF5555); }
-  .progress-fill.amber { background: linear-gradient(90deg, #FFAA00, #FFD000); }
-  .progress-fill.green { background: linear-gradient(90deg, #00E676, #69F0AE); }
-  .progress-pct { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; width: 40px; text-align: right; }
-  .progress-pct.red { color: var(--red); }
-  .progress-pct.amber { color: var(--amber); }
-  .progress-pct.green { color: var(--green); }
+.res-qty-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.res-qty-bar-wrap { flex: 1; height: 6px; background: var(--gray3); border-radius: 3px; overflow: hidden; }
+.res-qty-bar { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.res-qty-text { font-size: 12px; font-weight: 600; color: var(--white); white-space: nowrap; }
 
-  /* Details row */
-  .details-row { display: flex; gap: 8px; }
-  .detail-chip { flex: 1; background: var(--gray3); border-radius: 10px; padding: 8px; text-align: center; }
-  .detail-val { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; color: var(--white); }
-  .detail-label { font-size: 9px; color: var(--text-muted); margin-top: 1px; letter-spacing: 0.5px; }
+.res-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.res-btn {
+  flex: 1; min-width: 80px; padding: 8px 10px; border-radius: 10px; border: none;
+  font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.res-btn:active { transform: scale(0.97); }
+.res-btn.edit    { background: rgba(41,121,255,0.15); color: var(--blue); }
+.res-btn.delete  { background: rgba(255,31,31,0.12);  color: var(--red); }
+.res-btn.request { background: rgba(255,170,0,0.12);  color: var(--amber); }
 
-  /* Action btn */
-  .res-action-row { display: flex; gap: 8px; margin-top: 12px; }
-  .res-btn {
-    flex: 1; padding: 9px; border-radius: 10px;
-    font-size: 12px; font-weight: 600; cursor: pointer; text-align: center;
-    border: 1px solid var(--gray3); color: var(--white); background: transparent;
-    transition: all 0.15s;
-  }
-  .res-btn.primary { background: var(--green); border-color: var(--green); color: #000; }
-  .res-btn:hover { border-color: var(--green); transform: translateY(-1px); }
-  .res-btn:active { transform: translateY(1px); }
-  
-  /* Requests */
-  .request-item {
-    background: var(--gray2); border: 1px solid var(--gray3);
-    border-radius: 14px; padding: 12px 14px;
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 8px;
-  }
-  .req-icon { font-size: 20px; flex-shrink: 0; }
-  .req-info { flex: 1; }
-  .req-name { font-size: 13px; font-weight: 600; color: var(--white); }
-  .req-detail { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
-  .req-fulfill { padding: 6px 14px; background: var(--blue); border: none; border-radius: 8px; color: white; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background 0.2s, transform 0.1s; }
-  .req-fulfill:hover { background: #448aff; }
-  .req-fulfill:active { transform: scale(0.95); }
+.empty-state { text-align: center; padding: 60px 24px; }
+.empty-icon  { font-size: 44px; opacity: 0.2; margin-bottom: 14px; }
+.empty-title { font-size: 15px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+.empty-sub   { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
 
-  /* Bottom nav */
-  .bottom-nav {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    height: 76px; background: rgba(10,10,10,0.95);
-    backdrop-filter: blur(20px); border-top: 1px solid var(--gray3);
-    display: flex; align-items: center; justify-content: space-around;
-    padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 20;
-  }
-  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
-  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
-  .nav-label { font-size: 10px; color: var(--text-muted); }
-  .nav-item.active svg { fill: var(--red); }
-  .nav-item.active .nav-label { color: var(--red); }
+/* overlay */
+.overlay-backdrop {
+  display: none; position: absolute; inset: 0;
+  background: rgba(0,0,0,0.7); z-index: 40; align-items: flex-end;
+}
+.overlay-backdrop.open { display: flex; }
+.overlay-sheet {
+  width: 100%; background: var(--gray);
+  border-radius: 24px 24px 0 0; padding: 20px 20px max(24px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 12px;
+  animation: sheetUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; color: var(--white); letter-spacing: 1px; margin-bottom: 4px; }
+.sheet-title span { color: var(--green); }
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; }
+.form-input {
+  background: var(--gray2); border: 1px solid var(--gray3);
+  border-radius: 12px; padding: 12px 14px;
+  color: var(--white); font-family: 'Barlow', sans-serif; font-size: 15px; outline: none;
+  transition: border-color 0.2s; width: 100%; -webkit-appearance: none;
+}
+.form-input::placeholder { color: var(--text-muted); }
+.form-input:focus { border-color: var(--green); }
+.form-row { display: flex; gap: 10px; }
+.form-row .form-field { flex: 1; }
+.status-row { display: flex; gap: 8px; }
+.status-pill {
+  flex: 1; padding: 10px 4px; border-radius: 10px; text-align: center;
+  font-size: 12px; font-weight: 700; cursor: pointer; border: 2px solid var(--gray3);
+  color: var(--text-muted); transition: all 0.15s;
+}
+.status-pill.sel-OK       { border-color: var(--green);  color: var(--green); background: rgba(0,230,118,0.08); }
+.status-pill.sel-LOW      { border-color: var(--amber);  color: var(--amber); background: rgba(255,170,0,0.08); }
+.status-pill.sel-CRITICAL { border-color: var(--red);    color: var(--red);   background: rgba(255,31,31,0.08); }
+.submit-btn {
+  width: 100%; height: 52px; background: var(--green); border: none; border-radius: 14px;
+  color: #000; font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 900; letter-spacing: 2px; cursor: pointer;
+}
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.cancel-link { text-align: center; font-size: 13px; color: var(--text-muted); cursor: pointer; }
 
-  /* App Notification Toast */
-  .toast-notification {
-    position: absolute; top: 56px; left: 50%; transform: translateX(-50%) translateY(-150%);
-    background: var(--blue); color: white; padding: 10px 18px; border-radius: 20px;
-    font-size: 13px; font-weight: 600; font-family: 'Barlow', sans-serif;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; opacity: 0; pointer-events: none;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
-    white-space: nowrap;
-  }
-  .toast-notification.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+/* toast */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+  padding: 9px 18px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  z-index: 99; pointer-events: none; white-space: nowrap;
+}
+.toast.ok   { background: rgba(0,230,118,0.9); color: #000; }
+.toast.warn { background: rgba(255,170,0,0.9); color: #000; }
+.toast.err  { background: rgba(255,31,31,0.9);  color: #fff; }
 
-  /* Add Resource Overlay */
-  .add-overlay {
-    position: absolute; bottom: 0; left: 0; right: 0; top: 0;
-    background: rgba(0,0,0,0.8); z-index: 60;
-    display: flex; flex-direction: column; justify-content: flex-end;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s;
-  }
-  .add-overlay.open { opacity: 1; pointer-events: auto; }
-  .add-card {
-    background: #111; padding: 24px; border-radius: 30px 30px 0 0;
-    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  }
-  .add-overlay.open .add-card { transform: translateY(0); }
-  .add-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-  .add-title { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 700; color: white; }
-  .add-close { width: 32px; height: 32px; border-radius: 16px; background: var(--gray3); display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-weight: bold; }
-  .add-input { width: 100%; background: var(--gray2); border: 1px solid var(--gray3); color: white; padding: 14px; border-radius: 12px; margin-bottom: 12px; font-family: 'Barlow', sans-serif; font-size: 14px; outline: none; }
-  .add-submit-btn { width: 100%; padding: 16px; border-radius: 14px; background: var(--green); color: black; font-size: 16px; font-weight: 700; border: none; cursor: pointer; margin-top: 8px; transition: transform 0.1s; }
-  .add-submit-btn:active { transform: scale(0.97); }
+/* bottom nav */
+.bottom-nav {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 72px; background: rgba(10,10,10,0.96); backdrop-filter: blur(20px);
+  border-top: 1px solid var(--gray3);
+  display: flex; align-items: center; justify-content: space-around;
+  padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 20;
+}
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
+.nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
+.nav-label { font-size: 10px; color: var(--text-muted); }
+.nav-item.active svg { fill: var(--green); }
+.nav-item.active .nav-label { color: var(--green); }
 </style>
-  <link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="/manifest.json">
+<script src="/js/resq-auth.js"></script>
 </head>
 <body>
 <div class="phone">
+
   <div class="header">
     <a href="/dashboard/index.html" class="back-btn">
       <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
     </a>
-    <div class="header-title" data-i18n="supply_tracker"><span>SUPPLY</span> TRACKER</div>
-    <div class="add-btn" onclick="openAddOverlay()">
+    <div class="header-title">SUPPLY <span>TRACKER</span></div>
+    <button class="add-btn" onclick="openAddOverlay()">
       <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-    </div>
+    </button>
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab(this, 'tab-withme')">Resources With Me</div>
-    <div class="tab" onclick="switchTab(this, 'tab-shelter')">Resources in Shelter</div>
-    <div class="tab" onclick="switchTab(this, 'tab-requests')" data-i18n="tab_requests">Requests</div>
+    <div class="tab active" id="tabAll"  onclick="switchTab('all')">All</div>
+    <div class="tab"        id="tabMine" onclick="switchTab('mine')">Mine</div>
+    <div class="tab"        id="tabNet"  onclick="switchTab('network')">Network</div>
   </div>
 
-  <!-- Global Toast -->
-  <div class="toast-notification" id="toastMsg">Notification</div>
-
-  <div class="scroll-area">
-    <!-- Alert -->
-    <div class="resource-alert" id="resAlert" style="display:none;">
-      <div class="res-alert-icon">⚠️</div>
-      <div class="res-alert-text" id="resAlertText"></div>
+  <div class="content">
+    <div class="summary-bar">
+      <div class="sum-card"><div class="sum-icon">🩹</div><div class="sum-label">Medical</div><div class="sum-val" id="sumMedical">—</div></div>
+      <div class="sum-card"><div class="sum-icon">💧</div><div class="sum-label">Water</div><div class="sum-val"   id="sumWater">—</div></div>
+      <div class="sum-card"><div class="sum-icon">🥫</div><div class="sum-label">Food</div><div class="sum-val"    id="sumFood">—</div></div>
+      <div class="sum-card"><div class="sum-icon">🔦</div><div class="sum-label">Power</div><div class="sum-val"   id="sumPower">—</div></div>
     </div>
-
-    <!-- RESOURCES WITH ME TAB -->
-    <div id="tab-withme" class="tab-content">
-
-    <!-- Summary -->
-    <div class="summary-card">
-      <div class="sum-item"><div class="sum-icon">🩹</div><div class="sum-info"><div class="sum-label" data-i18n="res_medical">Medical</div><div class="sum-val red" data-i18n="res_critical">CRITICAL</div></div></div>
-      <div class="sum-item"><div class="sum-icon">💧</div><div class="sum-info"><div class="sum-label" data-i18n="res_water">Water</div><div class="sum-val amber" data-i18n="res_low">LOW</div></div></div>
-      <div class="sum-item"><div class="sum-icon">🥫</div><div class="sum-info"><div class="sum-label" data-i18n="res_food">Food</div><div class="sum-val green" data-i18n="res_ok">OK</div></div></div>
-      <div class="sum-item"><div class="sum-icon">🔦</div><div class="sum-info"><div class="sum-label" data-i18n="res_power">Power</div><div class="sum-val amber" id="sumPower">--</div></div></div>
-    </div>
-
-    <div class="section-label" data-i18n="res_details">Resource Details</div>
-
-    <!-- Medical -->
-    <div class="resource-card critical">
-      <div class="res-top">
-        <div class="res-emoji">🩹</div>
-        <div class="res-info">
-          <div class="res-name" data-i18n="res_med_supplies">Medical Supplies</div>
-          <div class="res-location" data-i18n="res_med_loc">High School Shelter · Room 4</div>
-        </div>
-        <span class="res-badge critical" data-i18n="res_critical">CRITICAL</span>
-      </div>
-      <div class="progress-row">
-        <div class="progress-track"><div class="progress-fill red" id="medBar" style="width:0%"></div></div>
-        <div class="progress-pct red" id="medPct">--%</div>
-      </div>
-      <div class="details-row">
-        <div class="detail-chip"><div class="detail-val" id="medBandages">--</div><div class="detail-label" data-i18n="res_bandages">Bandages</div></div>
-        <div class="detail-chip"><div class="detail-val" id="medInsulin">--</div><div class="detail-label" data-i18n="res_insulin">Insulin</div></div>
-        <div class="detail-chip"><div class="detail-val" id="medKits">--</div><div class="detail-label" data-i18n="res_kits">Kits</div></div>
-        <div class="detail-chip"><div class="detail-val" id="medPills">--</div><div class="detail-label" data-i18n="res_pills">Pills</div></div>
-      </div>
-      <div class="res-action-row">
-        <button class="res-btn" onclick="handleRequest(this, 'Medical Supplies')" data-i18n="res_btn_request">Request</button>
-        <button class="res-btn primary" onclick="handleMarkUsed(this)" data-i18n="res_btn_mark_used">Mark Used</button>
-      </div>
-    </div>
-
-    <!-- Water -->
-    <div class="resource-card low">
-      <div class="res-top">
-        <div class="res-emoji">💧</div>
-        <div class="res-info">
-          <div class="res-name" data-i18n="res_water_title">Drinking Water</div>
-          <div class="res-location" data-i18n="res_water_loc">High School Shelter · Gym</div>
-        </div>
-        <span class="res-badge low" data-i18n="res_low">LOW</span>
-      </div>
-      <div class="progress-row">
-        <div class="progress-track"><div class="progress-fill amber" id="waterBar" style="width:0%"></div></div>
-        <div class="progress-pct amber" id="waterPct">--%</div>
-      </div>
-      <div class="details-row">
-        <div class="detail-chip"><div class="detail-val" id="waterLiters">--</div><div class="detail-label" data-i18n="res_liters">Liters</div></div>
-        <div class="detail-chip"><div class="detail-val" id="waterPeople">--</div><div class="detail-label" data-i18n="res_people_short">People</div></div>
-        <div class="detail-chip"><div class="detail-val" id="waterRemaining">--</div><div class="detail-label" data-i18n="res_remaining">Remaining</div></div>
-        <div class="detail-chip"><div class="detail-val" id="waterFilters">--</div><div class="detail-label" data-i18n="res_filters">Filters</div></div>
-      </div>
-      <div class="res-action-row">
-        <button class="res-btn" onclick="handleRequest(this, 'Drinking Water')" data-i18n="res_btn_request">Request</button>
-        <button class="res-btn primary" onclick="handleUpdate(this)" data-i18n="res_btn_update">Update</button>
-      </div>
-    </div>
-
-    <!-- Food -->
-    <div class="resource-card">
-      <div class="res-top">
-        <div class="res-emoji">🥫</div>
-        <div class="res-info">
-          <div class="res-name" data-i18n="res_food_title">Non-Perishable Food</div>
-          <div class="res-location" data-i18n="res_food_loc">High School Shelter · Cafeteria</div>
-        </div>
-        <span class="res-badge ok" data-i18n="res_ok">ADEQUATE</span>
-      </div>
-      <div class="progress-row">
-        <div class="progress-track"><div class="progress-fill green" id="foodBar" style="width:0%"></div></div>
-        <div class="progress-pct green" id="foodPct">--%</div>
-      </div>
-      <div class="details-row">
-        <div class="detail-chip"><div class="detail-val" id="foodMeals">--</div><div class="detail-label" data-i18n="res_meals">Meals</div></div>
-        <div class="detail-chip"><div class="detail-val" id="foodSupply">--</div><div class="detail-label" data-i18n="res_supply">Supply</div></div>
-        <div class="detail-chip"><div class="detail-val" id="foodVeg">--</div><div class="detail-label" data-i18n="res_veg">Veg</div></div>
-        <div class="detail-chip"><div class="detail-val" id="foodAllergy">--</div><div class="detail-label" data-i18n="res_allergy">Allergy</div></div>
-      </div>
-      <div class="res-action-row">
-        <button class="res-btn" onclick="handleRequest(this, 'Non-Perishable Food')" data-i18n="res_btn_share">Share</button>
-        <button class="res-btn primary" onclick="handleUpdate(this)" data-i18n="res_btn_update">Update</button>
-      </div>
-    </div>
-    </div><!-- End My Shelter Tab -->
-
-    <!-- RESOURCES IN SHELTER TAB -->
-    <div id="tab-shelter" class="tab-content" style="display: none;">
-      <div class="summary-card" style="grid-template-columns: 1fr; gap:8px;">
-        <div style="font-size: 14px; color: var(--white); font-weight: 600;">Shelter Aggregated Stock</div>
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom:10px;" id="shelterHouseholdCount">No connected households yet.</div>
-        <div class="progress-row">
-          <div style="width: 40px; font-size:12px; color:var(--text-muted);">Water</div>
-          <div class="progress-track"><div class="progress-fill amber" id="shelterWaterBar" style="width:0%"></div></div>
-          <div class="progress-pct amber" id="shelterWaterPct" style="font-size:14px;">--%</div>
-        </div>
-        <div class="progress-row">
-          <div style="width: 40px; font-size:12px; color:var(--text-muted);">Food</div>
-          <div class="progress-track"><div class="progress-fill green" id="shelterFoodBar" style="width:0%"></div></div>
-          <div class="progress-pct green" id="shelterFoodPct" style="font-size:14px;">--%</div>
-        </div>
-        <div class="progress-row">
-          <div style="width: 40px; font-size:12px; color:var(--text-muted);">Meds</div>
-          <div class="progress-track"><div class="progress-fill red" id="shelterMedsBar" style="width:0%"></div></div>
-          <div class="progress-pct red" id="shelterMedsPct" style="font-size:14px;">--%</div>
-        </div>
-      </div>
-
-      <div class="section-label">Other Households in Shelter</div>
-      <div id="shelterHouseholdList">
-        <div style="text-align:center; padding:24px 0; color:var(--text-muted); font-size:12px;">No households connected via mesh</div>
-      </div>
-
-    </div><!-- End Zone B Tab -->
-
-    <!-- REQUESTS TAB -->
-    <div id="tab-requests" class="tab-content" style="display: none;">
-      <div class="section-label">Active Requests</div>
-    <div style="margin-bottom: 80px;" id="requestsList">
-      <div style="text-align:center; padding:24px 0; color:var(--text-muted); font-size:12px;">No active requests</div>
-    </div>
-    </div><!-- End Requests Tab -->
+    <div id="cardArea"></div>
   </div>
 
-  <!-- Add Resource Overlay -->
-  <div class="add-overlay" id="addOverlay" onclick="if(event.target === this) closeAddOverlay()">
-    <div class="add-card">
-      <div class="add-header">
-        <div class="add-title">Add / Request Resource</div>
-        <div class="add-close" onclick="closeAddOverlay()">✕</div>
+  <!-- Add / Edit overlay -->
+  <div class="overlay-backdrop" id="overlayBackdrop">
+    <div class="overlay-sheet">
+      <div class="sheet-title" id="sheetTitle">ADD <span>RESOURCE</span></div>
+
+      <div class="form-field">
+        <div class="form-label">Resource Name</div>
+        <input class="form-input" id="fName" type="text" placeholder="e.g. Bandages, Water Bottles, Rice Bags…">
       </div>
-      <div class="add-form">
-        <input type="text" class="add-input" placeholder="Resource Name (e.g. Blankets)" id="newResName">
-        <div style="display:flex; gap:10px;">
-          <input type="number" class="add-input" placeholder="Qty" style="flex: 1;" id="newResQty" min="1" oninput="this.value = !!this.value && Math.abs(this.value) >= 0 ? Math.abs(this.value) : null">
-          <select class="add-input" style="flex: 2; appearance: none;">
-            <option>Category: Medical</option>
-            <option>Category: Water</option>
-            <option>Category: Food</option>
-            <option>Category: Power</option>
-            <option>Category: Rescue</option>
-            <option>Category: Other</option>
+
+      <div class="form-row">
+        <div class="form-field">
+          <div class="form-label">Category</div>
+          <select class="form-input" id="fType">
+            <option value="medical">🩹 Medical</option>
+            <option value="water">💧 Water</option>
+            <option value="food">🥫 Food</option>
+            <option value="power">🔦 Power</option>
+            <option value="shelter">🏠 Shelter</option>
+            <option value="equipment">🔧 Equipment</option>
+            <option value="communication">📡 Comms</option>
+            <option value="other">📦 Other</option>
           </select>
         </div>
-        <button class="add-submit-btn" onclick="submitAddResource()">Broadcast to Mesh</button>
+        <div class="form-field">
+          <div class="form-label">Quantity</div>
+          <input class="form-input" id="fQty" type="number" min="0" placeholder="0" inputmode="numeric">
+        </div>
       </div>
+
+      <div class="form-field">
+        <div class="form-label">Unit (optional)</div>
+        <input class="form-input" id="fUnit" type="text" placeholder="units, liters, pcs, doses, meals…">
+      </div>
+
+      <div class="form-field">
+        <div class="form-label">Status</div>
+        <div class="status-row">
+          <div class="status-pill sel-OK" id="spOK"       onclick="pickStatus('OK')">OK</div>
+          <div class="status-pill"        id="spLOW"      onclick="pickStatus('LOW')">LOW</div>
+          <div class="status-pill"        id="spCRITICAL" onclick="pickStatus('CRITICAL')">CRITICAL</div>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="submitBtn" onclick="submitResource()">ADD RESOURCE</button>
+      <div class="cancel-link" onclick="closeOverlay()">Cancel</div>
     </div>
   </div>
 
+  <!-- Bottom nav -->
   <div class="bottom-nav">
     <a href="/dashboard/index.html" class="nav-item">
       <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-      <span class="nav-label" data-i18n="nav_home">Home</span>
+      <span class="nav-label">Home</span>
     </a>
     <a href="/messaging/index.html" class="nav-item">
       <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
-      <span class="nav-label" data-i18n="nav_messages">Messages</span>
+      <span class="nav-label">Messages</span>
     </a>
     <a href="/map/index.html" class="nav-item">
       <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-      <span class="nav-label" data-i18n="nav_map">Map</span>
+      <span class="nav-label">Map</span>
     </a>
     <a href="/resources/index.html" class="nav-item active">
-      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
-      <span class="nav-label" data-i18n="nav_resources">Resources</span>
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      <span class="nav-label">Resources</span>
     </a>
     <a href="/settings/index.html" class="nav-item">
-      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.12-.22-.07-.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
-      <span class="nav-label" data-i18n="nav_settings">Settings</span>
+      <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.12.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
+      <span class="nav-label">Settings</span>
     </a>
   </div>
+
 </div>
+
 <script>
-  function switchTab(el, targetId) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    el.classList.add('active');
-    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-    document.getElementById(targetId).style.display = 'block';
-  }
+// ── Config ──────────────────────────────────────────────────────────────────
+const SERVER = (() => {
+  const s = localStorage.getItem('resq_server_ip');
+  if (s) return s;
+  const h = window.location.hostname;
+  if (h && h !== 'localhost' && h !== '127.0.0.1' && h !== '10.0.0.2') return 'http://' + h + ':5000';
+  return 'http://localhost:5000';
+})();
 
-  function showToast(message) {
-    const toast = document.getElementById('toastMsg');
-    toast.innerText = message;
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
-  }
+function authHeaders() {
+  const t = localStorage.getItem('resq_token');
+  return { 'Content-Type': 'application/json', ...(t ? { Authorization: 'Bearer ' + t } : {}) };
+}
 
-  // Update progress bar + badge colours based on new percentage
-  function applyStatus(card, pct) {
-    const fill   = card.querySelector('.progress-fill');
-    const pctEl  = card.querySelector('.progress-pct');
-    const badge  = card.querySelector('.res-badge');
-    const newPct = Math.max(0, pct);
+const MY_ID = localStorage.getItem('resq_uid') || '';
 
-    fill.style.width = newPct + '%';
-    pctEl.textContent = newPct + '%';
+// ── State ───────────────────────────────────────────────────────────────────
+let _resources      = [];
+let _currentTab     = 'all';
+let _editingId      = null;
+let _selectedStatus = 'OK';
 
-    if (newPct <= 15) {
-      fill.className  = 'progress-fill red';
-      pctEl.className = 'progress-pct red';
-      if (badge) { badge.className = 'res-badge critical'; badge.setAttribute('data-i18n','res_critical'); badge.textContent = (typeof t === 'function' ? t('res_critical') : 'CRITICAL'); }
-      card.classList.remove('low'); card.classList.add('critical');
-    } else if (newPct <= 40) {
-      fill.className  = 'progress-fill amber';
-      pctEl.className = 'progress-pct amber';
-      if (badge) { badge.className = 'res-badge low'; badge.setAttribute('data-i18n','res_low'); badge.textContent = (typeof t === 'function' ? t('res_low') : 'LOW'); }
-      card.classList.remove('critical'); card.classList.add('low');
-    } else {
-      fill.className  = 'progress-fill green';
-      pctEl.className = 'progress-pct green';
-      if (badge) { badge.className = 'res-badge ok'; badge.setAttribute('data-i18n','res_ok'); badge.textContent = (typeof t === 'function' ? t('res_ok') : 'OK'); }
-      card.classList.remove('critical','low');
-    }
-  }
+// ── Type display map ────────────────────────────────────────────────────────
+const TYPE_META = {
+  medical:       { icon: '🩹', color: '#FF1F1F' },
+  water:         { icon: '💧', color: '#2979FF' },
+  food:          { icon: '🥫', color: '#FFAA00' },
+  power:         { icon: '🔦', color: '#FFD600' },
+  shelter:       { icon: '🏠', color: '#00E676' },
+  equipment:     { icon: '🔧', color: '#78909C' },
+  communication: { icon: '📡', color: '#AB47BC' },
+  other:         { icon: '📦', color: '#546E7A' },
+};
+function meta(type) { return TYPE_META[type] || { icon: '📦', color: '#546E7A' }; }
 
-  // Recalculate summary card icons from current card states
-  function updateSummary() {
-    const cards = document.querySelectorAll('#tab-withme .resource-card');
-    const icons = ['🩹','💧','🥫','🔦'];
-    const sumVals = document.querySelectorAll('.sum-val');
-    cards.forEach((card, i) => {
-      const pct = parseInt(card.querySelector('.progress-pct').textContent);
-      const val = sumVals[i];
-      if (!val) return;
-      if (pct <= 15) { val.className = 'sum-val red';   val.setAttribute('data-i18n','res_critical'); val.textContent = (typeof t==='function'?t('res_critical'):'CRITICAL'); }
-      else if (pct <= 40) { val.className = 'sum-val amber'; val.setAttribute('data-i18n','res_low');      val.textContent = (typeof t==='function'?t('res_low'):'LOW'); }
-      else { val.className = 'sum-val green'; val.setAttribute('data-i18n','res_ok');       val.textContent = pct + '%'; }
+// ── Toast ───────────────────────────────────────────────────────────────────
+let _tt;
+function showToast(msg, kind) {
+  clearTimeout(_tt);
+  const old = document.querySelector('.toast');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'toast ' + (kind || 'ok');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  _tt = setTimeout(() => el.remove(), 2800);
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+// ── Load from API ───────────────────────────────────────────────────────────
+async function loadResources() {
+  try {
+    const res = await fetch(SERVER + '/api/resources/', {
+      headers: authHeaders(),
+      signal: AbortSignal.timeout(7000),
     });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    _resources = await res.json();
+    localStorage.setItem('resq_res_cache', JSON.stringify(_resources));
+  } catch (e) {
+    try { _resources = JSON.parse(localStorage.getItem('resq_res_cache') || '[]'); } catch(_) {}
+    if (_resources.length === 0) showToast('Server unreachable — add resources to sync later', 'warn');
+    else showToast('Offline — showing cached resources', 'warn');
+  }
+  render();
+}
+
+// ── Render ──────────────────────────────────────────────────────────────────
+function visible() {
+  if (_currentTab === 'mine')    return _resources.filter(r => ownId(r) === MY_ID);
+  if (_currentTab === 'network') return _resources.filter(r => ownId(r) !== MY_ID);
+  return _resources;
+}
+
+function ownId(r) { return r.ownerId && typeof r.ownerId === 'object' ? r.ownerId._id : r.ownerId; }
+
+function render() {
+  // Update summary bar
+  ['medical','water','food','power'].forEach((cat, i) => {
+    const items = _resources.filter(r => r.type === cat);
+    const el = document.getElementById(['sumMedical','sumWater','sumFood','sumPower'][i]);
+    if (!items.length) { el.textContent = '—'; el.className = 'sum-val'; return; }
+    const worst = items.find(r => r.status === 'CRITICAL') || items.find(r => r.status === 'LOW') || items[0];
+    el.textContent = worst.status;
+    el.className = 'sum-val ' + worst.status.toLowerCase();
+  });
+
+  // Build cards
+  const area = document.getElementById('cardArea');
+  const list  = visible();
+  if (!list.length) {
+    area.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📦</div>
+      <div class="empty-title">No resources here</div>
+      <div class="empty-sub">Tap <strong>+</strong> to add what you have — food, medicine, water, power.<br>Resources are shared over the local mesh network.</div>
+    </div>`;
+    return;
   }
 
-  // "Mark Used" — decrements every numeric chip value in the card
-  function handleMarkUsed(btn) {
-    if (btn.disabled) return;
-    const card = btn.closest('.resource-card');
-    const chips = card.querySelectorAll('.detail-chip .detail-val');
+  area.innerHTML = '';
+  list.forEach(r => area.appendChild(buildCard(r)));
+}
 
-    chips.forEach(valEl => {
-      const n = parseInt(valEl.textContent);
-      if (!isNaN(n) && n > 0) valEl.textContent = n - 1;
-    });
+function buildCard(r) {
+  const isMine = (ownId(r) === MY_ID);
+  const m   = meta(r.type);
+  const qty = r.quantity || 0;
+  const pct = Math.min(100, qty > 0 ? (qty / Math.max(qty * 2, 100)) * 100 : 0);
+  const barColor = r.status === 'CRITICAL' ? 'var(--red)' : r.status === 'LOW' ? 'var(--amber)' : 'var(--green)';
+  const ownerName  = r.ownerId && r.ownerId.name  ? r.ownerId.name  : (isMine ? 'You' : 'Unknown');
+  const ownerPhone = r.ownerId && r.ownerId.phone ? ' · ' + r.ownerId.phone : '';
 
-    // Recalculate % from total items left vs a fixed max reference stored on card
-    if (!card.dataset.maxItems) {
-      // First click: snapshot the total as the baseline max
-      let tot = 0;
-      chips.forEach(v => { const n = parseInt(v.textContent); if (!isNaN(n)) tot += n + 1; }); // +1 because we already decremented
-      card.dataset.maxItems = tot;
-    }
-    let tot = 0;
-    chips.forEach(v => { const n = parseInt(v.textContent); if (!isNaN(n)) tot += n; });
-    const max = parseInt(card.dataset.maxItems) || 1;
-    const newPct = Math.round((tot / max) * 100);
-    applyStatus(card, newPct);
-    updateSummary();
-
-    btn.disabled = true;
-    btn.textContent = '✓ Updated';
-    showToast(typeof t==='function' ? t('toast_res_updated') : 'Resource updated');
-    setTimeout(() => { btn.disabled = false; btn.setAttribute('data-i18n','res_btn_mark_used'); btn.textContent = (typeof t==='function'?t('res_btn_mark_used'):'Mark Used'); }, 1500);
-  }
-
-  // "Update" — decrements the FIRST numeric chip value (quantity)
-  function handleUpdate(btn) {
-    if (btn.disabled) return;
-    const card = btn.closest('.resource-card');
-    const firstChip = card.querySelector('.detail-chip .detail-val');
-    if (firstChip) {
-      const n = parseInt(firstChip.textContent);
-      if (!isNaN(n) && n > 0) {
-        const decrement = Math.max(1, Math.floor(n * 0.05)); // use 5% per update
-        firstChip.textContent = Math.max(0, n - decrement);
+  const el = document.createElement('div');
+  el.className = 'res-card' + (isMine ? ' mine' : '');
+  el.innerHTML = `
+    <div class="res-top">
+      <div class="res-icon" style="background:${m.color}22">${m.icon}</div>
+      <div class="res-info">
+        <div class="res-name">${escHtml(r.name)}</div>
+        <div class="res-meta">${escHtml(r.type)} · ${escHtml(ownerName)}${escHtml(ownerPhone)}</div>
+      </div>
+      <div class="res-status ${r.status}">${r.status}</div>
+    </div>
+    <div class="res-qty-row">
+      <div class="res-qty-bar-wrap">
+        <div class="res-qty-bar" style="width:${pct}%;background:${barColor}"></div>
+      </div>
+      <div class="res-qty-text">${qty} ${escHtml(r.unit || 'units')}</div>
+    </div>
+    <div class="res-actions">
+      ${isMine
+        ? `<button class="res-btn edit"   onclick="openEditOverlay('${r._id}')">✏️ Edit</button>
+           <button class="res-btn delete" onclick="confirmDelete('${r._id}')">🗑 Delete</button>`
+        : `<button class="res-btn request" onclick="requestResource('${escHtml(r.name)}')">📢 Request</button>`
       }
+    </div>`;
+  return el;
+}
+
+// ── Tab ─────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  _currentTab = tab;
+  document.getElementById('tabAll').classList.toggle('active',  tab === 'all');
+  document.getElementById('tabMine').classList.toggle('active', tab === 'mine');
+  document.getElementById('tabNet').classList.toggle('active',  tab === 'network');
+  render();
+}
+
+// ── Overlay open/close ───────────────────────────────────────────────────────
+function openAddOverlay() {
+  _editingId = null;
+  document.getElementById('sheetTitle').innerHTML = 'ADD <span>RESOURCE</span>';
+  document.getElementById('fName').value = '';
+  document.getElementById('fQty').value  = '';
+  document.getElementById('fUnit').value = '';
+  document.getElementById('fType').value = 'medical';
+  document.getElementById('submitBtn').textContent = 'ADD RESOURCE';
+  pickStatus('OK');
+  document.getElementById('overlayBackdrop').classList.add('open');
+  setTimeout(() => document.getElementById('fName').focus(), 300);
+}
+
+function openEditOverlay(id) {
+  const r = _resources.find(x => x._id === id);
+  if (!r) return;
+  _editingId = id;
+  document.getElementById('sheetTitle').innerHTML = 'EDIT <span>RESOURCE</span>';
+  document.getElementById('fName').value = r.name;
+  document.getElementById('fType').value = r.type;
+  document.getElementById('fQty').value  = r.quantity;
+  document.getElementById('fUnit').value = r.unit || '';
+  document.getElementById('submitBtn').textContent = 'SAVE CHANGES';
+  pickStatus(r.status || 'OK');
+  document.getElementById('overlayBackdrop').classList.add('open');
+}
+
+function closeOverlay() {
+  document.getElementById('overlayBackdrop').classList.remove('open');
+  _editingId = null;
+}
+
+document.getElementById('overlayBackdrop').addEventListener('click', function(e) {
+  if (e.target === this) closeOverlay();
+});
+
+// ── Status pills ─────────────────────────────────────────────────────────────
+function pickStatus(s) {
+  _selectedStatus = s;
+  ['OK','LOW','CRITICAL'].forEach(v => {
+    document.getElementById('sp' + v).className =
+      'status-pill' + (v === s ? ' sel-' + v : '');
+  });
+}
+
+// ── Submit (add or update) ───────────────────────────────────────────────────
+async function submitResource() {
+  const name = document.getElementById('fName').value.trim();
+  const type = document.getElementById('fType').value;
+  const qty  = parseFloat(document.getElementById('fQty').value) || 0;
+  const unit = document.getElementById('fUnit').value.trim() || 'units';
+
+  if (!name) { showToast('Enter a resource name', 'warn'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = _editingId ? 'Saving…' : 'Adding…';
+
+  const body = JSON.stringify({ name, type, quantity: qty, unit, status: _selectedStatus, isPublic: true });
+
+  try {
+    const url    = SERVER + '/api/resources/' + (_editingId ? _editingId : '');
+    const method = _editingId ? 'PUT' : 'POST';
+    const res    = await fetch(url, { method, headers: authHeaders(), body, signal: AbortSignal.timeout(7000) });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || ('Server error ' + res.status));
     }
-    // Recalculate progress %
-    const fill = card.querySelector('.progress-fill');
-    const currentPct = parseInt(fill.style.width) || 0;
-    const newPct = Math.max(0, currentPct - 5);
-    applyStatus(card, newPct);
-    updateSummary();
 
-    btn.disabled = true;
-    btn.textContent = '✓ Saved';
-    showToast(typeof t==='function' ? t('toast_res_updated') : 'Resource updated');
-    setTimeout(() => { btn.disabled = false; btn.setAttribute('data-i18n','res_btn_update'); btn.textContent = (typeof t==='function'?t('res_btn_update'):'Update'); }, 1500);
+    closeOverlay();
+    showToast(_editingId ? name + ' updated' : qty + ' ' + unit + ' of ' + name + ' added');
+    await loadResources();
+  } catch (e) {
+    showToast(e.message || 'Failed — check connection', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = _editingId ? 'SAVE CHANGES' : 'ADD RESOURCE';
   }
+}
 
-  function handleRequest(btn, itemName) {
-    if (btn.dataset.busy) return;
-    btn.dataset.busy = '1';
-    const origText = btn.textContent;
-    btn.innerHTML = '<span style="opacity:0.5">...</span>';
-    setTimeout(() => {
-      const label = origText === 'Share' ? 'Shared' : 'Requested';
-      btn.textContent = label;
-      btn.style.borderColor = 'var(--blue)';
-      btn.style.color = 'var(--blue)';
-      showToast(origText === 'Share'
-        ? `${itemName} ` + (typeof t==='function'?t('toast_new_res'):'broadcasted')
-        : `${itemName} ` + (typeof t==='function'?t('toast_req_broadcast'):'request broadcasted'));
-      setTimeout(() => {
-        btn.textContent = origText;
-        btn.style.borderColor = '';
-        btn.style.color = '';
-        delete btn.dataset.busy;
-      }, 3000);
-    }, 600);
-  }
+// ── Delete ────────────────────────────────────────────────────────────────────
+async function confirmDelete(id) {
+  const r = _resources.find(x => x._id === id);
+  if (!r) return;
+  if (!confirm('Delete "' + r.name + '"?\n\nThis cannot be undone.')) return;
 
-  function handleFulfill(btn) {
-    if (btn.dataset.busy) return;
-    btn.dataset.busy = '1';
-    const origText = btn.textContent;
-    btn.textContent = '...';
-    setTimeout(() => {
-      btn.textContent = 'Fulfilled';
-      btn.style.background = 'var(--green)';
-      btn.style.color = 'black';
-      showToast(typeof t==='function' ? t('toast_fulfilling') : 'Fulfilling request...');
-      // Remove request item after brief pause
-      setTimeout(() => {
-        const item = btn.closest('.request-item');
-        if (item) { item.style.opacity = '0'; item.style.transition = 'opacity 0.4s'; setTimeout(() => item.remove(), 400); }
-      }, 1000);
-    }, 500);
-  }
-
-  function openAddOverlay()  { document.getElementById('addOverlay').classList.add('open'); }
-  function closeAddOverlay() { document.getElementById('addOverlay').classList.remove('open'); }
-
-  function submitAddResource() {
-    const name = document.getElementById('newResName').value.trim() || 'New Resource';
-    const qty  = document.getElementById('newResQty').value || '1';
-    closeAddOverlay();
-    showToast(`${qty}x ${name} ` + (typeof t==='function'?t('toast_req_broadcast'):'broadcasted'));
-    document.getElementById('newResName').value = '';
-    document.getElementById('newResQty').value  = '';
-  }
-
-  // Animate progress bars on load — works whether DOM is ready or not
-  function animateBars() {
-    document.querySelectorAll('.progress-fill').forEach(bar => {
-      const w = bar.style.width;
-      bar.style.width = '0%';
-      setTimeout(() => bar.style.width = w, 200);
+  try {
+    const res = await fetch(SERVER + '/api/resources/' + id, {
+      method: 'DELETE', headers: authHeaders(), signal: AbortSignal.timeout(7000),
     });
+    if (!res.ok) throw new Error('Server error');
+    showToast(r.name + ' deleted');
+    await loadResources();
+  } catch (_) {
+    showToast('Could not delete — check connection', 'err');
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', animateBars);
+}
+
+// ── Request (broadcasts over mesh) ───────────────────────────────────────────
+function requestResource(name) {
+  if (window.RESQ_Mesh) {
+    RESQ_Mesh.sendMessage('all',
+      '📢 RESOURCE REQUEST: I need ' + name + ' — please reply if you can share.',
+      'broadcast');
+    showToast('Request broadcast to mesh');
   } else {
-    animateBars();
+    showToast('Mesh not connected', 'warn');
   }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadResources();
+// If token was fetched async by resq-auth.js, reload resources once it arrives
+window.addEventListener('resq:token-ready', () => loadResources());
 </script>
-<script src="../i18n.js"></script>
-  <script src="../store.js"></script>
+<script src="../mesh.js"></script>
 </body>
 </html>

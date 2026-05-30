@@ -1,22 +1,24 @@
-const CACHE_NAME = 'resq-offline-v12';
+const CACHE_NAME = 'resq-offline-v13';
 const TILE_CACHE_NAME = 'resq-map-tiles';
 const FONT_CACHE_NAME = 'resq-fonts';
 
 // Use absolute paths from the root to ensure reliability across subdirectories
 const ASSETS_TO_CACHE = [
   '/',
-  '/index.html',
   '/manifest.json',
   '/store.js',
   '/i18n.js',
-  '/dashboard/index.html',
-  '/messaging/index.html',
-  '/resources/index.html',
-  '/settings/index.html',
-  '/map/index.html',
+  '/mesh.js',
+  '/location.js',
+  '/splash',
+  '/login',
+  '/dashboard',
+  '/messaging',
+  '/resources',
+  '/settings',
+  '/map',
+  '/sos',
   '/map/map-fallback.png',
-  '/splash/index.html',
-  '/sos/index.html',
   '/leaflet/leaflet.js',
   '/leaflet/leaflet.css',
   '/leaflet/images/marker-icon.png',
@@ -94,11 +96,11 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Normalize directory requests to index.html
-  let normalizedPath = url.pathname;
-  if (normalizedPath.endsWith('/')) {
-    normalizedPath += 'index.html';
-  }
+  // Normalize to clean URL: strip /index.html suffix, .html extension, and trailing slash
+  let normalizedPath = url.pathname
+    .replace(/\/index\.html$/, '')
+    .replace(/\.html$/, '')
+    .replace(/\/$/, '') || '/';
   const normalizedUrl = url.origin + normalizedPath;
 
   event.respondWith(

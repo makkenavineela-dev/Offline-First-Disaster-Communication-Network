@@ -1,0 +1,18 @@
+<!DOCTYPE html><html><head><title>SW Clear</title></head><body>
+<p id="s">Checking…</p>
+<script>
+(async () => {
+  if (!new URLSearchParams(location.search).has('debug')) {
+    document.getElementById('s').textContent = 'Not found.';
+    setTimeout(() => location.replace('login/index.html'), 800);
+    return;
+  }
+  const regs = await navigator.serviceWorker.getRegistrations();
+  for (const r of regs) await r.unregister();
+  const keys = await caches.keys();
+  for (const k of keys) await caches.delete(k);
+  document.getElementById('s').textContent = 'Done — ' + regs.length + ' SW unregistered, ' + keys.length + ' caches cleared. Redirecting…';
+  setTimeout(() => location.replace('login/index.html'), 800);
+})();
+</script>
+</body></html>

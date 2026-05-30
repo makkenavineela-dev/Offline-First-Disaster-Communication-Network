@@ -13,7 +13,7 @@ router.route('/')
 router.route('/direct/:userId')
   .get(protect, getDirectMessages);
 
-router.route('/broadcast/:zone')
+router.route('/broadcasts/:zone')
   .get(protect, getBroadcasts);
 
 module.exports = router;

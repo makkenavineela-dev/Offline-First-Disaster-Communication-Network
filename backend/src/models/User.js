@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
  
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  phone: { type: String, default: null },           // Mobile number from login
   deviceId: { type: String, required: true, unique: true }, // Mesh identifier
   password: { type: String, required: true },
   role: { type: String, enum: ['civilian', 'responder', 'shelter_admin'], default: 'civilian' },
@@ -27,11 +28,10 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
  
 // Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+userSchema.pre('save', async function() {
+  if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
  
 // Match password
@@ -40,6 +40,7 @@ userSchema.methods.matchPassword = async function(enteredPassword) {
 };
  
 // Indexes
+userSchema.index({ phone: 1 }, { sparse: true });
 userSchema.index({ 'location': '2dsphere' });
 userSchema.index({ status: 1 });
 userSchema.index({ lastSeen: 1 }); // Used by cron cleanup

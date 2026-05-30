@@ -35,17 +35,28 @@
   }
 
   function _getUser() {
+    // Use phone number as userId fallback — it is always set immediately at
+    // login, before the async phone-register response arrives with the MongoDB ID.
+    // This prevents the timing bug where mesh joins with a random anon-XXX ID
+    // that never matches msg.from once the real ID arrives.
     return {
-      userId: localStorage.getItem('resq_uid')    || ('anon-' + Math.random().toString(36).slice(2)),
+      userId: localStorage.getItem('resq_uid')    ||
+              localStorage.getItem('resq_mobile') ||
+              ('anon-' + Math.random().toString(36).slice(2)),
       name:   localStorage.getItem('resq_name')   || 'Unknown',
       role:   localStorage.getItem('resq_role')   || 'civilian',
       zone:   localStorage.getItem('resq_zone')   || 'unknown',
+      phone:  localStorage.getItem('resq_mobile') || null,
     };
   }
 
   function _serverUrl() {
     const stored = localStorage.getItem(KEY_SERVER);
     if (stored) return stored.replace(/\/$/, '');
+    // Capacitor native app — backend runs on LAN machine, not the phone itself
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      return 'http://192.168.0.2:5000';
+    }
     const h = window.location.hostname;
     if (h && h !== '' && !['localhost','127.0.0.1'].includes(h)) {
       return 'http://' + h + ':5000';
@@ -105,8 +116,23 @@
   }
 
   // ── Node registry ─────────────────────────────────────────────────────────────
+  function _saveKnownUsers(nodes) {
+    try {
+      const myId = localStorage.getItem('resq_uid');
+      const phones = nodes
+        .filter(n => n.userId !== myId && n.phone)
+        .map(n => n.phone);
+      if (phones.length) {
+        const existing = JSON.parse(localStorage.getItem('resq_known_phones') || '[]');
+        const merged   = [...new Set([...existing, ...phones])];
+        localStorage.setItem('resq_known_phones', JSON.stringify(merged));
+      }
+    } catch(e) {}
+  }
+
   function _setNodes(nodes) {
     try { localStorage.setItem(KEY_NODES, JSON.stringify(nodes)); } catch(e) {}
+    _saveKnownUsers(nodes);
     _emit('status', { connected: _connected, nodeCount: nodes.length });
     _emit('nodes', nodes);
   }
@@ -118,6 +144,7 @@
       if (idx >= 0) nodes[idx] = { ...nodes[idx], ...node };
       else nodes.push(node);
       localStorage.setItem(KEY_NODES, JSON.stringify(nodes));
+      _saveKnownUsers(nodes);
       _emit('status', { connected: _connected, nodeCount: nodes.length });
       _emit('nodes', nodes);
     } catch(e) {}
@@ -187,6 +214,7 @@
         name:   user.name,
         role:   user.role,
         zone:   user.zone,
+        phone:  user.phone,
         lat:    loc ? loc.lat : null,
         lng:    loc ? loc.lng : null,
       });
@@ -221,6 +249,16 @@
 
     _socket.on('location_update', (data) => {
       _updateLocation(data);
+    });
+
+    // Server confirms message was routed (delivered=true if recipient was online)
+    _socket.on('ack', (data) => {
+      _emit('ack', data);
+    });
+
+    // Server confirms direct message actually reached the recipient's socket
+    _socket.on('delivery_receipt', (data) => {
+      _emit('delivery_receipt', data);
     });
 
     _socket.on('disconnect', () => {
@@ -346,6 +384,16 @@
 
     /** Force a reconnect attempt. */
     reconnect() { _connect(); },
+
+    /**
+     * Inject a message from an external channel (e.g. incoming SMS) into local
+     * history and fire the 'message' event so all listeners (messaging UI, etc.)
+     * see it alongside mesh messages.
+     */
+    _injectExternalMessage(msg) {
+      _addMsg(msg);
+      _emit('message', msg);
+    },
   };
 
   window.RESQ_Mesh = RESQ_Mesh;
@@ -353,9 +401,28 @@
   // ── Auto-connect ──────────────────────────────────────────────────────────────
   function _init() {
     _connect();
+
     // Forward GPS events to mesh so other nodes see our location
     window.addEventListener('resq:location', (e) => {
       if (_connected) RESQ_Mesh.updateLocation(e.detail.lat, e.detail.lng, e.detail.accuracy);
+    });
+
+    // When phone-register completes (resq-auth.js dispatches this), re-join with
+    // the correct MongoDB userId so msg.from matches across all devices.
+    window.addEventListener('resq:token-ready', (e) => {
+      if (e.detail && e.detail.userId) {
+        localStorage.setItem('resq_uid', String(e.detail.userId));
+        if (_socket && _socket.connected) {
+          const user = _getUser();
+          _socket.emit('join', {
+            userId: user.userId,
+            name:   user.name,
+            role:   user.role,
+            zone:   user.zone,
+            phone:  user.phone,
+          });
+        }
+      }
     });
   }
 

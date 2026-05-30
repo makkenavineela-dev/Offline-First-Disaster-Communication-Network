@@ -50,6 +50,100 @@
     transition: all 0.15s;
   }
   .tab.active { background: var(--blue); border-color: var(--blue); color: white; }
+  .tab.sms-tab.active { background: var(--amber); border-color: var(--amber); color: #000; }
+
+  /* SMS recipient bar */
+  .sms-phone-bar {
+    display: none; margin: 0 16px 8px; gap: 8px; align-items: center; flex-shrink: 0;
+  }
+  .sms-phone-bar.visible { display: flex; }
+  .sms-phone-input {
+    flex: 1; background: var(--gray2); border: 1px solid var(--amber);
+    border-radius: 10px; padding: 8px 12px;
+    color: var(--white); font-family: 'Barlow', sans-serif; font-size: 13px;
+    outline: none;
+  }
+  .sms-phone-input::placeholder { color: var(--text-muted); }
+  .sms-label {
+    font-size: 10px; font-weight: 700; color: var(--amber);
+    letter-spacing: 1px; white-space: nowrap;
+  }
+  .pick-contact-btn {
+    background: var(--amber); color: #000; border: none; border-radius: 10px;
+    padding: 8px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 4px; white-space: nowrap;
+  }
+  .pick-contact-btn svg { width: 14px; height: 14px; fill: #000; }
+
+  /* Contacts picker overlay */
+  .contacts-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--black); z-index: 60;
+    display: flex; flex-direction: column;
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.25,0.8,0.25,1);
+  }
+  .contacts-overlay.open { transform: translateY(0); }
+  .contacts-header {
+    padding: max(20px, env(safe-area-inset-top)) 16px 12px;
+    display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    border-bottom: 1px solid var(--gray3);
+  }
+  .contacts-title {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 22px;
+    font-weight: 900; color: var(--white); letter-spacing: 1.5px; flex: 1;
+  }
+  .contacts-title span { color: var(--amber); }
+  .contacts-search {
+    margin: 12px 16px; background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 12px; padding: 10px 14px; color: var(--white);
+    font-family: 'Barlow', sans-serif; font-size: 14px; outline: none;
+    flex-shrink: 0;
+  }
+  .contacts-list {
+    flex: 1; overflow-y: auto; padding: 0 16px 20px; scrollbar-width: none;
+  }
+  .contacts-list::-webkit-scrollbar { display: none; }
+  .contact-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px; background: var(--gray2); border: 1px solid var(--gray3);
+    border-radius: 12px; margin-bottom: 6px; cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .contact-item:active { transform: scale(0.98); background: var(--gray3); }
+  .contact-avatar {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--amber), #FF8800);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 16px;
+    font-weight: 700; color: #000; flex-shrink: 0;
+  }
+  .contact-info { flex: 1; min-width: 0; }
+  .contact-name {
+    font-size: 14px; font-weight: 600; color: var(--white);
+    margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .contact-phone { font-size: 12px; color: var(--text-muted); }
+  .contact-sms-icon {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: rgba(255,170,0,0.15); display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .contact-sms-icon svg { width: 16px; height: 16px; fill: var(--amber); }
+
+  .contacts-empty {
+    text-align: center; padding: 60px 24px; color: var(--text-muted);
+  }
+  .contacts-empty .icon { font-size: 40px; opacity: 0.3; margin-bottom: 12px; }
+  .contacts-empty .title { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .contacts-empty .sub { font-size: 12px; line-height: 1.5; max-width: 260px; margin: 0 auto; }
+
+  /* SMS channel badge on messages */
+  .channel-badge {
+    display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 5px;
+    border-radius: 4px; margin-left: 4px; vertical-align: middle;
+  }
+  .channel-badge.sms  { background: rgba(255,170,0,0.2); color: var(--amber); }
+  .channel-badge.mesh { background: rgba(41,121,255,0.2); color: var(--blue); }
 
   /* Mesh badge */
   .mesh-badge {
@@ -145,6 +239,34 @@
   }
   .attach-btn svg { width: 20px; height: 20px; fill: var(--text-muted); }
 
+  /* SOS Alert Banner */
+  .sos-alert-banner {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: linear-gradient(135deg, #cc0000, #ff1f1f);
+    box-shadow: 0 4px 24px rgba(255,31,31,0.6);
+    animation: sosSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    max-width: 480px; margin: 0 auto;
+  }
+  @keyframes sosSlideIn {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  .sos-banner-content {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px;
+  }
+  .sos-banner-icon { font-size: 28px; flex-shrink: 0; animation: sosPulse 0.8s ease-in-out infinite alternate; }
+  @keyframes sosPulse { from { transform: scale(1); } to { transform: scale(1.2); } }
+  .sos-banner-text { flex: 1; min-width: 0; }
+  .sos-banner-title { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 900; letter-spacing: 1px; color: white; }
+  .sos-banner-body  { font-size: 12px; color: rgba(255,255,255,0.85); margin-top: 2px; }
+  .sos-banner-close {
+    background: rgba(0,0,0,0.25); border: none; color: white;
+    border-radius: 50%; width: 28px; height: 28px; cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
   /* Bottom nav */
   .bottom-nav {
     position: absolute; bottom: 0; left: 0; right: 0;
@@ -226,9 +348,23 @@
   }
 </style>
   <link rel="manifest" href="/manifest.json">
+<script src="/js/resq-auth.js"></script>
 </head>
 <body>
 <div class="phone">
+
+  <!-- SOS Incoming Alert Banner (hidden until triggered) -->
+  <div class="sos-alert-banner" id="sosAlertBanner" style="display:none;">
+    <div class="sos-banner-content">
+      <div class="sos-banner-icon">🆘</div>
+      <div class="sos-banner-text">
+        <div class="sos-banner-title" id="sosBannerTitle">SOS ALERT NEARBY</div>
+        <div class="sos-banner-body" id="sosBannerBody"></div>
+      </div>
+      <button class="sos-banner-close" onclick="closeSosBanner()">✕</button>
+    </div>
+  </div>
+
   <div class="offline-top-bar">
     <div class="dot"></div>
     <span>Connected to Local Network</span>
@@ -242,23 +378,54 @@
     <div class="header-title" data-i18n="mesh_chat">MESH <span>CHAT</span></div>
   </div>
 
+  <!-- 3 tabs: Mesh users · Unread messages · SMS -->
   <div class="tabs">
-    <div class="tab active" onclick="switchTab(this)" data-i18n="tab_all">All</div>
-    <div class="tab" onclick="switchTab(this)" data-i18n="tab_groups">Groups</div>
-    <div class="tab" onclick="switchTab(this)" data-i18n="tab_broadcast">Broadcast</div>
-    <div class="tab" onclick="switchTab(this)" data-i18n="tab_direct">Direct</div>
+    <div class="tab active" id="tabMesh"   onclick="switchTab(this,'mesh-users')">
+      Mesh <span id="tabMeshCount" style="background:var(--green);color:#000;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;">0</span>
+    </div>
+    <div class="tab" id="tabUnread" onclick="switchTab(this,'unread')">
+      Unread <span id="tabUnreadCount" style="background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px;display:none;">0</span>
+    </div>
+    <div class="tab sms-tab" id="tabSMS" onclick="switchTab(this,'sms')">📶 SMS</div>
+  </div>
+
+  <!-- SMS recipient bar — only in SMS mode -->
+  <div class="sms-phone-bar" id="smsPhoneBar">
+    <span class="sms-label">TO:</span>
+    <input class="sms-phone-input" id="smsPhoneInput" type="tel" placeholder="Pick a contact or type number" inputmode="tel">
+    <button class="pick-contact-btn" onclick="openContactsPicker()">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      Contacts
+    </button>
   </div>
 
   <div class="mesh-badge">
     <div class="mesh-dot"></div>
-    <div class="mesh-text"><span data-i18n="chat_offline_badge">Offline Mesh Active · <span id="msgNodeCount">--</span> nodes ·</span> <span data-i18n="chat_offline_span">Msgs route without internet</span></div>
+    <div class="mesh-text">Offline Mesh Active · <span id="msgNodeCount">0</span> users online · No internet needed</div>
   </div>
 
-  <div class="chat-list" id="chatList">
-    <div id="emptyState" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 24px; gap:12px; text-align:center;">
-      <div style="font-size:40px; opacity:0.3;">💬</div>
-      <div style="font-size:14px; font-weight:600; color:var(--text-muted);">No messages yet</div>
-      <div style="font-size:12px; color:var(--text-muted); max-width:220px; line-height:1.5;">Messages from nearby mesh nodes will appear here when received.</div>
+  <!-- MESH USERS tab -->
+  <div id="viewMeshUsers" class="chat-list">
+    <div id="meshUsersEmpty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;gap:12px;text-align:center;">
+      <div style="font-size:40px;opacity:0.3;">📡</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-muted);">No users on mesh yet</div>
+      <div style="font-size:12px;color:var(--text-muted);max-width:220px;line-height:1.5;">When others join the same WiFi network, they'll appear here.</div>
+    </div>
+  </div>
+
+  <!-- UNREAD tab -->
+  <div id="viewUnread" class="chat-list" style="display:none;">
+    <div id="unreadEmpty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;gap:12px;text-align:center;">
+      <div style="font-size:40px;opacity:0.3;">✓</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-muted);">All caught up</div>
+      <div style="font-size:12px;color:var(--text-muted);max-width:220px;line-height:1.5;">New messages will appear here.</div>
+    </div>
+  </div>
+
+  <!-- SMS tab (compose only, no list) -->
+  <div id="viewSMS" class="chat-list" style="display:none;">
+    <div style="padding:20px 16px;color:var(--text-muted);font-size:12px;text-align:center;line-height:1.6;">
+      Enter a number above and type your message below.<br>SMS is sent over cellular — no internet needed.
     </div>
   </div>
 
@@ -266,8 +433,8 @@
     <div class="attach-btn">
       <svg viewBox="0 0 24 24"><path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/></svg>
     </div>
-    <textarea class="compose-input" data-i18n-placeholder="msg_placeholder" placeholder="Send via mesh network…" rows="1" inputmode="text"></textarea>
-    <button class="send-btn">
+    <textarea class="compose-input" id="mainCompose" placeholder="Send broadcast to all mesh users…" rows="1" inputmode="text"></textarea>
+    <button class="send-btn" id="mainSendBtn" onclick="mainSend()">
       <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
     </button>
   </div>
@@ -293,6 +460,24 @@
       <svg viewBox="0 0 24 24"><path d="M12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5zm7.43-2.02c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.12-.22-.07-.49-.12-.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"/></svg>
       <span class="nav-label" data-i18n="nav_settings">Settings</span>
     </a>
+  </div>
+
+  <!-- Contacts Picker Overlay -->
+  <div class="contacts-overlay" id="contactsOverlay">
+    <div class="contacts-header">
+      <div class="back-btn" onclick="closeContactsPicker()">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </div>
+      <div class="contacts-title">PICK <span>CONTACT</span></div>
+    </div>
+    <input class="contacts-search" id="contactsSearch" type="text" placeholder="Search name or number..." oninput="filterContacts()">
+    <div class="contacts-list" id="contactsList">
+      <div class="contacts-empty" id="contactsEmpty">
+        <div class="icon">👥</div>
+        <div class="title">Loading contacts...</div>
+        <div class="sub">If this is the first time, allow contacts permission when prompted.</div>
+      </div>
+    </div>
   </div>
 
   <!-- Chat Overlay -->
@@ -334,9 +519,220 @@
 
 </div>
 <script>
-  function switchTab(el) {
+  // ── Tab state ─────────────────────────────────────────────────────────────────
+  let _channel = 'mesh-users'; // 'mesh-users' | 'unread' | 'sms'
+
+  function switchTab(el, channel) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
+    _channel = channel || 'mesh-users';
+
+    // Show/hide views
+    document.getElementById('viewMeshUsers').style.display = _channel === 'mesh-users' ? '' : 'none';
+    document.getElementById('viewUnread').style.display    = _channel === 'unread'     ? '' : 'none';
+    document.getElementById('viewSMS').style.display       = _channel === 'sms'        ? '' : 'none';
+
+    const phoneBar = document.getElementById('smsPhoneBar');
+    const compose  = document.getElementById('mainCompose');
+    const sendBtn  = document.getElementById('mainSendBtn');
+
+    if (_channel === 'sms') {
+      phoneBar.classList.add('visible');
+      compose.placeholder = 'Type SMS message… (cellular, no internet needed)';
+      sendBtn.style.background = 'var(--amber)';
+      if (window.RESQ_SMS && !RESQ_SMS.available) showToast('SMS only works on the Android app', 'warn');
+    } else {
+      phoneBar.classList.remove('visible');
+      compose.placeholder = _channel === 'mesh-users'
+        ? 'Send broadcast to all mesh users…'
+        : 'Send message…';
+      sendBtn.style.background = 'var(--blue)';
+    }
+
+    if (_channel === 'unread') renderUnread();
+  }
+
+  // ── Toast notification ────────────────────────────────────────────────────────
+  function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.style.cssText = `position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+      padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;z-index:999;
+      background:${type==='warn'?'rgba(255,170,0,0.9)':'rgba(0,230,118,0.9)'};color:#000;`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  // ── Main compose send ─────────────────────────────────────────────────────────
+  async function mainSend() {
+    const compose = document.getElementById('mainCompose');
+    const text = compose.value.trim();
+    if (!text) return;
+
+    if (_channel === 'sms') {
+      const phone = document.getElementById('smsPhoneInput').value.trim();
+      if (!phone) { showToast('Enter a phone number first', 'warn'); return; }
+
+      compose.value = '';
+      addBubble(`📶 ${text}`, 'sent');
+      addSmsBadgeToLast();
+
+      if (window.RESQ_SMS && RESQ_SMS.available) {
+        const result = await RESQ_SMS.send(phone, text);
+        if (!result.success && result.reason !== 'not-native') {
+          showToast('SMS failed: ' + result.reason, 'warn');
+        } else {
+          showToast('SMS sent via cellular', 'ok');
+        }
+      } else {
+        showToast('SMS only works on the Android app', 'warn');
+      }
+    } else {
+      compose.value = '';
+      addBubble(text, 'sent');
+      if (window.RESQ_Mesh) {
+        RESQ_Mesh.sendMessage('all', text, 'broadcast');
+      }
+    }
+  }
+
+  // Allow Enter key to send from main compose
+  document.addEventListener('DOMContentLoaded', () => {
+    const compose = document.getElementById('mainCompose');
+    if (compose) {
+      compose.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mainSend(); }
+      });
+    }
+  });
+
+  // Attach a small SMS badge to the last bubble
+  function addSmsBadgeToLast() {
+    const area = document.getElementById('convMessages');
+    if (!area) return;
+    const last = area.querySelector('.msg-bubble:last-child');
+    if (last) {
+      const badge = document.createElement('span');
+      badge.className = 'channel-badge sms';
+      badge.textContent = 'SMS';
+      last.appendChild(badge);
+    }
+  }
+
+  // ── Contacts picker ───────────────────────────────────────────────────────────
+  let _contactsAll = [];
+
+  async function openContactsPicker() {
+    document.getElementById('contactsOverlay').classList.add('open');
+
+    if (!window.RESQ_Contacts) {
+      renderContactsEmpty('Contacts unavailable', 'The contacts bridge did not load.');
+      return;
+    }
+    if (!RESQ_Contacts.available) {
+      renderContactsEmpty('Android only', 'Contacts work only inside the RESQ Android app.');
+      return;
+    }
+
+    // Show loading
+    renderContactsEmpty('Loading contacts...', 'Allow access if prompted.');
+
+    try {
+      _contactsAll = await RESQ_Contacts.list();
+      if (!_contactsAll.length) {
+        renderContactsEmpty('No contacts found', 'Your phone book appears to be empty, or permission was denied.');
+        return;
+      }
+      renderContacts(_contactsAll);
+    } catch (err) {
+      renderContactsEmpty('Permission denied', 'Enable contacts permission in app settings to use this feature.');
+    }
+  }
+
+  function closeContactsPicker() {
+    document.getElementById('contactsOverlay').classList.remove('open');
+  }
+
+  function renderContactsEmpty(title, sub) {
+    document.getElementById('contactsList').innerHTML = `
+      <div class="contacts-empty">
+        <div class="icon">👥</div>
+        <div class="title">${title}</div>
+        <div class="sub">${sub}</div>
+      </div>`;
+  }
+
+  function renderContacts(contacts) {
+    const list = document.getElementById('contactsList');
+    if (!contacts.length) {
+      renderContactsEmpty('No matches', 'Try a different search.');
+      return;
+    }
+    list.innerHTML = '';
+    for (const c of contacts) {
+      const item = document.createElement('div');
+      item.className = 'contact-item';
+      const safeName  = (c.name  || c.phone).replace(/</g, '&lt;');
+      const safePhone = c.phone.replace(/</g, '&lt;');
+      item.innerHTML = `
+        <div class="contact-avatar">${initials(c.name || c.phone)}</div>
+        <div class="contact-info">
+          <div class="contact-name">${safeName}</div>
+          <div class="contact-phone">${safePhone}</div>
+        </div>
+        <div class="contact-sms-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        </div>`;
+      item.onclick = () => pickContact(c);
+      list.appendChild(item);
+    }
+  }
+
+  function filterContacts() {
+    const q = document.getElementById('contactsSearch').value;
+    renderContacts(RESQ_Contacts.filter(_contactsAll, q));
+  }
+
+  function pickContact(c) {
+    // Set as current SMS recipient
+    document.getElementById('smsPhoneInput').value = c.phone;
+    closeContactsPicker();
+
+    // Open chat overlay for this contact (SMS mode)
+    openSmsConversation(c.name || c.phone, c.phone);
+  }
+
+  // Open SMS conversation with a specific contact
+  function openSmsConversation(name, phone) {
+    document.getElementById('convName').innerText = name;
+    document.getElementById('convAvatar').innerText = initials(name);
+    document.getElementById('convAvatar').style.background = 'var(--amber)';
+    document.getElementById('convAvatar').style.color = '#000';
+
+    const status = document.querySelector('.chat-header-status');
+    if (status) status.innerHTML = '<div class="dot" style="background:var(--amber);"></div> SMS · Cellular';
+
+    const area = document.getElementById('convMessages');
+    area.innerHTML = '';
+
+    // Show SMS history with this contact (filtered from mesh history)
+    const history = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
+    const thread = history.filter(m =>
+      m.channel === 'sms' && (m.from === phone || m.to === phone)
+    ).slice(0, 50).reverse();
+
+    for (const m of thread) {
+      const isMine = m.to === phone; // I sent it to them
+      addBubble(m.content + '<span class="channel-badge sms">SMS</span>', isMine ? 'sent' : 'received');
+    }
+    if (!thread.length) {
+      addBubble(`SMS conversation with ${name}<br><span style="opacity:0.7;font-size:11px;">Messages sent here go over cellular — no internet needed</span>`, 'system');
+    }
+
+    // Mark current chat as SMS mode and remember the phone
+    window._currentChatPhone   = phone;
+    window._currentChatIsSms   = true;
+    document.getElementById('chatOverlay').classList.add('open');
   }
 
   function openConversation(nameKey, avatar, msgTextKey) {
@@ -361,22 +757,39 @@
   
   function closeConversation() {
     document.getElementById('chatOverlay').classList.remove('open');
+    window._currentChatIsSms  = false;
+    window._currentChatPhone  = null;
+    window._currentChatUserId = null;
+    const status = document.querySelector('.chat-header-status');
+    if (status) status.innerHTML = '<div class="dot"></div> Connected · Mesh';
+    const avatar = document.getElementById('convAvatar');
+    if (avatar) { avatar.style.background = 'var(--blue)'; avatar.style.color = 'white'; }
   }
   
-  function addBubble(text, cls) {
+  function addBubble(text, cls, senderPhone) {
     const area = document.getElementById('convMessages');
     if (!area) return;
     const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    // Use createElement + insertAdjacentHTML instead of innerHTML += to avoid full re-render
     const bubble = document.createElement('div');
     bubble.className = `msg-bubble ${cls}`;
-    bubble.innerHTML = `${text}<span class="msg-time">${time}</span>`;
+    const phoneTag = (cls === 'received' && senderPhone)
+      ? `<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:3px;">${senderPhone}</div>`
+      : '';
+    bubble.innerHTML = `${phoneTag}${text}<span class="msg-time">${time}</span>`;
     area.appendChild(bubble);
     area.scrollTop = area.scrollHeight;
   }
 
   function sendQuickMsg(text, isEmergency=false) {
     addBubble(text, isEmergency ? 'emergency' : 'sent');
+    if (!window.RESQ_Mesh) return;
+    if (isEmergency) {
+      RESQ_Mesh.sendMessage('all', text, 'broadcast');
+    } else if (window._currentChatUserId) {
+      RESQ_Mesh.sendMessage(window._currentChatUserId, text, 'direct');
+    } else {
+      RESQ_Mesh.sendMessage('all', text, 'broadcast');
+    }
   }
 
   function shareLocation() {
@@ -396,14 +809,170 @@
     }
   }
 
-  function sendOverlayMsg() {
+  async function sendOverlayMsg() {
     const input = document.getElementById('overlayInput');
     const text = input.value.trim();
     if (!text) return;
     input.value = '';
+
+    // SMS mode — contact picked, send via cellular
+    if (window._currentChatIsSms && window._currentChatPhone) {
+      addBubble(text + '<span class="channel-badge sms">SMS</span>', 'sent');
+      if (window.RESQ_SMS && RESQ_SMS.available) {
+        const result = await RESQ_SMS.send(window._currentChatPhone, text);
+        if (!result.success && result.reason !== 'not-native') {
+          showToast('SMS failed: ' + result.reason, 'warn');
+        } else {
+          showToast('SMS sent', 'ok');
+          // Record sent SMS in mesh history so the thread persists
+          if (window.RESQ_Mesh) {
+            RESQ_Mesh._injectExternalMessage({
+              id: 'sms_out_' + Date.now(),
+              from: localStorage.getItem('resq_uid') || 'me',
+              fromName: 'You',
+              to: window._currentChatPhone,
+              content: text,
+              type: 'sms',
+              timestamp: Date.now(),
+              channel: 'sms',
+            });
+          }
+        }
+      } else {
+        showToast('SMS only works on the Android app', 'warn');
+      }
+      return;
+    }
+
+    // Direct message to the person whose chat is open
     addBubble(text, 'sent');
-    if (window.RESQ_Mesh) {
+    if (window.RESQ_Mesh && window._currentChatUserId) {
+      RESQ_Mesh.sendMessage(window._currentChatUserId, text, 'direct');
+    } else if (window.RESQ_Mesh) {
       RESQ_Mesh.sendMessage('all', text, 'broadcast');
+    }
+  }
+
+  // ── Nearby nodes (3 km radius) ───────────────────────────────────────────────
+  function distKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function myGps() {
+    if (window.RESQ_Location) {
+      const l = RESQ_Location.getLast();
+      if (l) return l;
+    }
+    try {
+      const s = JSON.parse(localStorage.getItem('resq_app_state') || '{}');
+      if (s.location && s.location.lat) return s.location;
+    } catch(e) {}
+    return null;
+  }
+
+  // Deduplicate nodes — one phone = one person
+  function dedupeNodes(nodes) {
+    const seen = new Map();
+    for (const n of (nodes || [])) {
+      const key = (n.phone && n.phone.trim()) ? n.phone.trim() : n.userId;
+      const ex  = seen.get(key);
+      if (!ex || (n.lastSeen || 0) > (ex.lastSeen || 0)) seen.set(key, n);
+    }
+    return Array.from(seen.values());
+  }
+
+  // Render the MESH tab — shows all live users on the network
+  function renderMeshUsers(rawNodes) {
+    const myId  = localStorage.getItem('resq_uid');
+    const me    = myGps();
+    const nodes = dedupeNodes(rawNodes || (window.RESQ_Mesh ? RESQ_Mesh.getNodes() : []))
+                    .filter(n => n.userId !== myId);
+
+    const view  = document.getElementById('viewMeshUsers');
+    const empty = document.getElementById('meshUsersEmpty');
+    const countBadge = document.getElementById('tabMeshCount');
+    const nodeCountEl = document.getElementById('msgNodeCount');
+
+    if (countBadge) countBadge.textContent = nodes.length;
+    if (nodeCountEl) nodeCountEl.textContent = nodes.length;
+
+    // Clear old user cards (keep empty state)
+    view.querySelectorAll('.mesh-user-card').forEach(el => el.remove());
+
+    if (!nodes.length) {
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    for (const node of nodes) {
+      const dist = (me && node.lat && node.lng)
+        ? distKm(me.lat, me.lng, node.lat, node.lng).toFixed(1) + ' km away'
+        : 'on mesh';
+      const safeName  = (node.name  || 'Unknown').replace(/</g,'&lt;');
+      const safePhone = (node.phone || '').replace(/</g,'&lt;');
+
+      const el = document.createElement('div');
+      el.className = 'chat-item mesh-user-card';
+      el.style.borderColor = 'rgba(0,230,118,0.3)';
+      el.innerHTML = `
+        <div class="chat-avatar" style="background:var(--green);color:#000;">${initials(node.name || 'UN')}</div>
+        <div class="chat-body">
+          <div class="chat-name">${safeName}
+            <span class="chat-badge mesh">${node.role || 'civilian'}</span>
+          </div>
+          <div class="chat-preview">${safePhone ? safePhone + ' · ' : ''}${dist}</div>
+        </div>
+        <div class="chat-meta" style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <div style="color:var(--green);font-size:10px;font-weight:700;">● ONLINE</div>
+          <div style="background:var(--blue);color:#fff;border-radius:8px;padding:3px 10px;font-size:10px;font-weight:600;cursor:pointer;"
+               onclick="event.stopPropagation();openDirectConversation('${safeName}','${initials(node.name||'UN')}','${node.userId}','${safePhone}')">
+            Chat
+          </div>
+        </div>`;
+      el.onclick = () => openDirectConversation(node.name || 'Unknown', initials(node.name || 'UN'), node.userId, node.phone);
+      view.appendChild(el);
+    }
+  }
+
+  // Render the UNREAD tab — incoming messages not yet read
+  function renderUnread() {
+    const view  = document.getElementById('viewUnread');
+    const empty = document.getElementById('unreadEmpty');
+    const badge = document.getElementById('tabUnreadCount');
+    const myId  = localStorage.getItem('resq_uid');
+
+    view.querySelectorAll('.thread-item,.thread-label').forEach(el => el.remove());
+
+    const history  = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
+    const incoming = history.filter(m => m.from !== myId).slice(0, 20);
+
+    if (badge) {
+      badge.textContent = incoming.length;
+      badge.style.display = incoming.length ? '' : 'none';
+    }
+
+    if (!incoming.length) {
+      if (empty) empty.style.display = '';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    // Group by sender
+    const threads = new Map();
+    for (const m of incoming) {
+      if (!threads.has(m.from)) threads.set(m.from, m);
+    }
+
+    for (const [, msg] of threads) {
+      const el = renderChatItem(msg, true);
+      el.classList.add('thread-item');
+      view.appendChild(el);
     }
   }
 
@@ -425,108 +994,245 @@
     const isEmerg = msg.type === 'sos';
     const el = document.createElement('div');
     el.className = 'chat-item' + (unread ? ' unread' : '') + (isEmerg ? ' emergency' : '');
+    const phoneHtml = msg.fromPhone
+      ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px;">${msg.fromPhone}</div>`
+      : '';
     el.innerHTML = `
       <div class="chat-avatar${msg.fromName ? '' : ' group'}">${initials(msg.fromName || 'ALL')}</div>
       <div class="chat-body">
         <div class="chat-name">${msg.fromName || 'Broadcast'}</div>
+        ${phoneHtml}
         <div class="chat-preview${unread ? ' unread' : ''}">${msg.content}</div>
       </div>
       <div class="chat-meta">
         <div class="chat-time">${timeAgo(msg.timestamp)}</div>
         ${unread ? '<div class="unread-count">1</div>' : '<div class="delivery-icon">✓✓</div>'}
       </div>`;
-    el.onclick = () => openDirectConversation(msg.fromName || 'Broadcast', initials(msg.fromName || 'ALL'), msg.from);
+    el.onclick = () => openDirectConversation(msg.fromName || 'Broadcast', initials(msg.fromName || 'ALL'), msg.from, msg.fromPhone);
     return el;
   }
 
   // Open a conversation thread by userId
-  function openDirectConversation(name, avatar, fromId) {
+  function openDirectConversation(name, avatar, fromId, fromPhone) {
     document.getElementById('convName').innerText = name;
     document.getElementById('convAvatar').innerText = avatar;
     document.getElementById('convAvatar').style.background = 'var(--blue)';
 
+    const status = document.querySelector('.chat-header-status');
+    if (status) {
+      const phoneLabel = fromPhone ? ` · ${fromPhone}` : '';
+      status.innerHTML = `<div class="dot"></div> Connected · Mesh${phoneLabel}`;
+    }
+
+    // Track who we're talking to so sendOverlayMsg sends direct messages
+    window._currentChatUserId = fromId;
+    window._currentChatIsSms  = false;
+
     const area = document.getElementById('convMessages');
     area.innerHTML = '';
 
-    // Show all history messages with this sender
+    // Only show messages directly between me and this specific person
     const history = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
     const myId = localStorage.getItem('resq_uid');
-    const thread = history.filter(m => m.from === fromId || m.from === myId || m.to === 'all').slice(0, 50).reverse();
+    const myPhone = localStorage.getItem('resq_mobile');
+
+    const thread = history.filter(m => {
+      // Match by userId OR phone (handles timing gap before MongoDB ID arrives)
+      const fromIsMe   = m.from === myId   || (myPhone && m.fromPhone === myPhone);
+      const fromIsThem = m.from === fromId || (fromPhone && m.fromPhone === fromPhone);
+      const meToThem   = fromIsMe   && (m.to === fromId || (fromPhone && m.to === fromPhone));
+      const themToMe   = fromIsThem && (m.to === myId   || (myPhone && m.to === myPhone) || m.to === 'all');
+      return meToThem || themToMe;
+    }).slice(0, 100).reverse();
 
     for (const m of thread) {
-      const isMine = m.from === myId;
-      addBubble(m.content, isMine ? 'sent' : 'received');
+      const isMine = m.from === myId || (myPhone && m.fromPhone === myPhone);
+      addBubble(m.content, isMine ? 'sent' : 'received', isMine ? null : (m.fromPhone || null));
     }
     if (!thread.length) addBubble('Start of conversation', 'system');
 
     document.getElementById('chatOverlay').classList.add('open');
   }
 
-  // Re-render chat list from history
+  // Re-render chat list from history — one thread per person (direct only)
+  // Broadcasts appear as a separate "Broadcast" thread
   let _seenIds = new Set();
   function refreshChatList() {
     const list  = document.getElementById('chatList');
     const empty = document.getElementById('emptyState');
     const history = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
+    const myId = localStorage.getItem('resq_uid');
 
-    if (!history.length) {
+    // Split into direct threads and broadcasts
+    const directThreads = new Map(); // otherUserId → latest msg
+    let latestBroadcast = null;
+
+    for (const m of history) {
+      if (m.from === myId) continue; // skip my own sent messages
+
+      if (m.to === 'all' || m.to === 'broadcast' || m.type === 'broadcast') {
+        if (!latestBroadcast || m.timestamp > latestBroadcast.timestamp) latestBroadcast = m;
+      } else if (m.to === myId || m.from !== myId) {
+        // Direct message involving me
+        const otherId = m.from === myId ? m.to : m.from;
+        if (!directThreads.has(otherId) || m.timestamp > directThreads.get(otherId).timestamp) {
+          directThreads.set(otherId, m);
+        }
+      }
+    }
+
+    const hasItems = directThreads.size > 0 || latestBroadcast;
+    if (!hasItems) {
       if (empty) empty.style.display = '';
+      list.querySelectorAll('.chat-item:not(#nearbySection .chat-item)').forEach(el => el.remove());
+      list.querySelectorAll('.chat-group-label:not(#nearbySection .chat-group-label)').forEach(el => el.remove());
       return;
     }
     if (empty) empty.style.display = 'none';
 
-    // Build thread list: one entry per sender
-    const seen = new Map();
-    for (const m of history) {
-      if (!seen.has(m.from)) seen.set(m.from, m);
+    // Remove old thread items (not the nearby section)
+    list.querySelectorAll('.thread-item').forEach(el => el.remove());
+    list.querySelectorAll('.thread-label').forEach(el => el.remove());
+
+    // Add broadcast thread if exists
+    if (latestBroadcast) {
+      const lbl = document.createElement('div');
+      lbl.className = 'chat-group-label thread-label';
+      lbl.textContent = 'BROADCASTS';
+      list.appendChild(lbl);
+      const el = renderChatItem(latestBroadcast, !_seenIds.has(latestBroadcast.id));
+      el.classList.add('thread-item');
+      el.onclick = () => openBroadcastChannel();
+      list.appendChild(el);
     }
 
-    // Remove old items
-    list.querySelectorAll('.chat-item').forEach(el => el.remove());
-
-    // Add newest-first
-    const myId = localStorage.getItem('resq_uid');
-    for (const [fromId, msg] of seen) {
-      if (fromId === myId) continue; // skip my own
-      const isNew = !_seenIds.has(msg.id);
-      list.appendChild(renderChatItem(msg, isNew));
+    // Add direct threads
+    if (directThreads.size) {
+      const lbl = document.createElement('div');
+      lbl.className = 'chat-group-label thread-label';
+      lbl.textContent = 'DIRECT MESSAGES';
+      list.appendChild(lbl);
+      for (const [otherId, msg] of directThreads) {
+        const isNew = !_seenIds.has(msg.id);
+        const el = renderChatItem(msg, isNew);
+        el.classList.add('thread-item');
+        list.appendChild(el);
+      }
     }
   }
 
-  // Incoming message handler
+  // Open broadcast channel — shows all broadcast messages
+  function openBroadcastChannel() {
+    document.getElementById('convName').innerText = 'Broadcast Channel';
+    document.getElementById('convAvatar').innerText = '📡';
+    document.getElementById('convAvatar').style.background = 'var(--amber)';
+    const status = document.querySelector('.chat-header-status');
+    if (status) status.innerHTML = '<div class="dot" style="background:var(--amber)"></div> All mesh nodes';
+
+    window._currentChatUserId = null; // broadcast — not direct
+    window._currentChatIsSms  = false;
+
+    const area = document.getElementById('convMessages');
+    area.innerHTML = '';
+    const history = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
+    const myId = localStorage.getItem('resq_uid');
+    const broadcasts = history.filter(m => m.to === 'all' || m.to === 'broadcast' || m.type === 'broadcast').slice(0, 100).reverse();
+    for (const m of broadcasts) {
+      addBubble(m.content, m.from === myId ? 'sent' : 'received', m.from === myId ? null : m.fromName);
+    }
+    if (!broadcasts.length) addBubble('No broadcasts yet', 'system');
+    document.getElementById('chatOverlay').classList.add('open');
+  }
+
+  // Incoming message handler — only show messages relevant to me
   function onMeshMessage(msg) {
     const myId = localStorage.getItem('resq_uid');
-    if (msg.from === myId) return; // don't show my own in list
+    if (msg.from === myId) return;
 
-    _seenIds.clear(); // mark all existing as old after refresh
+    // Only add to chat list if it's a broadcast OR directly to me
+    const isForMe = msg.to === 'all' || msg.to === 'broadcast' || msg.to === myId || msg.type === 'broadcast';
+    if (!isForMe) return;
+
     refreshChatList();
 
-    // If overlay is open and shows this sender, append bubble
-    const convName = document.getElementById('convName');
+    // If direct conversation overlay is open with this sender, add bubble
     if (document.getElementById('chatOverlay').classList.contains('open') &&
-        convName && convName.innerText === (msg.fromName || 'Broadcast')) {
-      addBubble(msg.content, 'received');
+        window._currentChatUserId === msg.from) {
+      addBubble(msg.content, 'received', msg.fromPhone || null);
+    }
+
+    // If broadcast channel is open, add bubble there too
+    if (document.getElementById('chatOverlay').classList.contains('open') &&
+        !window._currentChatUserId && (msg.to === 'all' || msg.to === 'broadcast')) {
+      addBubble(msg.content, 'received', msg.fromName || null);
     }
   }
 
-  // Status handler — update mesh badge node count
+  // Status handler — update deduplicated node count
   function onMeshStatus(s) {
+    const nodes = window.RESQ_Mesh ? dedupeNodes(RESQ_Mesh.getNodes()) : [];
+    const count = nodes.filter(n => n.userId !== localStorage.getItem('resq_uid')).length;
     const el = document.getElementById('msgNodeCount');
-    if (el) el.textContent = s.nodeCount || 0;
+    if (el) el.textContent = count;
+    const badge = document.getElementById('tabMeshCount');
+    if (badge) badge.textContent = count;
+  }
+
+  // ── SOS banner ───────────────────────────────────────────────────────────────
+  let _sosBannerTimer = null;
+
+  function showSosBanner(alert) {
+    const banner = document.getElementById('sosAlertBanner');
+    const title  = document.getElementById('sosBannerTitle');
+    const body   = document.getElementById('sosBannerBody');
+
+    const who  = alert.fromName || 'Unknown';
+    const type = (alert.alertType || 'EMERGENCY').toUpperCase();
+    title.textContent = `SOS ${type} — ${who}`;
+
+    const parts = [];
+    if (alert.fromPhone) parts.push('📱 ' + alert.fromPhone);
+    if (alert.message)   parts.push(alert.message);
+    body.textContent = parts.join('  ·  ') || 'Emergency alert nearby';
+
+    banner.style.display = 'block';
+    // Vibrate: 200ms on, 100ms off, 200ms on, 100ms off, 500ms on
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+
+    clearTimeout(_sosBannerTimer);
+    _sosBannerTimer = setTimeout(closeSosBanner, 12000);
+  }
+
+  function closeSosBanner() {
+    document.getElementById('sosAlertBanner').style.display = 'none';
+    clearTimeout(_sosBannerTimer);
   }
 
   // Wire mesh once available (mesh.js loads after this script)
   function wireMesh() {
     if (!window.RESQ_Mesh) { setTimeout(wireMesh, 200); return; }
-    RESQ_Mesh.on('message', onMeshMessage);
-    RESQ_Mesh.on('status',  onMeshStatus);
-    // Also listen for SOS alerts in chat list
+
+    const refresh = () => {
+      renderMeshUsers();
+      onMeshStatus({});
+      if (_channel === 'unread') renderUnread();
+    };
+
+    RESQ_Mesh.on('message',     (msg) => { onMeshMessage(msg); refresh(); });
+    RESQ_Mesh.on('status',      onMeshStatus);
+    RESQ_Mesh.on('nodes',       refresh);
+    RESQ_Mesh.on('node_joined', refresh);
+    RESQ_Mesh.on('node_left',   refresh);
     RESQ_Mesh.on('sos', (alert) => {
-      onMeshMessage({ ...alert, fromName: alert.fromName, content: '🆘 SOS: ' + (alert.message || alert.alertType), type: 'sos' });
+      onMeshMessage({ ...alert, fromName: alert.fromName, fromPhone: alert.fromPhone,
+                      content: '🆘 SOS: ' + (alert.message || alert.alertType), type: 'sos' });
+      showSosBanner(alert);
+      refresh();
     });
-    // Load existing history
-    refreshChatList();
-    onMeshStatus({ nodeCount: RESQ_Mesh.getNodes().length });
+
+    // Initial render
+    renderMeshUsers();
+    onMeshStatus({});
   }
 
   if (document.readyState === 'loading') {
@@ -534,9 +1240,58 @@
   } else {
     wireMesh();
   }
+
+  // ── Incoming SMS from sms.js bridge ──────────────────────────────────────────
+  window.addEventListener('resq:sms:incoming', (e) => {
+    const sms = e.detail;
+    // Show in chat list as a new thread
+    const fakeMsg = {
+      id:        'sms_' + sms.timestamp,
+      from:      sms.from,
+      fromName:  sms.from,
+      to:        'all',
+      content:   sms.message,
+      type:      'sms',
+      timestamp: sms.timestamp,
+      channel:   'sms',
+    };
+    const list  = document.getElementById('chatList');
+    const empty = document.getElementById('emptyState');
+    if (empty) empty.style.display = 'none';
+
+    const el = document.createElement('div');
+    el.className = 'chat-item unread';
+    el.style.borderColor = 'rgba(255,170,0,0.4)';
+    el.innerHTML = `
+      <div class="chat-avatar" style="background:var(--amber);color:#000;">${sms.from.slice(-2)}</div>
+      <div class="chat-body">
+        <div class="chat-name">${sms.from} <span class="channel-badge sms">SMS</span></div>
+        <div class="chat-preview unread">${sms.message}</div>
+      </div>
+      <div class="chat-meta">
+        <div class="chat-time">now</div>
+        <div class="unread-count red">1</div>
+      </div>`;
+    el.onclick = () => openDirectConversation(sms.from, sms.from.slice(-2), sms.from);
+    list.prepend(el);
+
+    // If this conversation is currently open, append bubble
+    const convName = document.getElementById('convName');
+    if (document.getElementById('chatOverlay').classList.contains('open') &&
+        convName && convName.innerText === sms.from) {
+      const bubble = document.createElement('div');
+      bubble.className = 'msg-bubble received';
+      bubble.innerHTML = `${sms.message}<span class="channel-badge sms">SMS</span>
+        <span class="msg-time">${new Date(sms.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`;
+      document.getElementById('convMessages').appendChild(bubble);
+      document.getElementById('convMessages').scrollTop = 9999;
+    }
+  });
 </script>
 <script src="../i18n.js"></script>
 <script src="../store.js"></script>
 <script src="../mesh.js"></script>
+<script src="../sms-bridge.js"></script>
+<script src="../contacts.js"></script>
 </body>
 </html>

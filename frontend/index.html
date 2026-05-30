@@ -4,24 +4,21 @@
     <title>RESQ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-      body { margin: 0; background: #0a0a0a; display: flex; align-items: center; justify-content: center; height: 100vh; }
-      p { color: #888; font-family: sans-serif; font-size: 14px; }
+      body { margin: 0; background: #0a0a0a; display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column; gap: 12px; }
+      .logo { font-family: sans-serif; font-size: 36px; font-weight: 900; color: #FF1F1F; letter-spacing: 4px; }
+      p    { color: #555; font-family: sans-serif; font-size: 13px; }
     </style>
   </head>
   <body>
-    <p>Loading RESQ...</p>
+    <div class="logo">RESQ</div>
+    <p>Loading…</p>
     <script>
-      // Only redirect to splash when loaded at the true root ("/").
-      // If Capacitor's local server falls back to this file for a missing page
-      // (e.g. /dashboard/ not found), we must NOT redirect — that creates an
-      // infinite loop: missing page → index.html → splash → user taps link →
-      // missing page again. In that case, show an error message instead.
-      var path = window.location.pathname;
-      if (path === '/' || path === '/index.html') {
-        window.location.replace('/splash/index.html');
+      var mobile  = localStorage.getItem('resq_mobile');
+      var channel = localStorage.getItem('resq_verify_channel');
+      if (mobile && channel) {
+        window.location.replace('/dashboard/index.html');
       } else {
-        document.querySelector('p').textContent =
-          'App pages not found (' + path + '). Run BUILD_ANDROID.bat then rebuild in Android Studio.';
+        window.location.replace('/login/index.html');
       }
     </script>
   </body>

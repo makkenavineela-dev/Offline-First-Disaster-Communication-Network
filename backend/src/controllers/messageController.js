@@ -27,6 +27,18 @@ const getDirectMessages = async (req, res) => {
     .populate('senderId', 'name deviceId')
     .populate('receiverId', 'name deviceId');
 
+    // Mark all undelivered messages addressed to me as delivered now that I've read them
+    const undeliveredIds = messages
+      .filter(m => !m.isDelivered && String(m.receiverId?._id || m.receiverId) === String(myId))
+      .map(m => m._id);
+
+    if (undeliveredIds.length > 0) {
+      await Message.updateMany(
+        { _id: { $in: undeliveredIds } },
+        { $set: { isDelivered: true, deliveredAt: new Date() } }
+      );
+    }
+
     res.json(messages);
   } catch (error) {
     res.status(500).json({ message: 'Failed to retrieve messages' });

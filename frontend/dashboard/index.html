@@ -438,11 +438,11 @@
         </div>
         <div class="mesh-stat">
           <div class="mesh-stat-val amber" id="meshBattery">--</div>
-          <div class="mesh-stat-label" data-i18n="mesh_battery">Battery</div>
+          <div class="mesh-stat-label">Battery</div>
         </div>
         <div class="mesh-stat">
-          <div class="mesh-stat-val" id="meshLatency">--</div>
-          <div class="mesh-stat-label" data-i18n="mesh_latency">Latency</div>
+          <div class="mesh-stat-val" id="meshZone" style="font-size:14px;letter-spacing:0;">--</div>
+          <div class="mesh-stat-label">Zone</div>
         </div>
       </div>
     </div>
@@ -725,22 +725,87 @@
     return Math.floor(d / 3600) + 'h ago';
   }
 
+  // One phone = one person — deduplicate before counting or displaying
+  function dedupeNodes(nodes) {
+    const seen = new Map();
+    for (const n of nodes) {
+      const key = (n.phone && n.phone.trim()) ? n.phone.trim() : n.userId;
+      const ex  = seen.get(key);
+      if (!ex || (n.lastSeen || 0) > (ex.lastSeen || 0)) seen.set(key, n);
+    }
+    return Array.from(seen.values());
+  }
+
+  // Haversine km
+  function distKm(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function updateRange(nodes) {
+    const el = document.getElementById('meshRange');
+    if (!el) return;
+    const loc = window.RESQ_Location && RESQ_Location.getLast();
+    if (!loc || !nodes.length) { el.textContent = 'LAN'; return; }
+    let maxDist = 0;
+    for (const n of nodes) {
+      if (n.lat != null && n.lng != null) {
+        const d = distKm(loc.lat, loc.lng, n.lat, n.lng);
+        if (d > maxDist) maxDist = d;
+      }
+    }
+    if (maxDist === 0) { el.textContent = 'LAN'; return; }
+    el.textContent = maxDist < 1 ? Math.round(maxDist * 1000) + 'm' : maxDist.toFixed(1) + 'km';
+  }
+
+  // Read real device battery
+  function updateBattery() {
+    const el = document.getElementById('meshBattery');
+    if (!el) return;
+    if (!navigator.getBattery) { el.textContent = 'N/A'; return; }
+    navigator.getBattery().then(bat => {
+      const pct = Math.round(bat.level * 100);
+      el.textContent = pct + '%';
+      el.style.color = pct <= 20 ? 'var(--red)' : pct <= 50 ? 'var(--amber)' : 'var(--green)';
+      // Update whenever battery changes
+      bat.onlevelchange = () => {
+        const p = Math.round(bat.level * 100);
+        el.textContent = p + '%';
+        el.style.color = p <= 20 ? 'var(--red)' : p <= 50 ? 'var(--amber)' : 'var(--green)';
+      };
+    }).catch(() => { el.textContent = 'N/A'; });
+  }
+
+  function updateZone() {
+    const el = document.getElementById('meshZone');
+    if (!el) return;
+    const zone = localStorage.getItem('resq_zone') || localStorage.getItem('resq_role') || '--';
+    el.textContent = zone.length > 8 ? zone.slice(0, 8) : zone;
+  }
+
   function onStatus(s) {
-    const nodesEl   = document.getElementById('meshNodes');
     const statusDot = document.querySelector('.mesh-dot');
     const statusTxt = document.querySelector('.mesh-status-text');
+    const nodesEl   = document.getElementById('meshNodes');
 
-    if (nodesEl) nodesEl.textContent = s.nodeCount || 0;
+    // Deduplicate — one phone = one node
+    const allNodes = window.RESQ_Mesh ? dedupeNodes(RESQ_Mesh.getNodes()) : [];
+    const count    = allNodes.length;
+
+    if (nodesEl) nodesEl.textContent = count;
 
     if (s.connected) {
       if (statusDot) statusDot.style.background = 'var(--green)';
       if (statusTxt) statusTxt.textContent = 'CONNECTED';
-      document.getElementById('meshLatency') && (document.getElementById('meshLatency').textContent = '--');
     } else {
       if (statusDot) statusDot.style.background = 'var(--amber)';
       if (statusTxt) statusTxt.textContent = 'SEARCHING';
       if (nodesEl) nodesEl.textContent = '0';
     }
+
+    updateRange(allNodes);
+    updateZone();
 
     // Messages action sub
     const msgSub = document.getElementById('dashMsgSub');
@@ -751,7 +816,7 @@
 
     // Map action sub
     const mapSub = document.getElementById('dashMapSub');
-    if (mapSub) mapSub.textContent = (s.nodeCount || 0) + ' nearby';
+    if (mapSub) mapSub.textContent = count + ' nearby';
   }
 
   function renderMsgItem(msg) {
@@ -799,11 +864,16 @@
 
   function wireMesh() {
     if (!window.RESQ_Mesh) { setTimeout(wireMesh, 200); return; }
-    RESQ_Mesh.on('status',  onStatus);
-    RESQ_Mesh.on('message', () => refreshMsgList());
-    RESQ_Mesh.on('sos',     onSOS);
+    RESQ_Mesh.on('status',      onStatus);
+    RESQ_Mesh.on('nodes',       () => onStatus({ connected: RESQ_Mesh.isConnected() }));
+    RESQ_Mesh.on('node_joined', () => onStatus({ connected: RESQ_Mesh.isConnected() }));
+    RESQ_Mesh.on('node_left',   () => onStatus({ connected: RESQ_Mesh.isConnected() }));
+    RESQ_Mesh.on('message',     () => refreshMsgList());
+    RESQ_Mesh.on('sos',         onSOS);
+    // Battery — read once on load, live updates via onlevelchange
+    updateBattery();
     // Initialise with current values
-    onStatus({ connected: RESQ_Mesh.isConnected(), nodeCount: RESQ_Mesh.getNodes().length });
+    onStatus({ connected: RESQ_Mesh.isConnected() });
     refreshMsgList();
   }
 
@@ -829,6 +899,24 @@
     // Redirect to login if not registered
     if (!localStorage.getItem('resq_mobile')) {
       window.location.replace('/login/index.html');
+      return;
+    }
+
+    // ── Auto-refresh JWT token if missing (e.g. user logged in before DB was connected) ──
+    if (!localStorage.getItem('resq_token') && mobile) {
+      const serverBase = (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
+        ? 'http://' + window.location.hostname + ':5000'
+        : 'http://localhost:5000';
+      fetch(serverBase + '/api/users/phone-register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: mobile, name: name || ('User-' + mobile.slice(-4)) })
+      }).then(r => r.ok ? r.json() : null).then(d => {
+        if (d && d.token) {
+          localStorage.setItem('resq_token', d.token);
+          if (d.userId) localStorage.setItem('resq_uid', String(d.userId));
+        }
+      }).catch(() => {});
     }
   })();
 
@@ -902,5 +990,6 @@
       .catch(function(e) { setLocBadge('error'); });
   }
 </script>
+<script src="/js/resq-auth.js"></script>
 </body>
 </html>

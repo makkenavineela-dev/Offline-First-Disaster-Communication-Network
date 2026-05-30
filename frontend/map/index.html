@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -224,6 +224,7 @@
   .detail-action-btn:active { transform: scale(0.97); }
 </style>
 <link rel="manifest" href="/manifest.json">
+<script src="/js/resq-auth.js"></script>
 </head>
 <body>
 <div class="phone">
@@ -437,6 +438,19 @@ if (document.readyState === 'complete') initMap();
 const _nodeMarkers = {};  // userId → Leaflet marker
 const _sosMarkers  = [];  // SOS markers
 
+// Deduplicate nodes: one phone number = one person = one marker
+function _dedupeNodes(nodes) {
+  const seen = new Map();
+  for (const n of nodes) {
+    const key = (n.phone && n.phone.trim()) ? n.phone.trim() : n.userId;
+    const existing = seen.get(key);
+    if (!existing || (n.lastSeen || 0) > (existing.lastSeen || 0)) {
+      seen.set(key, n);
+    }
+  }
+  return Array.from(seen.values());
+}
+
 function _roleColor(role) {
   if (role === 'responder' || role === 'first_responder') return '#2979FF';
   if (role === 'medical')   return '#00E676';
@@ -531,27 +545,29 @@ function _refreshMapStats(nodes) {
 function wireMeshMap() {
   if (!window.RESQ_Mesh) { setTimeout(wireMeshMap, 200); return; }
 
-  // Load already-known nodes
-  const nodes = RESQ_Mesh.getNodes();
+  // Load already-known nodes (deduplicated)
+  const nodes = _dedupeNodes(RESQ_Mesh.getNodes());
   nodes.forEach(_addNodeMarker);
   _refreshMapStats(nodes);
 
   // Load SOS history markers
   RESQ_Mesh.getSOSHistory().forEach(_addSosMarker);
 
-  RESQ_Mesh.on('nodes', (nodes) => {
-    nodes.forEach(_addNodeMarker);
-    _refreshMapStats(nodes);
+  RESQ_Mesh.on('nodes', (raw) => {
+    const deduped = _dedupeNodes(raw);
+    deduped.forEach(_addNodeMarker);
+    _refreshMapStats(deduped);
   });
 
-  RESQ_Mesh.on('node_joined', (node) => {
-    _addNodeMarker(node);
-    _refreshMapStats(RESQ_Mesh.getNodes());
+  RESQ_Mesh.on('node_joined', () => {
+    const deduped = _dedupeNodes(RESQ_Mesh.getNodes());
+    deduped.forEach(_addNodeMarker);
+    _refreshMapStats(deduped);
   });
 
   RESQ_Mesh.on('node_left', (data) => {
     _removeNodeMarker(data.userId);
-    _refreshMapStats(RESQ_Mesh.getNodes());
+    _refreshMapStats(_dedupeNodes(RESQ_Mesh.getNodes()));
   });
 
   RESQ_Mesh.on('location_update', (data) => {
