@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>RESQ — Join Network</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fonts/fonts.css">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -745,6 +745,15 @@
     localStorage.setItem('resq_verify_channel', STATE.channel || 'unknown');
     localStorage.setItem('resq_verified_at', String(Date.now()));
 
+    // Always assign a local UID immediately so mesh/messaging work fully offline.
+    // Format: phone-based so it is stable across app restarts without a server.
+    // The server overwrites this with the MongoDB ObjectId when connectivity returns.
+    if (!localStorage.getItem('resq_uid')) {
+      const localUid = 'local_' + STATE.fullPhone.replace(/\D/g, '') + '_' +
+                       Math.random().toString(36).slice(2, 7);
+      localStorage.setItem('resq_uid', localUid);
+    }
+
     try {
       const storeState = JSON.parse(localStorage.getItem('resq_app_state') || '{}');
       if (!storeState.user) storeState.user = {};
@@ -831,5 +840,8 @@
 </script>
 <script src="../store.js"></script>
 <script src="../sms-bridge.js"></script>
+<script src="../js/connectivity.js"></script>
+<script src="../js/ble-sos.js"></script>
 </body>
 </html>
+

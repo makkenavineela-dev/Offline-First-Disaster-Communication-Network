@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#0d1117">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <title>RESQ — SOS</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fonts/fonts.css">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -410,28 +410,50 @@
   if (navigator.onLine) flushSOSQueue();
 
   async function broadcastSOS() {
-    const typeEl  = document.querySelector('.alert-type.active .alert-type-label');
+    const typeEl    = document.querySelector('.alert-type.active .alert-type-label');
     const alertType = typeEl ? typeEl.textContent.trim() : 'General';
     const message   = document.querySelector('.msg-textarea').value.trim() || ('Emergency SOS: ' + alertType);
 
-    // Use mesh layer — works offline over LAN, queues when no network at all
-    if (window.RESQ_Mesh) {
-      RESQ_Mesh.sendSOS(alertType, message, currentCoords);
-      // Show our own SOS in the nearby list immediately
-      renderSOSItem({
-        id:        'my-' + Date.now(),
-        fromName:  localStorage.getItem('resq_name')   || 'Me',
-        fromPhone: localStorage.getItem('resq_mobile') || null,
-        alertType,
-        message,
-        lat:       currentCoords.lat,
-        lng:       currentCoords.lng,
-        timestamp: Date.now(),
-        _mine:     true,
-      });
-      return true;
+    // Show SOS in local history immediately
+    renderSOSItem({
+      id:        'my-' + Date.now(),
+      fromName:  localStorage.getItem('resq_name')   || 'Me',
+      fromPhone: localStorage.getItem('resq_mobile') || null,
+      alertType,
+      message,
+      lat:       currentCoords ? currentCoords.lat : null,
+      lng:       currentCoords ? currentCoords.lng : null,
+      timestamp: Date.now(),
+      _mine:     true,
+    });
+
+    // LAYER 1: SMS via cellular (works without WiFi)
+    const smsSent = sendSMSAlert(alertType, message, currentCoords);
+
+    // LAYER 2: Mesh over WiFi if server reachable
+    if (window.RESQ_Mesh) RESQ_Mesh.sendSOS(alertType, message, currentCoords);
+
+    // LAYER 3: WiFi Direct — no router, device-to-device
+    if (window.RESQ_WifiDirect && RESQ_WifiDirect.isConnected()) {
+      const name = localStorage.getItem('resq_name') || 'Unknown';
+      RESQ_WifiDirect.sendMessage(`🆘 SOS ${alertType}: ${message}`, name);
     }
-    return false;
+
+    // LAYER 4: BLE beacon — last resort, zero network, ~100m range
+    if (window.RESQ_BLE) {
+      RESQ_BLE.broadcastSOS(alertType, currentCoords, 5 * 60 * 1000);
+    }
+
+    // Show delivery status to user
+    const anyChannel = smsSent > 0 || (window.RESQ_Mesh && RESQ_Mesh.isConnected()) ||
+                       (window.RESQ_WifiDirect && RESQ_WifiDirect.isConnected()) ||
+                       (window.RESQ_BLE && RESQ_BLE.isAvailable());
+    if (!anyChannel) {
+      // SOS queued in localStorage — will send when any channel becomes available
+      enqueueSOSPayload({ type: 'sos', alertType, message, lat: currentCoords?.lat, lng: currentCoords?.lng });
+    }
+
+    return smsSent;
   }
 
   // Use Pointer Events to avoid the touch+mouse double-fire on Android.
@@ -460,29 +482,38 @@
     }, 3000);
   }
 
-  // ── SMS Alert ────────────────────────────────────────────────────────────────
+  // ── SMS SOS Broadcast ────────────────────────────────────────────────────────
   function sendSMSAlert(alertType, message, coords) {
-    const contacts = JSON.parse(localStorage.getItem('resq_emergency_contacts') || '[]');
-    if (!contacts.length) return; // no contacts saved — skip silently
+    // Combine emergency contacts + all known mesh phones
+    const emergency = JSON.parse(localStorage.getItem('resq_emergency_contacts') || '[]');
+    const known     = window.RESQ_SMS ? RESQ_SMS.getKnownPhones() : [];
+    const contacts  = [...new Set([...emergency, ...known])].filter(Boolean);
+
+    if (!contacts.length) {
+      alert('No contacts saved. Add contacts in Settings first.');
+      return 0;
+    }
 
     const name    = localStorage.getItem('resq_name') || 'Unknown';
     const lat     = coords && coords.lat != null ? coords.lat.toFixed(5) : null;
     const lng     = coords && coords.lng != null ? coords.lng.toFixed(5) : null;
-    const locPart = lat ? `Location: ${lat},${lng}` : 'Location unavailable';
-    const text    = `RESQ SOS from ${name}\nType: ${alertType}\n${message}\n${locPart}\nTime: ${new Date().toLocaleTimeString()}`;
+    const locPart = lat
+      ? `Location: ${lat},${lng} https://maps.google.com/?q=${lat},${lng}`
+      : 'Location unavailable';
+    const text = `[RESQ] SOS from ${name}\nType: ${alertType}\n${message}\n${locPart}\nTime: ${new Date().toLocaleTimeString()}`;
 
-    // Build SMS URI — Android supports semicolon-separated numbers
-    const numbersStr = contacts.join(';');
-    const uri = `sms:${numbersStr}?body=${encodeURIComponent(text)}`;
-
-    // Capacitor opens it in the native SMS app; browser falls back to same
-    if (window.Capacitor) {
-      window.Capacitor.Plugins.App
-        ? window.Capacitor.Plugins.App.openUrl({ url: uri }).catch(() => window.open(uri, '_system'))
-        : window.open(uri, '_system');
+    // Use RESQ_SMS bridge if available (programmatic send), else URI intent
+    if (window.RESQ_SMS && RESQ_SMS.available) {
+      contacts.forEach(phone => RESQ_SMS.sendDirect(phone, text));
     } else {
-      window.open(uri, '_system');
+      const uri = `sms:${contacts.join(';')}?body=${encodeURIComponent(text)}`;
+      if (window.Capacitor) {
+        window.open(uri, '_system');
+      } else {
+        const a = document.createElement('a'); a.href = uri; a.click();
+      }
     }
+    return contacts.length;
   }
 
   async function confirmSOS() {
@@ -498,14 +529,26 @@
       const alertType = typeEl ? typeEl.textContent.trim() : 'General';
       const message   = document.querySelector('.msg-textarea').value.trim() || ('Emergency SOS: ' + alertType);
 
-      // 1. Broadcast over mesh (WiFi LAN)
-      const success = await broadcastSOS();
+      // Broadcast via SMS (primary) + mesh if WiFi available (bonus)
+      const smsSentTo = await broadcastSOS();
 
-      // 2. Also send SMS via cellular (works even without WiFi)
-      sendSMSAlert(alertType, message, currentCoords);
+      // Build delivery channel summary
+      const meshOk = window.RESQ_Mesh && RESQ_Mesh.isConnected();
+      const wdOk   = window.RESQ_WifiDirect && RESQ_WifiDirect.isConnected();
+      const bleOk  = window.RESQ_BLE && RESQ_BLE.isAdvertising();
+      const channels = [];
+      if (smsSentTo > 0) channels.push(`SMS→${smsSentTo}`);
+      if (meshOk)        channels.push('Mesh');
+      if (wdOk)          channels.push('WiFiDirect');
+      if (bleOk)         channels.push('BLE');
 
-      btn.querySelector('.sos-btn-text').textContent = success ? 'SENT!' : 'QUEUED';
-      btn.querySelector('.sos-btn-sub').textContent  = success ? 'Mesh + SMS sent' : 'Queued · SMS sent';
+      if (channels.length) {
+        btn.querySelector('.sos-btn-text').textContent = 'SENT!';
+        btn.querySelector('.sos-btn-sub').textContent  = channels.join(' · ');
+      } else {
+        btn.querySelector('.sos-btn-text').textContent = 'QUEUED';
+        btn.querySelector('.sos-btn-sub').textContent  = 'Saved — sends when signal returns';
+      }
 
       setTimeout(() => {
         btn.style.background = 'linear-gradient(145deg, #FF3333, #CC0000)';
@@ -593,8 +636,10 @@
 </script>
 <script src="../i18n.js"></script>
 <script src="../store.js"></script>
-<script src="../mesh.js"></script>
 <script src="../sms-bridge.js"></script>
 <script src="/js/resq-auth.js"></script>
+<script src="../js/connectivity.js"></script>
+<script src="../js/ble-sos.js"></script>
 </body>
 </html>
+

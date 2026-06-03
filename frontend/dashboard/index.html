@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>RESQ — Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fonts/fonts.css">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
@@ -360,8 +360,8 @@
 <div class="phone">
   <div class="offline-top-bar">
     <div class="dot"></div>
-    <span>Connected to Local Network</span>
-    <span class="sub">(Internet Not Required)</span>
+    <span>Offline Mode · SMS Active</span>
+    <span class="sub">(No WiFi or Internet Needed)</span>
   </div>
 
   <div class="header">
@@ -418,23 +418,23 @@
       </div>
     </div>
 
-    <!-- Mesh Status -->
+    <!-- SMS Status Card -->
     <div class="mesh-card">
       <div class="mesh-top">
-        <span class="mesh-label" data-i18n="mesh_network">Mesh Network</span>
+        <span class="mesh-label">SMS Status</span>
         <div class="mesh-status">
           <div class="mesh-dot"></div>
-          <span class="mesh-status-text" data-i18n="mesh_connected">CONNECTED</span>
+          <span class="mesh-status-text" id="smsStatusText">READY</span>
         </div>
       </div>
       <div class="mesh-stats">
         <div class="mesh-stat">
-          <div class="mesh-stat-val green" id="meshNodes">--</div>
-          <div class="mesh-stat-label" data-i18n="mesh_nodes">Nodes</div>
+          <div class="mesh-stat-val green" id="smsContacts">0</div>
+          <div class="mesh-stat-label">Contacts</div>
         </div>
         <div class="mesh-stat">
-          <div class="mesh-stat-val" id="meshRange">--</div>
-          <div class="mesh-stat-label" data-i18n="mesh_range">Range</div>
+          <div class="mesh-stat-val" id="smsMsgCount">0</div>
+          <div class="mesh-stat-label">Messages</div>
         </div>
         <div class="mesh-stat">
           <div class="mesh-stat-val amber" id="meshBattery">--</div>
@@ -714,7 +714,6 @@
 <script src="../i18n.js"></script>
 <script src="../store.js"></script>
 <script src="../location.js"></script>
-<script src="../mesh.js"></script>
 <script>
 // ── Dashboard mesh wiring ─────────────────────────────────────────────────────
 (function() {
@@ -784,39 +783,32 @@
     el.textContent = zone.length > 8 ? zone.slice(0, 8) : zone;
   }
 
-  function onStatus(s) {
-    const statusDot = document.querySelector('.mesh-dot');
-    const statusTxt = document.querySelector('.mesh-status-text');
-    const nodesEl   = document.getElementById('meshNodes');
+  function updateSmsStatus() {
+    // Known contacts
+    const phones = window.RESQ_SMS ? RESQ_SMS.getKnownPhones() : [];
+    const contactEl = document.getElementById('smsContacts');
+    if (contactEl) contactEl.textContent = phones.length;
 
-    // Deduplicate — one phone = one node
-    const allNodes = window.RESQ_Mesh ? dedupeNodes(RESQ_Mesh.getNodes()) : [];
-    const count    = allNodes.length;
+    // Total messages (SMS + mesh history)
+    const meshHist = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
+    const smsSent  = parseInt(localStorage.getItem('resq_sms_sent_count') || '0');
+    const msgEl    = document.getElementById('smsMsgCount');
+    if (msgEl) msgEl.textContent = meshHist.length + smsSent;
 
-    if (nodesEl) nodesEl.textContent = count;
+    // Status badge
+    const txt = document.getElementById('smsStatusText');
+    const dot = document.querySelector('.mesh-dot');
+    const isNative = window.RESQ_SMS && RESQ_SMS.available;
+    if (txt) txt.textContent = isNative ? 'ACTIVE' : 'READY';
+    if (dot) dot.style.background = 'var(--green)';
 
-    if (s.connected) {
-      if (statusDot) statusDot.style.background = 'var(--green)';
-      if (statusTxt) statusTxt.textContent = 'CONNECTED';
-    } else {
-      if (statusDot) statusDot.style.background = 'var(--amber)';
-      if (statusTxt) statusTxt.textContent = 'SEARCHING';
-      if (nodesEl) nodesEl.textContent = '0';
-    }
-
-    updateRange(allNodes);
-    updateZone();
-
-    // Messages action sub
+    // Action subtitles
     const msgSub = document.getElementById('dashMsgSub');
-    if (msgSub) {
-      const hist = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
-      msgSub.textContent = hist.length ? hist.length + ' message' + (hist.length !== 1 ? 's' : '') : '';
-    }
-
-    // Map action sub
+    if (msgSub) msgSub.textContent = meshHist.length ? meshHist.length + ' message' + (meshHist.length !== 1 ? 's' : '') : '';
     const mapSub = document.getElementById('dashMapSub');
-    if (mapSub) mapSub.textContent = count + ' nearby';
+    if (mapSub) mapSub.textContent = phones.length + ' contacts';
+
+    updateZone();
   }
 
   function renderMsgItem(msg) {
@@ -839,12 +831,16 @@
 
   function refreshMsgList() {
     const list = document.getElementById('dashMsgList');
-    if (!list || !window.RESQ_Mesh) return;
-    const myId   = localStorage.getItem('resq_uid');
-    const hist   = RESQ_Mesh.getHistory().filter(m => m.from !== myId).slice(0, 3);
+    if (!list) return;
+    const myId    = localStorage.getItem('resq_uid');
+    const myPhone = localStorage.getItem('resq_mobile');
+    // Combine mesh history + SMS history
+    const meshHist = (window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [])
+      .filter(m => m.from !== myId && m.fromPhone !== myPhone);
+    const hist = meshHist.slice(0, 3);
     list.innerHTML = '';
     if (!hist.length) {
-      list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:12px;">No recent messages</div>';
+      list.innerHTML = '<div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:12px;">No recent messages — send an SMS to get started</div>';
       return;
     }
     hist.forEach(m => list.appendChild(renderMsgItem(m)));
@@ -863,18 +859,19 @@
   }
 
   function wireMesh() {
-    if (!window.RESQ_Mesh) { setTimeout(wireMesh, 200); return; }
-    RESQ_Mesh.on('status',      onStatus);
-    RESQ_Mesh.on('nodes',       () => onStatus({ connected: RESQ_Mesh.isConnected() }));
-    RESQ_Mesh.on('node_joined', () => onStatus({ connected: RESQ_Mesh.isConnected() }));
-    RESQ_Mesh.on('node_left',   () => onStatus({ connected: RESQ_Mesh.isConnected() }));
-    RESQ_Mesh.on('message',     () => refreshMsgList());
-    RESQ_Mesh.on('sos',         onSOS);
-    // Battery — read once on load, live updates via onlevelchange
+    // SMS status card
+    updateSmsStatus();
     updateBattery();
-    // Initialise with current values
-    onStatus({ connected: RESQ_Mesh.isConnected() });
+    updateZone();
     refreshMsgList();
+
+    // Wire SOS listener from mesh if WiFi happens to be available (bonus)
+    if (window.RESQ_Mesh) {
+      RESQ_Mesh.on('sos',     onSOS);
+      RESQ_Mesh.on('message', () => { refreshMsgList(); updateSmsStatus(); });
+    }
+    // Refresh SMS status when incoming SMS arrives
+    window.addEventListener('resq:sms:incoming', () => { updateSmsStatus(); refreshMsgList(); });
   }
 
   if (document.readyState === 'loading') {
@@ -991,5 +988,8 @@
   }
 </script>
 <script src="/js/resq-auth.js"></script>
+<script src="../js/connectivity.js"></script>
+<script src="../js/ble-sos.js"></script>
 </body>
 </html>
+
