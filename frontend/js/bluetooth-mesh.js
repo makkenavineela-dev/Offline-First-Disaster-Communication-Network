@@ -133,6 +133,9 @@
       if (!_listeners[event]) _listeners[event] = [];
       _listeners[event].push(fn);
     },
+
+    // Exposed so browser-mesh.js can fire events into the UI without touching private _listeners
+    _emit,
     off(event, fn) {
       if (!_listeners[event]) return;
       _listeners[event] = _listeners[event].filter(f => f !== fn);
@@ -246,32 +249,73 @@
       _addToHistory(msg);
       _emit('message', msg);
     },
+
+    /**
+     * Inject a peer directly into the peer list and fire UI events.
+     * Used by browser-mesh.js and the preview eval for testing.
+     * { userId, name, rssi, hasKey }
+     */
+    _injectPeer(peer) {
+      _peers.push(peer);
+      _emit('node_joined', peer);
+      _emit('nodes',       _peers.slice());
+      _emit('status', { connected: true, nodeCount: _peers.length });
+    },
+
+    /** Remove a peer by userId */
+    _removePeer(userId) {
+      _peers = _peers.filter(p => p.userId !== userId);
+      _emit('node_left', { userId });
+      _emit('nodes', _peers.slice());
+    },
+
+    /** Reset the in-memory peer list */
+    _clearPeers() {
+      _peers = [];
+      _emit('nodes', []);
+      _emit('status', { connected: false, nodeCount: 0 });
+    },
   };
 
   // ── Init ──────────────────────────────────────────────────────────────────
   async function _init() {
+    // IMPORTANT: expose RESQ_BTMesh FIRST so pages can always access it
+    // regardless of whether BLE starts successfully
+    window.RESQ_BTMesh = RESQ_BTMesh;
+    window.RESQ_Mesh   = RESQ_BTMesh;
+
     await _wirePlugin();
 
     const p = _plugin();
     if (!p) {
-      // Non-native (browser): still expose API so UI works
-      window.RESQ_BTMesh = RESQ_BTMesh;
-      // Also expose as RESQ_Mesh alias so existing SOS/dashboard code works
-      window.RESQ_Mesh   = RESQ_BTMesh;
+      // Non-native browser — browser-mesh.js handles discovery via BroadcastChannel
+      _emit('status', { connected: false, nodeCount: 0, reason: 'browser' });
       return;
     }
 
-    // Export own public key to native layer
-    if (window.RESQ_Crypto) {
-      const pubKey = await RESQ_Crypto.exportOwnPublicKey();
+    // Signal UI that we are starting
+    _emit('status', { connected: false, nodeCount: 0, reason: 'starting' });
+
+    try {
+      const pubKey = window.RESQ_Crypto ? await RESQ_Crypto.exportOwnPublicKey() : '';
       const userId = localStorage.getItem('resq_uid')  || ('local_' + Math.random().toString(36).slice(2));
       const name   = localStorage.getItem('resq_name') || 'Unknown';
+
       await p.start({ userId, name, publicKey: pubKey });
       _active = true;
+      _emit('status', { connected: true, nodeCount: 0, reason: 'scanning' });
+    } catch (err) {
+      // BT off, permissions denied, or unsupported — surface the reason
+      const reason = (err && err.message) ? err.message.toLowerCase() : 'unknown';
+      _active = false;
+      _emit('status', {
+        connected: false,
+        nodeCount: 0,
+        reason: reason.includes('permission') ? 'permission' :
+                reason.includes('disable')    ? 'bt_off'    : 'error',
+        error: err && err.message,
+      });
     }
-
-    window.RESQ_BTMesh = RESQ_BTMesh;
-    window.RESQ_Mesh   = RESQ_BTMesh; // compatibility alias
   }
 
   if (document.readyState === 'loading') {

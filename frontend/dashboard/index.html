@@ -784,29 +784,36 @@
   }
 
   function updateSmsStatus() {
-    // Known contacts
-    const phones = window.RESQ_SMS ? RESQ_SMS.getKnownPhones() : [];
+    // Known contacts — read from emergency contacts + mesh-discovered phones
+    const emergency = JSON.parse(localStorage.getItem('resq_emergency_contacts') || '[]');
+    const meshPhones = JSON.parse(localStorage.getItem('resq_known_phones') || '[]');
+    const phones = [...new Set([...emergency, ...meshPhones])].filter(Boolean);
     const contactEl = document.getElementById('smsContacts');
-    if (contactEl) contactEl.textContent = phones.length;
+    if (contactEl) {
+      contactEl.textContent = phones.length;
+      // Highlight red with link when 0 so user knows to add contacts
+      contactEl.style.color = phones.length === 0 ? 'var(--red)' : 'var(--green)';
+    }
 
-    // Total messages (SMS + mesh history)
-    const meshHist = window.RESQ_Mesh ? RESQ_Mesh.getHistory() : [];
+    // Total messages (BT mesh history)
+    const meshHist = window.RESQ_BTMesh ? RESQ_BTMesh.getHistory() : (window.RESQ_Mesh ? RESQ_Mesh.getHistory() : []);
     const smsSent  = parseInt(localStorage.getItem('resq_sms_sent_count') || '0');
     const msgEl    = document.getElementById('smsMsgCount');
     if (msgEl) msgEl.textContent = meshHist.length + smsSent;
 
-    // Status badge
+    // Status badge — show BT mesh status
     const txt = document.getElementById('smsStatusText');
     const dot = document.querySelector('.mesh-dot');
-    const isNative = window.RESQ_SMS && RESQ_SMS.available;
-    if (txt) txt.textContent = isNative ? 'ACTIVE' : 'READY';
-    if (dot) dot.style.background = 'var(--green)';
+    const btActive  = window.RESQ_BTMesh && RESQ_BTMesh.isConnected();
+    const smsNative = window.RESQ_SMS && RESQ_SMS.available;
+    if (txt) txt.textContent = btActive ? 'MESH ON' : smsNative ? 'SMS ONLY' : phones.length === 0 ? 'ADD CONTACTS' : 'READY';
+    if (dot) dot.style.background = btActive ? 'var(--green)' : phones.length === 0 ? 'var(--red)' : 'var(--amber)';
 
     // Action subtitles
     const msgSub = document.getElementById('dashMsgSub');
-    if (msgSub) msgSub.textContent = meshHist.length ? meshHist.length + ' message' + (meshHist.length !== 1 ? 's' : '') : '';
+    if (msgSub) msgSub.textContent = meshHist.length ? meshHist.length + ' message' + (meshHist.length !== 1 ? 's' : '') : 'No messages yet';
     const mapSub = document.getElementById('dashMapSub');
-    if (mapSub) mapSub.textContent = phones.length + ' contacts';
+    if (mapSub) mapSub.textContent = phones.length > 0 ? phones.length + ' contacts' : 'Add contacts in Settings';
 
     updateZone();
   }

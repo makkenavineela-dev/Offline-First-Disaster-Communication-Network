@@ -108,7 +108,12 @@ html,body{height:100%;background:#080808;font-family:'Barlow',sans-serif;}
     <div class="btext">BT Mesh <span>· <span id="bcnt">0</span> devices nearby</span></div>
   </div>
   <div id="viewNearby" class="lv">
-    <div id="empNearby" class="emp"><div class="ic">📡</div><div class="et">No devices nearby</div><div class="es">Other RESQ users within ~100m appear automatically when Bluetooth is on.</div></div>
+    <div id="empNearby" class="emp">
+      <div class="ic" id="bleStatusIcon">📡</div>
+      <div class="et" id="bleStatusTitle">Scanning for devices...</div>
+      <div class="es" id="bleStatusDesc">Looking for RESQ users within ~100m. Make sure Bluetooth is on.</div>
+      <button id="bleActionBtn" onclick="bleAction()" style="display:none;margin-top:12px;padding:10px 24px;background:var(--blue);color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer;">ENABLE BLUETOOTH</button>
+    </div>
   </div>
   <div id="viewMessages" class="lv" style="display:none;">
     <div id="empMsg" class="emp"><div class="ic">💬</div><div class="et">No messages yet</div><div class="es">Messages received via Bluetooth mesh appear here.</div></div>
@@ -161,6 +166,68 @@ var _tab='nearby',_peer=null,_un=0;
 var ini=function(n){return(n||'??').trim().split(/\s+/).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();};
 var ago=function(ts){var d=Math.floor((Date.now()-ts)/1000);return d<60?d+'s':d<3600?Math.floor(d/60)+'m':Math.floor(d/3600)+'h';};
 var esc=function(s){return(s||'').toString().replace(/</g,'&lt;');};
+
+// ── BLE Status display ──────────────────────────────────────────────────────
+function setBleStatus(reason, peerCount) {
+  var icon  = document.getElementById('bleStatusIcon');
+  var title = document.getElementById('bleStatusTitle');
+  var desc  = document.getElementById('bleStatusDesc');
+  var btn   = document.getElementById('bleActionBtn');
+  if (!icon) return;
+
+  if (peerCount > 0) {
+    // Peers found — hide empty state entirely
+    var emp = document.getElementById('empNearby');
+    if (emp) emp.style.display = 'none';
+    return;
+  }
+
+  // Show empty state with appropriate message
+  var emp = document.getElementById('empNearby');
+  if (emp) emp.style.display = '';
+
+  if (reason === 'permission') {
+    icon.textContent  = '🔒';
+    title.textContent = 'Bluetooth Permission Needed';
+    desc.textContent  = 'RESQ needs Bluetooth permission to find nearby devices.';
+    btn.textContent   = 'GRANT PERMISSION';
+    btn.style.display = '';
+  } else if (reason === 'bt_off') {
+    icon.textContent  = '📴';
+    title.textContent = 'Bluetooth is Off';
+    desc.textContent  = 'Turn on Bluetooth to discover nearby RESQ users.';
+    btn.textContent   = 'ENABLE BLUETOOTH';
+    btn.style.display = '';
+  } else if (reason === 'scanning') {
+    icon.textContent  = '📡';
+    title.textContent = 'Scanning for devices...';
+    desc.textContent  = 'Looking for RESQ users within ~100m. Both phones need Bluetooth on.';
+    btn.style.display = 'none';
+  } else if (reason === 'starting') {
+    icon.textContent  = '⏳';
+    title.textContent = 'Starting Bluetooth Mesh...';
+    desc.textContent  = 'Initialising — this takes a few seconds on first launch.';
+    btn.style.display = 'none';
+  } else {
+    icon.textContent  = '📡';
+    title.textContent = 'No devices nearby';
+    desc.textContent  = 'Other RESQ users within ~100m appear automatically when Bluetooth is on.';
+    btn.style.display = 'none';
+  }
+}
+
+// Request BT permissions / open settings
+function bleAction() {
+  if (window.RESQ_BTMesh && window.RESQ_BTMesh._retryStart) {
+    RESQ_BTMesh._retryStart();
+  } else if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.BluetoothMesh) {
+    // Re-trigger start which will re-request permissions
+    var uid  = localStorage.getItem('resq_uid')  || 'local_user';
+    var name = localStorage.getItem('resq_name') || 'Unknown';
+    Capacitor.Plugins.BluetoothMesh.start({ userId: uid, name: name, publicKey: '' })
+      .catch(function(e) { setBleStatus(e.message && e.message.includes('permission') ? 'permission' : 'bt_off', 0); });
+  }
+}
 function toast(m,t){var el=document.createElement('div');el.style.cssText='position:fixed;bottom:100px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;font-size:12px;font-weight:600;z-index:999;background:'+(t==='warn'?'rgba(255,170,0,0.9)':'rgba(0,230,118,0.9)')+';color:#000;';el.textContent=m;document.body.appendChild(el);setTimeout(function(){el.remove();},3000);}
 function sw(tab){
   _tab=tab;
@@ -238,23 +305,61 @@ function sloc(){if(navigator.geolocation){navigator.geolocation.getCurrentPositi
 async function sendBC(){var inp=document.getElementById('cinput'),text=inp.value.trim();if(!text)return;inp.value='';if(window.RESQ_BTMesh){await RESQ_BTMesh.sendBroadcast(text);toast('Broadcast sent','ok');}}
 document.getElementById('cinput').addEventListener('keypress',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendBC();}});
 function wireMesh(){
-  if(!window.RESQ_BTMesh){setTimeout(wireMesh,300);return;}
-  RESQ_BTMesh.on('nodes',function(n){rp(n);});
-  RESQ_BTMesh.on('node_joined',function(){rp(RESQ_BTMesh.getPeers());});
-  RESQ_BTMesh.on('node_left',function(){rp(RESQ_BTMesh.getPeers());});
-  RESQ_BTMesh.on('status',function(s){bts(s.connected||s.active,s.nodeCount||0);});
+  if(!window.RESQ_BTMesh){setTimeout(wireMesh,200);return;}
+  RESQ_BTMesh.on('nodes',function(n){
+    rp(n);
+    setBleStatus(n.length>0?'connected':'scanning', n.length);
+  });
+  RESQ_BTMesh.on('node_joined',function(){
+    var peers=RESQ_BTMesh.getPeers();
+    rp(peers);
+    setBleStatus(peers.length>0?'connected':'scanning', peers.length);
+  });
+  RESQ_BTMesh.on('node_left',function(){
+    var peers=RESQ_BTMesh.getPeers();
+    rp(peers);
+    setBleStatus(peers.length>0?'connected':'scanning', peers.length);
+  });
+  RESQ_BTMesh.on('status',function(s){
+    bts(s.connected||s.active, s.nodeCount||0);
+    setBleStatus(s.reason||'scanning', s.nodeCount||0);
+  });
   RESQ_BTMesh.on('message',function(msg){
     var myId=localStorage.getItem('resq_uid');if(msg.from===myId)return;
     if(_peer&&_peer.userId===msg.from&&document.getElementById('chatOv').classList.contains('open')){bub(msg.content,'recv',msg.timestamp);}
     else if(_tab!=='messages'){_un++;bdg();}
     if(_tab==='messages')rh();
   });
-  rp(RESQ_BTMesh.getPeers());
+  // Show initial scanning status
+  setBleStatus('starting', 0);
+  var initialPeers=RESQ_BTMesh.getPeers();
+  rp(initialPeers);
+  if(initialPeers.length===0) setBleStatus('scanning', 0);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireMesh);else wireMesh();
 </script>
+<script>
+// ── URL param identity (for test-user.html second tab) ──────────────────────
+(function(){
+  var p = new URLSearchParams(window.location.search);
+  if (p.get('test') === '1') {
+    // Override localStorage identity for this tab session only
+    var _orig = localStorage.getItem.bind(localStorage);
+    var _map  = { resq_uid: p.get('uid'), resq_name: p.get('name'), resq_role: p.get('role'), resq_mobile: p.get('mobile'), resq_verify_channel: 'bypass' };
+    Storage.prototype._resqOverride = _map;
+    var origGet = localStorage.__proto__.getItem;
+    localStorage.__proto__.getItem = function(k) {
+      if (_map[k] !== undefined && _map[k] !== null) return _map[k];
+      return origGet.call(this, k);
+    };
+    // Show which user this tab is
+    document.title = 'RESQ — ' + p.get('name');
+  }
+})();
+</script>
 <script src="../js/crypto-e2ee.js"></script>
 <script src="../js/bluetooth-mesh.js"></script>
+<script src="../js/browser-mesh.js"></script>
 <script src="../sms-bridge.js"></script>
 <script src="../js/connectivity.js"></script>
 </body>
