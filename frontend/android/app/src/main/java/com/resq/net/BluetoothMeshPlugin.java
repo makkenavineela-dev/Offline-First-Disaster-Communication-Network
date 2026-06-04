@@ -83,6 +83,15 @@ public class BluetoothMeshPlugin extends Plugin {
     private String                       ownName     = "";
     // Connected GATT clients (outbound connections we opened)
     private final Map<String, BluetoothGatt> activeGatts = new ConcurrentHashMap<>();
+    // Addresses we are currently connecting to (prevents duplicate connects)
+    private final java.util.Set<String> connecting =
+        java.util.Collections.newSetFromMap(new ConcurrentHashMap<>());
+    // deviceAddress -> full userId (resolved from GATT devinfo, NOT truncated advert)
+    private final Map<String, String> addrToUserId = new ConcurrentHashMap<>();
+    // deviceAddress -> queue of message bytes waiting to be written sequentially.
+    // BLE allows only ONE outstanding write at a time, so we chain via the
+    // onCharacteristicWrite callback instead of looping.
+    private final Map<String, java.util.Queue<byte[]>> pendingWrites = new ConcurrentHashMap<>();
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     @Override
@@ -330,38 +339,30 @@ public class BluetoothMeshPlugin extends Plugin {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 String addr = result.getDevice().getAddress();
-                if (peers.containsKey(addr)) return; // already known
 
-                // Parse adv data
+                // Already fully resolved OR currently connecting — skip.
+                // (We do NOT use the truncated advertisement data as identity;
+                //  the FULL userId + name come from the GATT devinfo read.)
+                if (peers.containsKey(addr) || connecting.contains(addr)) return;
+
+                // Best-effort self-check: ignore our own advertisement.
+                // The advert userId is truncated to 6 chars, so compare prefixes.
                 ScanRecord rec = result.getScanRecord();
-                String peerUserId = addr; // fallback
-                String peerName   = "Unknown";
                 if (rec != null) {
                     byte[] sd = rec.getServiceData(PARCEL_SVC);
                     if (sd != null) {
                         String raw = new String(sd, StandardCharsets.UTF_8);
                         if (raw.startsWith("RM") && raw.contains("|")) {
-                            String[] parts = raw.substring(2).split("\\|", 2);
-                            peerUserId = parts[0];
-                            peerName   = parts.length > 1 ? parts[1] : "Unknown";
+                            String advUid = raw.substring(2).split("\\|", 2)[0];
+                            String myPrefix = ownUserId.length() > 6 ? ownUserId.substring(0, 6) : ownUserId;
+                            if (advUid.equals(myPrefix)) return; // it's us
                         }
                     }
                 }
-                if (peerUserId.equals(ownUserId)) return; // ignore self
 
-                JSObject peer = new JSObject();
-                peer.put("address",  addr);
-                peer.put("userId",   peerUserId);
-                peer.put("name",     peerName);
-                peer.put("rssi",     result.getRssi());
-                peer.put("lastSeen", System.currentTimeMillis());
-                peers.put(addr, peer);
-
-                notifyListeners("bt_peer_found", peer);
-
-                // Connect to exchange keys + messages
-                final String finalPeerUserId = peerUserId;
-                pool.execute(() -> connectAndSync(result.getDevice(), finalPeerUserId));
+                connecting.add(addr);
+                final int rssi = result.getRssi();
+                pool.execute(() -> connectAndSync(result.getDevice(), rssi));
             }
 
             @Override public void onScanFailed(int errorCode) {}
@@ -378,8 +379,14 @@ public class BluetoothMeshPlugin extends Plugin {
     }
 
     // ── GATT Client — connect, exchange keys, deliver messages ────────────────
-    private void connectAndSync(BluetoothDevice device, String peerUserId) {
-        if (activeGatts.containsKey(device.getAddress())) return;
+    private void connectAndSync(BluetoothDevice device, int rssi) {
+        final String addr = device.getAddress();
+        if (activeGatts.containsKey(addr)) return;
+
+        // Mutable holders — filled with the FULL identity once devinfo is read.
+        final String[] fullUserId = { addr };       // fallback to MAC until resolved
+        final String[] fullName   = { "Unknown" };
+        final int[]    peerRssi    = { rssi };
 
         BluetoothGatt[] gattRef = new BluetoothGatt[1];
 
@@ -389,18 +396,16 @@ public class BluetoothMeshPlugin extends Plugin {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     gatt.requestMtu(512);
                 } else {
-                    activeGatts.remove(device.getAddress());
+                    activeGatts.remove(addr);
+                    connecting.remove(addr);
                     gatt.close();
-                    // Mark peer as seen but possibly moved away
-                    JSObject peer = peers.get(device.getAddress());
-                    if (peer != null) {
-                        long lastSeen = peer.optLong("lastSeen", 0);
-                        if (System.currentTimeMillis() - lastSeen > 120_000) {
-                            peers.remove(device.getAddress());
-                            JSObject lost = new JSObject();
-                            lost.put("userId", peerUserId);
-                            notifyListeners("bt_peer_lost", lost);
-                        }
+                    // Peer moved away — remove if we had resolved its identity
+                    String resolvedUid = addrToUserId.get(addr);
+                    if (resolvedUid != null && peers.containsKey(addr)) {
+                        peers.remove(addr);
+                        JSObject lost = new JSObject();
+                        lost.put("userId", resolvedUid);
+                        notifyListeners("bt_peer_lost", lost);
                     }
                 }
             }
@@ -416,11 +421,10 @@ public class BluetoothMeshPlugin extends Plugin {
                 BluetoothGattService svc = gatt.getService(SVC_UUID);
                 if (svc == null) { gatt.disconnect(); return; }
 
-                // Step 1: read device info
+                // Step 1: read FULL device info (userId|name) — not truncated like advert
                 BluetoothGattCharacteristic info = svc.getCharacteristic(CHAR_DEVINFO);
                 if (info != null) gatt.readCharacteristic(info);
                 else {
-                    // Skip to key read
                     BluetoothGattCharacteristic pk = svc.getCharacteristic(CHAR_PUBKEY);
                     if (pk != null) gatt.readCharacteristic(pk);
                 }
@@ -437,69 +441,124 @@ public class BluetoothMeshPlugin extends Plugin {
 
                 if (CHAR_DEVINFO.equals(characteristic.getUuid()) && !infoRead) {
                     infoRead = true;
-                    // Parse peer info and update registry
-                    String info = new String(characteristic.getValue(), StandardCharsets.UTF_8);
+
+                    // Parse the FULL identity (this is the authoritative userId+name,
+                    // matching exactly what the sender puts in message 'from' fields).
+                    byte[] val = characteristic.getValue();
+                    String info = val != null ? new String(val, StandardCharsets.UTF_8) : "";
                     if (info.contains("|")) {
                         String[] p = info.split("\\|", 2);
-                        JSObject peer = peers.getOrDefault(device.getAddress(), new JSObject());
-                        peer.put("userId", p[0]);
-                        peer.put("name",   p.length > 1 ? p[1] : "Unknown");
-                        peers.put(device.getAddress(), peer);
+                        fullUserId[0] = p[0];
+                        fullName[0]   = p.length > 1 ? p[1] : "Unknown";
                     }
+
+                    // Ignore self (full id check)
+                    if (fullUserId[0].equals(ownUserId)) {
+                        gatt.disconnect();
+                        return;
+                    }
+
+                    // Record mapping + peer entry with FULL identity
+                    addrToUserId.put(addr, fullUserId[0]);
+                    JSObject peer = new JSObject();
+                    peer.put("address",  addr);
+                    peer.put("userId",   fullUserId[0]);
+                    peer.put("name",     fullName[0]);
+                    peer.put("rssi",     peerRssi[0]);
+                    peer.put("lastSeen", System.currentTimeMillis());
+                    peers.put(addr, peer);
+
+                    // NOW fire bt_peer_found with the FULL, correct identity
+                    notifyListeners("bt_peer_found", peer);
+
                     // Read public key next
                     BluetoothGattCharacteristic pk = svc.getCharacteristic(CHAR_PUBKEY);
                     if (pk != null) gatt.readCharacteristic(pk);
+                    else deliverPendingMessages(gatt, svc, fullUserId[0]);
 
                 } else if (CHAR_PUBKEY.equals(characteristic.getUuid())) {
                     byte[] keyBytes = characteristic.getValue();
                     if (keyBytes != null && keyBytes.length > 0) {
                         String pubKeyB64 = Base64.encodeToString(keyBytes, Base64.NO_WRAP);
                         JSObject event = new JSObject();
-                        event.put("userId",    peerUserId);
+                        event.put("userId",    fullUserId[0]); // FULL id — matches message sender
                         event.put("publicKey", pubKeyB64);
                         notifyListeners("bt_pubkey", event);
                     }
-                    // Now write pending messages for this peer
-                    deliverPendingMessages(gatt, svc, peerUserId);
+                    // Deliver any queued messages to this peer
+                    deliverPendingMessages(gatt, svc, fullUserId[0]);
                 }
             }
 
             @Override
             public void onCharacteristicWrite(BluetoothGatt gatt,
                     BluetoothGattCharacteristic characteristic, int status) {
-                // Next message in queue will be written by deliverPendingMessages loop
+                // Write the NEXT queued message (sequential — one at a time)
+                writeNextPending(gatt, addr);
             }
         };
 
         BluetoothGatt gatt = device.connectGatt(getContext(), false, cb, BluetoothDevice.TRANSPORT_LE);
         gattRef[0] = gatt;
-        activeGatts.put(device.getAddress(), gatt);
+        activeGatts.put(addr, gatt);
     }
 
-    // Deliver all queued messages relevant to this peer (direct or relay)
+    // Queue messages relevant to this peer, then kick off sequential writes.
     private void deliverPendingMessages(BluetoothGatt gatt, BluetoothGattService svc, String peerUserId) {
         BluetoothGattCharacteristic msgChar = svc.getCharacteristic(CHAR_MSG);
-        if (msgChar == null) { gatt.disconnect(); return; }
+        if (msgChar == null) { cleanupConnection(gatt, gatt.getDevice().getAddress()); return; }
 
+        java.util.Queue<byte[]> q = new java.util.LinkedList<>();
         synchronized (relayQueue) {
-            List<String> toRemove = new ArrayList<>();
             for (String msgJson : relayQueue) {
                 String to = extractField(msgJson, "to");
-                // Send if: addressed to this peer, or is a broadcast/relay
+                // Send broadcasts to everyone; direct messages only to the target peer
                 boolean shouldSend = "all".equals(to) || peerUserId.equals(to);
                 if (shouldSend) {
                     byte[] bytes = msgJson.getBytes(StandardCharsets.UTF_8);
-                    if (bytes.length > 512) continue; // skip oversized (shouldn't happen)
-                    msgChar.setValue(bytes);
-                    gatt.writeCharacteristic(msgChar);
-                    if (!"all".equals(to)) toRemove.add(msgJson); // direct → remove after delivery
+                    if (bytes.length <= 512) q.add(bytes);
                 }
             }
-            relayQueue.removeAll(toRemove);
         }
 
-        // Close after a short delay to let writes complete
-        main.postDelayed(gatt::disconnect, 1500);
+        if (q.isEmpty()) {
+            // Nothing to send — close after a moment
+            main.postDelayed(() -> cleanupConnection(gatt, gatt.getDevice().getAddress()), 800);
+            return;
+        }
+
+        pendingWrites.put(gatt.getDevice().getAddress(), q);
+        writeNextPending(gatt, gatt.getDevice().getAddress());
+    }
+
+    // Write the next queued message for this connection, or clean up when done.
+    private void writeNextPending(BluetoothGatt gatt, String addr) {
+        java.util.Queue<byte[]> q = pendingWrites.get(addr);
+        if (q == null || q.isEmpty()) {
+            pendingWrites.remove(addr);
+            // Give the last write a moment to flush, then disconnect
+            main.postDelayed(() -> cleanupConnection(gatt, addr), 600);
+            return;
+        }
+        BluetoothGattService svc = gatt.getService(SVC_UUID);
+        if (svc == null) { cleanupConnection(gatt, addr); return; }
+        BluetoothGattCharacteristic msgChar = svc.getCharacteristic(CHAR_MSG);
+        if (msgChar == null) { cleanupConnection(gatt, addr); return; }
+
+        byte[] next = q.poll();
+        msgChar.setValue(next);
+        msgChar.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+        boolean ok = gatt.writeCharacteristic(msgChar);
+        if (!ok) {
+            // Write couldn't start — retry shortly
+            main.postDelayed(() -> writeNextPending(gatt, addr), 200);
+        }
+    }
+
+    private void cleanupConnection(BluetoothGatt gatt, String addr) {
+        pendingWrites.remove(addr);
+        connecting.remove(addr);
+        try { gatt.disconnect(); } catch (Exception ignored) {}
     }
 
     // ── Message Router ────────────────────────────────────────────────────────
@@ -546,20 +605,32 @@ public class BluetoothMeshPlugin extends Plugin {
     }
 
     // ── Periodic sync with all known peers ────────────────────────────────────
+    // Reconnects to known peers to flush the relay queue (deliver pending msgs).
     private void syncAllPeers() {
+        // Prune relay-queue messages older than 5 minutes so broadcasts don't
+        // accumulate and re-send forever.
+        synchronized (relayQueue) {
+            long cutoff = System.currentTimeMillis() - 5 * 60 * 1000;
+            relayQueue.removeIf(json -> {
+                try { return Long.parseLong(extractField(json, "ts")) < cutoff; }
+                catch (Exception e) { return false; }
+            });
+        }
+
         if (!active || relayQueue.isEmpty()) {
-            if (active) main.postDelayed(this::syncAllPeers, 15_000);
+            if (active) main.postDelayed(this::syncAllPeers, 8_000);
             return;
         }
         for (Map.Entry<String, JSObject> entry : peers.entrySet()) {
             String addr = entry.getKey();
-            String peerUserId = entry.getValue().getString("userId");
             BluetoothDevice dev = btAdapter.getRemoteDevice(addr);
-            if (!activeGatts.containsKey(addr)) {
-                pool.execute(() -> connectAndSync(dev, peerUserId));
+            if (!activeGatts.containsKey(addr) && !connecting.contains(addr)) {
+                int rssi = (int) entry.getValue().optLong("rssi", -70);
+                connecting.add(addr);
+                pool.execute(() -> connectAndSync(dev, rssi));
             }
         }
-        if (active) main.postDelayed(this::syncAllPeers, 15_000);
+        if (active) main.postDelayed(this::syncAllPeers, 8_000);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
