@@ -167,6 +167,21 @@ var ini=function(n){return(n||'??').trim().split(/\s+/).map(function(w){return w
 var ago=function(ts){var d=Math.floor((Date.now()-ts)/1000);return d<60?d+'s':d<3600?Math.floor(d/60)+'m':Math.floor(d/3600)+'h';};
 var esc=function(s){return(s||'').toString().replace(/</g,'&lt;');};
 
+// ── Read-receipt helpers ───────────────────────────────────────────────────
+// Key: stable contact key (name-based), Value: timestamp of last-read message
+function _readKey(name){return 'read_'+(name||'?').trim().toLowerCase().replace(/\s+/g,'_');}
+function _markRead(name){
+  try{var m=JSON.parse(localStorage.getItem('resq_read_map')||'{}');m[_readKey(name)]=Date.now();localStorage.setItem('resq_read_map',JSON.stringify(m));}catch(_){}
+}
+function _lastRead(name){
+  try{var m=JSON.parse(localStorage.getItem('resq_read_map')||'{}');return m[_readKey(name)]||0;}catch(_){return 0;}
+}
+function _isUnread(msg){return msg.timestamp>_lastRead(msg.fromName||'?');}
+
+// ── Stable contact key — group by fromName (stable) not from (session ID) ─
+function _contactKey(msg){return (msg.fromName||msg.from||'unknown').trim().toLowerCase();}
+
+
 // ── BLE Status display ──────────────────────────────────────────────────────
 function setBleStatus(reason, peerCount) {
   var icon  = document.getElementById('bleStatusIcon');
@@ -243,46 +258,146 @@ function bdg(){var b=document.getElementById('ubadge');if(!b)return;if(_un>0){b.
 function bts(ok,n){var d=document.getElementById('bdot'),c=document.getElementById('bcnt');if(d)d.className='bdot'+(ok?'':' off');if(c)c.textContent=n||0;}
 function rp(peers){
   var v=document.getElementById('viewNearby'),emp=document.getElementById('empNearby');
-  if(!v)return;v.querySelectorAll('.pc').forEach(function(e){e.remove();});bts(true,peers.length);
-  if(!peers.length){if(emp)emp.style.display='';return;}if(emp)emp.style.display='none';
+  if(!v)return;
+  v.querySelectorAll('.pc').forEach(function(e){e.remove();});
+  bts(true,peers.length);
+  setBleStatus(peers.length>0?'connected':'scanning', peers.length);
+  if(!peers.length){if(emp)emp.style.display='';return;}
+  if(emp)emp.style.display='none';
   peers.forEach(function(p){
-    var hk=!!(window.RESQ_Crypto&&RESQ_Crypto.canEncryptFor(p.userId));
+    var hk=!!(p.hasKey||(window.RESQ_Crypto&&RESQ_Crypto.canEncryptFor(p.userId)));
     var c=document.createElement('div');c.className='pc';
-    c.innerHTML='<div class="pa">'+esc(ini(p.name))+'<div class="pon"></div></div>'+
-      '<div class="pb"><div class="pn">'+esc(p.name||'Unknown')+'</div><div class="ps">BT Mesh '+(p.rssi?'- '+p.rssi+'dBm':'- nearby')+'</div></div>'+
-      '<div class="eb'+(hk?'',' nk')+'" onclick="event.stopPropagation();oc(\''+p.userId+'\',\''+esc(p.name||'Unknown')+'\','+hk+')">'+
-      (hk?'🔒 Chat':'⏳ Keys...')+'</div>';
-    c.onclick=function(){oc(p.userId,p.name||'Unknown',hk);};v.appendChild(c);
+    // Fix: (hk?'':' nk') — was (hk?'',' nk') which is comma operator, always ' nk'
+    c.innerHTML=
+      '<div class="pa">'+esc(ini(p.name))+'<div class="pon"></div></div>'+
+      '<div class="pb">'+
+        '<div class="pn">'+esc(p.name||'Unknown')+'</div>'+
+        '<div class="ps">● BT Mesh '+(p.rssi?'· '+p.rssi+'dBm':'· nearby')+'</div>'+
+      '</div>'+
+      '<div class="eb'+(hk?'':' nk')+'">'+
+        (hk?'🔒 Chat':'⏳ Keys...')+
+      '</div>';
+    c.onclick=function(){oc(p.userId,p.name||'Unknown',hk);};
+    v.appendChild(c);
   });
 }
+
 function rh(){
   var v=document.getElementById('viewMessages'),emp=document.getElementById('empMsg');
-  if(!v)return;v.querySelectorAll('.tc').forEach(function(e){e.remove();});
-  var myId=localStorage.getItem('resq_uid'),hist=window.RESQ_BTMesh?RESQ_BTMesh.getHistory():[];
-  var inc=hist.filter(function(m){return m.from!==myId;}).slice(0,30);
-  if(!inc.length){if(emp)emp.style.display='';return;}if(emp)emp.style.display='none';
-  var threads=new Map();inc.forEach(function(m){if(!threads.has(m.from)||m.timestamp>threads.get(m.from).timestamp)threads.set(m.from,m);});
+  if(!v)return;
+  v.querySelectorAll('.tc').forEach(function(e){e.remove();});
+
+  var myId = localStorage.getItem('resq_uid');
+  var hist  = window.RESQ_BTMesh ? RESQ_BTMesh.getHistory() : [];
+  // All incoming messages (not sent by me)
+  var inc   = hist.filter(function(m){ return m.from!==myId; });
+  if(!inc.length){if(emp)emp.style.display='';return;}
+  if(emp)emp.style.display='none';
+
+  // ── Group by fromName (stable across sessions) ────────────────────────
+  // Also merge messages where fromName matches even if from IDs differ
+  var threads=new Map(); // contactKey → latest msg
+  inc.forEach(function(m){
+    var key=_contactKey(m);
+    if(!threads.has(key)||m.timestamp>threads.get(key).timestamp)
+      threads.set(key,m);
+  });
+
+  // Count unread for badge
+  var totalUnread=0;
+  threads.forEach(function(msg){ if(_isUnread(msg)) totalUnread++; });
+  _un=totalUnread; bdg();
+
   threads.forEach(function(msg){
-    var c=document.createElement('div');c.className='tc unread';
-    c.innerHTML='<div class="ta">'+esc(ini(msg.fromName||'?'))+'</div>'+
-      '<div class="tb"><div class="tn">'+esc(msg.fromName||'Unknown')+(msg.enc?' 🔒':'')+'</div>'+
-      '<div class="tp unread">'+esc((msg.content||'').slice(0,80))+'</div></div>'+
-      '<div class="tm"><div class="tt">'+ago(msg.timestamp)+'</div><div class="ud"></div></div>';
-    c.onclick=function(){oc(msg.from,msg.fromName||'Unknown',msg.enc);};v.appendChild(c);
+    var unread = _isUnread(msg);
+    var c=document.createElement('div');
+    c.className='tc'+(unread?' unread':'');
+    c.innerHTML=
+      '<div class="ta">'+esc(ini(msg.fromName||'?'))+'</div>'+
+      '<div class="tb">'+
+        '<div class="tn">'+esc(msg.fromName||'Unknown')+(msg.enc?' 🔒':'')+'</div>'+
+        '<div class="tp'+(unread?' unread':'')+'">'+esc((msg.content||'').slice(0,80))+'</div>'+
+      '</div>'+
+      '<div class="tm">'+
+        '<div class="tt">'+ago(msg.timestamp)+'</div>'+
+        (unread?'<div class="ud"></div>':'')+
+      '</div>';
+    // Open chat using fromName for stable thread matching
+    c.onclick=function(){ ocByName(msg.fromName||'Unknown', msg.from); };
+    v.appendChild(c);
   });
 }
+
+// ── Open chat by NAME (stable) — collects ALL messages from this contact ──
+function ocByName(name, fallbackId){
+  var myId  = localStorage.getItem('resq_uid');
+  var hist  = window.RESQ_BTMesh ? RESQ_BTMesh.getHistory() : [];
+  var nameKey = (name||'').trim().toLowerCase();
+
+  // Find latest userId for this contact (most recent message)
+  var latestFrom = fallbackId;
+  var latestTs   = 0;
+  hist.forEach(function(m){
+    if((m.fromName||'').trim().toLowerCase()===nameKey && m.from!==myId && m.timestamp>latestTs){
+      latestTs=m.timestamp; latestFrom=m.from;
+    }
+  });
+
+  var hk = !!(window.RESQ_Crypto && RESQ_Crypto.canEncryptFor(latestFrom));
+  oc(latestFrom, name, hk);
+}
+
 function oc(uid,name,hk){
   _peer={userId:uid,name:name,hasKey:hk};
-  document.getElementById('cav').textContent=ini(name);document.getElementById('cname').textContent=name;
+
+  // ── Mark this contact's messages as read ────────────────────────────────
+  _markRead(name);
+  // Refresh unread badge after marking read
+  setTimeout(function(){ _recomputeUnread(); rh(); }, 50);
+
+  document.getElementById('cav').textContent=ini(name);
+  document.getElementById('cname').textContent=name;
   var st=document.getElementById('cstat'),en=document.getElementById('enc');
-  if(hk){st.style.color='var(--purple)';st.innerHTML='<span class="dot"></span> 🔒 E2EE - Bluetooth Mesh';if(en)en.style.display='';}
-  else{st.style.color='var(--amber)';st.innerHTML='<span class="dot" style="background:var(--amber)"></span> BT Mesh - Key exchange pending';if(en)en.style.display='none';}
-  var area=document.getElementById('cmsg');area.innerHTML='';
-  var myId=localStorage.getItem('resq_uid'),hist=window.RESQ_BTMesh?RESQ_BTMesh.getHistory():[];
-  var thread=hist.filter(function(m){return(m.from===uid&&(m.to===myId||m.to==='all'))||(m.from===myId&&m.to===uid);}).slice(0,100).reverse();
-  if(!thread.length)bub('Start of encrypted conversation 🔒','sys');
-  else thread.forEach(function(m){bub(m.content,m.from===myId?'sent':'recv',m.timestamp);});
-  document.getElementById('chatOv').classList.add('open');document.getElementById('minput').focus();
+  if(hk){
+    st.style.color='var(--purple)';
+    st.innerHTML='<span class="dot"></span> 🔒 E2EE · Bluetooth Mesh';
+    if(en)en.style.display='';
+  } else {
+    st.style.color='var(--amber)';
+    st.innerHTML='<span class="dot" style="background:var(--amber)"></span> BT Mesh · Key exchange pending';
+    if(en)en.style.display='none';
+  }
+
+  var area=document.getElementById('cmsg');
+  area.innerHTML='';
+  var myId=localStorage.getItem('resq_uid');
+  var hist=window.RESQ_BTMesh?RESQ_BTMesh.getHistory():[];
+  var nameKey=(name||'').trim().toLowerCase();
+
+  // ── Thread: match by NAME (stable) not just UID ───────────────────────
+  var thread=hist.filter(function(m){
+    var fromIsMe   = m.from===myId;
+    var fromIsThem = (m.fromName||'').trim().toLowerCase()===nameKey || m.from===uid;
+    var toIsMe     = m.to===myId||m.to==='all';
+    var toIsThem   = m.to===uid||(m.toName&&m.toName.trim().toLowerCase()===nameKey);
+    return (fromIsThem&&toIsMe)||(fromIsMe&&toIsThem);
+  }).slice(0,150).reverse();
+
+  if(!thread.length) bub('Start of conversation 🔒','sys');
+  else thread.forEach(function(m){ bub(m.content,m.from===myId?'sent':'recv',m.timestamp); });
+
+  document.getElementById('chatOv').classList.add('open');
+  document.getElementById('minput').focus();
+}
+
+function _recomputeUnread(){
+  var myId=localStorage.getItem('resq_uid');
+  var hist=window.RESQ_BTMesh?RESQ_BTMesh.getHistory():[];
+  var inc=hist.filter(function(m){return m.from!==myId;});
+  var threads=new Map();
+  inc.forEach(function(m){var key=_contactKey(m);if(!threads.has(key)||m.timestamp>threads.get(key).timestamp)threads.set(key,m);});
+  var count=0;threads.forEach(function(msg){if(_isUnread(msg))count++;});
+  _un=count;bdg();
 }
 function closeChat(){document.getElementById('chatOv').classList.remove('open');_peer=null;}
 function bub(text,cls,ts){
@@ -325,10 +440,23 @@ function wireMesh(){
     setBleStatus(s.reason||'scanning', s.nodeCount||0);
   });
   RESQ_BTMesh.on('message',function(msg){
-    var myId=localStorage.getItem('resq_uid');if(msg.from===myId)return;
-    if(_peer&&_peer.userId===msg.from&&document.getElementById('chatOv').classList.contains('open')){bub(msg.content,'recv',msg.timestamp);}
-    else if(_tab!=='messages'){_un++;bdg();}
-    if(_tab==='messages')rh();
+    var myId=localStorage.getItem('resq_uid');
+    if(msg.from===myId) return; // skip my own messages
+
+    var chatOpen = document.getElementById('chatOv').classList.contains('open');
+    var senderName = (msg.fromName||'').trim().toLowerCase();
+    var currentName = _peer ? (_peer.name||'').trim().toLowerCase() : '';
+
+    if(chatOpen && (senderName===currentName || _peer&&_peer.userId===msg.from)){
+      // Chat with this person is open — show bubble + mark read
+      bub(msg.content,'recv',msg.timestamp);
+      _markRead(msg.fromName||'Unknown');
+    } else {
+      // Chat not open — increment unread only if not already read
+      if(_isUnread(msg)) { _un++; bdg(); }
+    }
+    // Always refresh message list if on messages tab
+    if(_tab==='messages') rh();
   });
   // Show initial scanning status
   setBleStatus('starting', 0);
