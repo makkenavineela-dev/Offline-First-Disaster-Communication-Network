@@ -12,6 +12,8 @@ import android.os.ParcelUuid;
 import com.getcapacitor.*;
 import com.getcapacitor.annotation.*;
 
+import android.util.Base64;
+
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
@@ -339,7 +341,7 @@ public class BluetoothMeshPlugin extends Plugin {
                     // Mark peer as seen but possibly moved away
                     JSObject peer = peers.get(device.getAddress());
                     if (peer != null) {
-                        long lastSeen = peer.getLong("lastSeen", 0);
+                        long lastSeen = peer.optLong("lastSeen", 0);
                         if (System.currentTimeMillis() - lastSeen > 120_000) {
                             peers.remove(device.getAddress());
                             JSObject lost = new JSObject();

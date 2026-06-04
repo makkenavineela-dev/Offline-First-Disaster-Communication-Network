@@ -306,7 +306,7 @@ public class WifiDirectPlugin extends Plugin {
     }
 
     // ── Permissions ───────────────────────────────────────────────────────────
-    private boolean hasRequiredPermissions() {
+    public boolean hasRequiredPermissions() {
         return getPermissionState("location") == PermissionState.GRANTED;
     }
 
