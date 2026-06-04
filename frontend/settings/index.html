@@ -178,13 +178,13 @@
   <div class="scroll-area">
     <!-- Profile -->
     <div class="profile-card">
-      <div class="profile-avatar">YO<div class="profile-online"></div></div>
+      <div class="profile-avatar" id="profileAvatar">··<div class="profile-online"></div></div>
       <div class="profile-info">
-        <div class="profile-name" data-i18n="your_profile">Your Profile</div>
+        <div class="profile-name" id="profileName">Your Profile</div>
         <div class="profile-id" id="profileNodeId">Node ID: -- · --</div>
-        <span class="profile-role" data-i18n="first_responder">First Responder</span>
+        <span class="profile-role" id="profileRole">Civilian</span>
       </div>
-      <div class="profile-edit">
+      <div class="profile-edit" onclick="editProfile()">
         <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
       </div>
     </div>
@@ -467,18 +467,61 @@
     }
   }
 
-  function wireMesh() {
-    if (!window.RESQ_Mesh) { setTimeout(wireMesh, 200); return; }
-    RESQ_Mesh.on('status', updateNetStatus);
-    updateNetStatus({ connected: RESQ_Mesh.isConnected(), nodeCount: RESQ_Mesh.getNodes().length });
+  // ── Render profile from localStorage (works WITHOUT mesh) ──────────────────
+  function renderProfile() {
+    const name = localStorage.getItem('resq_name')   || 'Your Profile';
+    const role = localStorage.getItem('resq_role')   || 'Civilian';
+    const uid  = localStorage.getItem('resq_uid')    || '--';
+    const zone = localStorage.getItem('resq_zone')   || 'Local';
+    const phone= localStorage.getItem('resq_mobile') || '';
 
-    // Show node ID from localStorage
+    const nameEl = document.getElementById('profileName');
+    if (nameEl) nameEl.textContent = name;
+
+    const roleEl = document.getElementById('profileRole');
+    if (roleEl) roleEl.textContent = role;
+
+    const avEl = document.getElementById('profileAvatar');
+    if (avEl) {
+      const initials = name.trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase() || '··';
+      avEl.firstChild.textContent = initials;
+    }
+
     const nodeIdEl = document.getElementById('profileNodeId');
     if (nodeIdEl) {
-      const uid  = localStorage.getItem('resq_uid') || '--';
-      const zone = localStorage.getItem('resq_zone') || '--';
-      nodeIdEl.textContent = 'Node ID: ' + uid.slice(0, 8).toUpperCase() + ' · ' + zone;
+      const shortId = uid !== '--' ? uid.slice(-6).toUpperCase() : '------';
+      nodeIdEl.textContent = (phone ? phone + ' · ' : '') + 'ID ' + shortId + ' · ' + zone;
     }
+  }
+
+  // ── Edit profile (name + role) ─────────────────────────────────────────────
+  function editProfile() {
+    const cur = localStorage.getItem('resq_name') || '';
+    const name = prompt('Your display name:', cur);
+    if (name && name.trim()) {
+      localStorage.setItem('resq_name', name.trim());
+      renderProfile();
+      // Re-announce to the mesh so peers see the new name
+      const mesh = window.RESQ_BTMesh || window.RESQ_Mesh;
+      if (mesh && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.BluetoothMesh) {
+        try {
+          Capacitor.Plugins.BluetoothMesh.start({
+            userId: localStorage.getItem('resq_uid') || 'me',
+            name: name.trim(),
+            publicKey: ''
+          });
+        } catch (_) {}
+      }
+    }
+  }
+  window.editProfile = editProfile;
+
+  function wireMesh() {
+    renderProfile(); // always render profile immediately
+    const mesh = window.RESQ_BTMesh || window.RESQ_Mesh;
+    if (!mesh) { setTimeout(wireMesh, 300); return; }
+    mesh.on('status', updateNetStatus);
+    updateNetStatus({ connected: mesh.isConnected(), nodeCount: mesh.getNodes().length });
   }
 
   if (document.readyState === 'loading') {
@@ -488,7 +531,10 @@
   }
 })();
 </script>
-<script src="../js/connectivity.js"></script>
+<script src="../js/crypto-e2ee.js"></script>
+<script src="../js/bluetooth-mesh.js"></script>
+<script src="../js/mesh-boot.js"></script>
+<script src="../js/notifications.js"></script><script src="../js/connectivity.js"></script>
 <script src="../js/ble-sos.js"></script>
 </body>
 </html>

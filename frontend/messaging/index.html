@@ -100,8 +100,9 @@ html,body{height:100%;background:#080808;font-family:'Barlow',sans-serif;}
   </div>
   <div class="tabs">
     <div class="tab active" id="tabNearby"    onclick="sw('nearby')">📡 Nearby</div>
-    <div class="tab"        id="tabMessages"  onclick="sw('messages')">Messages <span id="ubadge" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:2px;"></span></div>
-    <div class="tab tbc"    id="tabBroadcast" onclick="sw('broadcast')">📢 Broadcast</div>
+    <div class="tab"        id="tabMessages"  onclick="sw('messages')">💬 Chats <span id="ubadge" style="display:none;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:2px;"></span></div>
+    <div class="tab"        id="tabSMS"       onclick="sw('sms')">📱 SMS</div>
+    <div class="tab tbc"    id="tabBroadcast" onclick="sw('broadcast')">📢 All</div>
   </div>
   <div class="banner">
     <div class="bdot" id="bdot"></div>
@@ -120,6 +121,17 @@ html,body{height:100%;background:#080808;font-family:'Barlow',sans-serif;}
   </div>
   <div id="viewBroadcast" class="lv" style="display:none;">
     <div style="padding:16px 0 8px;font-size:11px;color:var(--muted);text-align:center;line-height:1.8;">Broadcast sends to ALL nearby devices.<br><strong style="color:var(--amber);">Not encrypted</strong> — visible to everyone.<br>Use <strong style="color:var(--green);">Private Chat</strong> for sensitive messages.</div>
+  </div>
+  <!-- SMS to saved contacts (cellular — reaches people OFF the mesh) -->
+  <div id="viewSMS" class="lv" style="display:none;">
+    <div style="padding:14px 0 6px;font-size:11px;color:var(--muted);text-align:center;line-height:1.7;">
+      Send a text over <strong style="color:var(--amber);">cellular SMS</strong> to your saved contacts.<br>
+      Works even when they are NOT on the Bluetooth mesh.
+    </div>
+    <textarea id="smsBody" rows="3" style="width:100%;background:var(--gray2);border:1px solid var(--gray3);border-radius:14px;padding:12px 14px;color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;outline:none;resize:none;margin:10px 0;" placeholder="Type your SMS message..."></textarea>
+    <div id="smsContactList"></div>
+    <button onclick="smsSendAll()" style="width:100%;margin-top:10px;padding:13px;background:var(--amber);color:#000;border:none;border-radius:14px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:1px;cursor:pointer;">📱 SEND SMS TO ALL CONTACTS</button>
+    <a href="/settings/index.html" style="display:block;text-align:center;margin-top:12px;font-size:12px;color:var(--blue);text-decoration:none;">+ Add / manage contacts in Settings</a>
   </div>
   <div class="cbar" id="cbar">
     <textarea class="ci" id="cinput" placeholder="Broadcast to all nearby..." rows="1"></textarea>
@@ -246,13 +258,59 @@ function bleAction() {
 function toast(m,t){var el=document.createElement('div');el.style.cssText='position:fixed;bottom:100px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;font-size:12px;font-weight:600;z-index:999;background:'+(t==='warn'?'rgba(255,170,0,0.9)':'rgba(0,230,118,0.9)')+';color:#000;';el.textContent=m;document.body.appendChild(el);setTimeout(function(){el.remove();},3000);}
 function sw(tab){
   _tab=tab;
-  ['nearby','messages','broadcast'].forEach(function(t){
-    var v=document.getElementById('view'+t[0].toUpperCase()+t.slice(1));if(v)v.style.display=t===tab?'':'none';
-    var tb=document.getElementById('tab'+t[0].toUpperCase()+t.slice(1));if(tb)tb.classList.toggle('active',t===tab);
+  ['nearby','messages','sms','broadcast'].forEach(function(t){
+    var suffix=(t==='sms')?'SMS':t[0].toUpperCase()+t.slice(1);
+    var v=document.getElementById('view'+suffix);if(v)v.style.display=t===tab?'':'none';
+    var tb=document.getElementById('tab'+suffix);if(tb)tb.classList.toggle('active',t===tab);
   });
   var bar=document.getElementById('cbar'),btn=document.getElementById('sbtn'),inp=document.getElementById('cinput');
   if(tab==='messages'){if(bar)bar.style.display='none';_un=0;bdg();rh();}
+  else if(tab==='sms'){if(bar)bar.style.display='none';renderSMSContacts();}
   else{if(bar)bar.style.display='';if(btn)btn.style.background=tab==='broadcast'?'var(--amber)':'var(--blue)';if(inp)inp.placeholder=tab==='broadcast'?'Broadcast to all nearby - visible to everyone...':'Broadcast to all nearby...';}
+}
+
+// ── SMS to saved contacts ─────────────────────────────────────────────────────
+function smsContacts(){
+  var emergency=[]; try{emergency=JSON.parse(localStorage.getItem('resq_emergency_contacts')||'[]');}catch(_){}
+  var known=(window.RESQ_SMS&&RESQ_SMS.getKnownPhones)?RESQ_SMS.getKnownPhones():[];
+  var all=emergency.concat(known).filter(function(v,i,a){return v&&a.indexOf(v)===i;});
+  return all;
+}
+function renderSMSContacts(){
+  var box=document.getElementById('smsContactList');if(!box)return;
+  var list=smsContacts();
+  if(!list.length){box.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px 0;">No saved contacts yet.<br>Add them in Settings → SOS SMS Contacts.</div>';return;}
+  box.innerHTML='<div style="font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin:6px 0;">Saved contacts ('+list.length+')</div>';
+  list.forEach(function(num){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:10px;background:var(--gray2);border:1px solid var(--gray3);border-radius:12px;padding:11px 14px;margin-bottom:8px;';
+    row.innerHTML='<div style="width:34px;height:34px;border-radius:10px;background:rgba(255,170,0,0.15);display:flex;align-items:center;justify-content:center;font-size:16px;">📞</div>'+
+      '<div style="flex:1;font-size:14px;color:var(--white);font-weight:600;">'+esc(num)+'</div>'+
+      '<button style="padding:6px 14px;border-radius:18px;border:none;background:var(--amber);color:#000;font-size:12px;font-weight:700;cursor:pointer;">Send</button>';
+    row.querySelector('button').onclick=function(){smsSendOne(num);};
+    box.appendChild(row);
+  });
+}
+function smsText(){
+  var body=(document.getElementById('smsBody')||{}).value||'';
+  body=body.trim();
+  var name=localStorage.getItem('resq_name')||'Unknown';
+  return body?('[RESQ] '+name+': '+body):'';
+}
+function smsSendOne(num){
+  var text=smsText();
+  if(!text){toast('Type a message first','warn');return;}
+  if(window.RESQ_SMS&&RESQ_SMS.available){RESQ_SMS.sendDirect(num,text);toast('SMS sent to '+num,'ok');}
+  else{var a=document.createElement('a');a.href='sms:'+encodeURIComponent(num)+'?body='+encodeURIComponent(text);a.click();toast('Opening SMS app...','ok');}
+}
+function smsSendAll(){
+  var text=smsText();
+  if(!text){toast('Type a message first','warn');return;}
+  var list=smsContacts();
+  if(!list.length){toast('No saved contacts — add in Settings','warn');return;}
+  if(window.RESQ_SMS&&RESQ_SMS.available){list.forEach(function(n){RESQ_SMS.sendDirect(n,text);});toast('SMS sent to '+list.length+' contacts','ok');}
+  else{var a=document.createElement('a');a.href='sms:'+encodeURIComponent(list.join(';'))+'?body='+encodeURIComponent(text);a.click();toast('Opening SMS app...','ok');}
+  var b=document.getElementById('smsBody');if(b)b.value='';
 }
 function bdg(){var b=document.getElementById('ubadge');if(!b)return;if(_un>0){b.textContent=_un;b.style.display='';}else b.style.display='none';}
 function bts(ok,n){var d=document.getElementById('bdot'),c=document.getElementById('bcnt');if(d)d.className='bdot'+(ok?'':' off');if(c)c.textContent=n||0;}
@@ -349,6 +407,7 @@ function ocByName(name, fallbackId){
 
 function oc(uid,name,hk){
   _peer={userId:uid,name:name,hasKey:hk};
+  window.__resqActivePeer = uid; // suppress notification banner for open chat
 
   // ── Mark this contact's messages as read ────────────────────────────────
   _markRead(name);
@@ -399,7 +458,7 @@ function _recomputeUnread(){
   var count=0;threads.forEach(function(msg){if(_isUnread(msg))count++;});
   _un=count;bdg();
 }
-function closeChat(){document.getElementById('chatOv').classList.remove('open');_peer=null;}
+function closeChat(){document.getElementById('chatOv').classList.remove('open');_peer=null;window.__resqActivePeer=null;}
 function bub(text,cls,ts){
   var area=document.getElementById('cmsg');
   var t=new Date(ts||Date.now()).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
@@ -490,6 +549,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script src="../js/browser-mesh.js"></script>
 <script src="../js/mesh-boot.js"></script>
 <script src="../sms-bridge.js"></script>
-<script src="../js/connectivity.js"></script>
+<script src="../js/notifications.js"></script><script src="../js/connectivity.js"></script>
 </body>
 </html>
