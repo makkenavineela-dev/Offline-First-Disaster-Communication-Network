@@ -340,10 +340,17 @@ public class BluetoothMeshPlugin extends Plugin {
             public void onScanResult(int callbackType, ScanResult result) {
                 String addr = result.getDevice().getAddress();
 
-                // Already fully resolved OR currently connecting — skip.
+                // Known peer still advertising — refresh lastSeen so it isn't
+                // pruned as stale, then skip (no need to reconnect just to discover).
+                JSObject known = peers.get(addr);
+                if (known != null) {
+                    known.put("lastSeen", System.currentTimeMillis());
+                    return;
+                }
+                if (connecting.contains(addr)) return;
+
                 // (We do NOT use the truncated advertisement data as identity;
                 //  the FULL userId + name come from the GATT devinfo read.)
-                if (peers.containsKey(addr) || connecting.contains(addr)) return;
 
                 // Best-effort self-check: ignore our own advertisement.
                 // The advert userId is truncated to 6 chars, so compare prefixes.
@@ -396,17 +403,15 @@ public class BluetoothMeshPlugin extends Plugin {
                 if (newState == BluetoothProfile.STATE_CONNECTED) {
                     gatt.requestMtu(512);
                 } else {
+                    // Normal disconnect after message delivery — do NOT fire
+                    // bt_peer_lost here. We connect/disconnect frequently for
+                    // store-and-forward. The peer stays "known" as long as the
+                    // scanner keeps seeing its advertisement. A separate stale
+                    // check (pruneStalePeers) removes peers truly gone.
                     activeGatts.remove(addr);
                     connecting.remove(addr);
-                    gatt.close();
-                    // Peer moved away — remove if we had resolved its identity
-                    String resolvedUid = addrToUserId.get(addr);
-                    if (resolvedUid != null && peers.containsKey(addr)) {
-                        peers.remove(addr);
-                        JSObject lost = new JSObject();
-                        lost.put("userId", resolvedUid);
-                        notifyListeners("bt_peer_lost", lost);
-                    }
+                    pendingWrites.remove(addr);
+                    try { gatt.close(); } catch (Exception ignored) {}
                 }
             }
 
@@ -604,6 +609,27 @@ public class BluetoothMeshPlugin extends Plugin {
         }
     }
 
+    // Remove peers whose advertisement hasn't been seen for 45s, firing
+    // bt_peer_lost so the UI drops them. Active connections are exempt.
+    private void pruneStalePeers() {
+        long cutoff = System.currentTimeMillis() - 45_000;
+        for (Map.Entry<String, JSObject> entry : new ArrayList<>(peers.entrySet())) {
+            String addr = entry.getKey();
+            if (activeGatts.containsKey(addr) || connecting.contains(addr)) continue;
+            long lastSeen = entry.getValue().optLong("lastSeen", 0);
+            if (lastSeen < cutoff) {
+                String uid = entry.getValue().getString("userId");
+                peers.remove(addr);
+                addrToUserId.remove(addr);
+                if (uid != null) {
+                    JSObject lost = new JSObject();
+                    lost.put("userId", uid);
+                    notifyListeners("bt_peer_lost", lost);
+                }
+            }
+        }
+    }
+
     // ── Periodic sync with all known peers ────────────────────────────────────
     // Reconnects to known peers to flush the relay queue (deliver pending msgs).
     private void syncAllPeers() {
@@ -616,6 +642,9 @@ public class BluetoothMeshPlugin extends Plugin {
                 catch (Exception e) { return false; }
             });
         }
+
+        // Prune peers not seen advertising for 45s — fire bt_peer_lost for each.
+        pruneStalePeers();
 
         if (!active || relayQueue.isEmpty()) {
             if (active) main.postDelayed(this::syncAllPeers, 8_000);
