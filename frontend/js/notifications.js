@@ -19,8 +19,14 @@
   let _wired = false;
   let _audioCtx = null;
 
+  // Respect the "Vibration & Sound" preference (default on)
+  function alertsEnabled() {
+    return localStorage.getItem('resq_pref_vibrate') !== '0';
+  }
+
   // ── Sound ──────────────────────────────────────────────────────────────────
   function beep(urgent) {
+    if (!alertsEnabled()) return;
     try {
       _audioCtx = _audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       const ctx = _audioCtx;
@@ -42,6 +48,7 @@
   }
 
   function vibrate(urgent) {
+    if (!alertsEnabled()) return;
     if (navigator.vibrate) {
       navigator.vibrate(urgent ? [200, 100, 200, 100, 400] : [120]);
     }
@@ -162,6 +169,8 @@
 
     mesh.on('sos', (alert) => {
       if (!alert || alert.from === myId()) return;
+      // Respect the "SOS Alerts" preference (default on)
+      if (localStorage.getItem('resq_pref_sos_alerts') === '0') return;
       RESQ_Notify.sos(alert.fromName, alert.message);
     });
 

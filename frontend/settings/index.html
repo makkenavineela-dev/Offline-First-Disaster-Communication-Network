@@ -155,7 +155,7 @@
     height: 76px; background: rgba(10,10,10,0.95);
     backdrop-filter: blur(20px); border-top: 1px solid var(--gray3);
     display: flex; align-items: center; justify-content: space-around;
-    padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 20;
+    padding-bottom:max(16px,env(safe-area-inset-bottom)); z-index: 20;
   }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
   .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
@@ -193,24 +193,20 @@
     <div class="network-card">
       <div class="net-title" data-i18n="network_status">Network Status</div>
       <div class="net-row">
-        <div class="net-label"><div class="net-dot green"></div><span class="net-name" data-i18n="mesh_network">Mesh Network</span></div>
-        <span class="net-value green" id="netMeshStatus">SEARCHING…</span>
+        <div class="net-label"><div class="net-dot" id="dotMesh"></div><span class="net-name">Bluetooth Mesh</span></div>
+        <span class="net-value" id="netMeshStatus">Starting…</span>
       </div>
       <div class="net-row">
-        <div class="net-label"><div class="net-dot red"></div><span class="net-name">Internet / Cellular</span></div>
-        <span class="net-value" id="netInternet" style="color:var(--red)">OFFLINE</span>
+        <div class="net-label"><div class="net-dot" id="dotBt"></div><span class="net-name">Bluetooth Radio</span></div>
+        <span class="net-value" id="netBluetooth">--</span>
       </div>
       <div class="net-row">
-        <div class="net-label"><div class="net-dot green"></div><span class="net-name">Bluetooth</span></div>
-        <span class="net-value green" id="netBluetooth">--</span>
+        <div class="net-label"><div class="net-dot" id="dotSms"></div><span class="net-name">Cellular / SMS</span></div>
+        <span class="net-value" id="netInternet">--</span>
       </div>
       <div class="net-row">
-        <div class="net-label"><div class="net-dot amber"></div><span class="net-name">WiFi Direct</span></div>
-        <span class="net-value amber" id="netWifi">Scanning…</span>
-      </div>
-      <div class="net-row">
-        <div class="net-label"><div class="net-dot green"></div><span class="net-name">GPS Location</span></div>
-        <span class="net-value green" id="netGps">--</span>
+        <div class="net-label"><div class="net-dot" id="dotGps"></div><span class="net-name">GPS Location</span></div>
+        <span class="net-value" id="netGps">--</span>
       </div>
     </div>
 
@@ -241,20 +237,12 @@
     <div class="settings-group">
       <div class="settings-group-title" data-i18n="emergency">Emergency</div>
       <div class="setting-row">
-        <div class="setting-icon red">🚨</div>
-        <div class="setting-info">
-          <div class="setting-name" data-i18n="auto_sos">Auto-SOS on Impact</div>
-          <div class="setting-sub" data-i18n="auto_sos_desc">Detect falls & send SOS automatically</div>
-        </div>
-        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
-      </div>
-      <div class="setting-row">
         <div class="setting-icon red">📣</div>
         <div class="setting-info">
-          <div class="setting-name">Emergency Broadcast</div>
-          <div class="setting-sub">Receive zone-wide alerts</div>
+          <div class="setting-name">SOS Alerts</div>
+          <div class="setting-sub">Get notified when someone nearby sends SOS</div>
         </div>
-        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        <label class="toggle"><input type="checkbox" id="tgSosAlerts" data-pref="sos_alerts"><span class="toggle-track"></span></label>
       </div>
 
       <!-- Emergency SMS Contacts -->
@@ -283,92 +271,68 @@
       <div class="setting-row">
         <div class="setting-icon amber">🔔</div>
         <div class="setting-info">
-          <div class="setting-name">Vibration Alerts</div>
-          <div class="setting-sub">Haptic feedback for alerts</div>
+          <div class="setting-name">Vibration &amp; Sound</div>
+          <div class="setting-sub">Buzz &amp; beep on incoming alerts</div>
         </div>
-        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        <label class="toggle"><input type="checkbox" id="tgVibrate" data-pref="vibrate"><span class="toggle-track"></span></label>
       </div>
     </div>
 
     <!-- Mesh settings -->
     <div class="settings-group">
       <div class="settings-group-title">Mesh Network</div>
-
-      <!-- Server IP — critical for LAN-only offline operation -->
-      <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
-        <div style="display:flex;align-items:center;gap:10px;width:100%;">
-          <div class="setting-icon blue">🖥️</div>
-          <div class="setting-info">
-            <div class="setting-name">Server IP Address</div>
-            <div class="setting-sub" id="meshConnStatus">Searching for local server…</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;width:100%;padding-left:50px;">
-          <input id="serverIpInput" type="text" placeholder="e.g. 192.168.1.100:5000"
-            style="flex:1;background:var(--gray3);border:1px solid var(--gray2);border-radius:10px;
-                   padding:8px 12px;color:var(--white);font-size:13px;outline:none;font-family:'Barlow',sans-serif;"
-            value="">
-          <button onclick="applyServerIp()"
-            style="background:var(--blue);border:none;border-radius:10px;padding:8px 14px;
-                   color:white;font-size:12px;font-weight:600;cursor:pointer;">Connect</button>
-        </div>
-      </div>
-
       <div class="setting-row">
         <div class="setting-icon blue">📡</div>
         <div class="setting-info">
           <div class="setting-name">Relay Mode</div>
-          <div class="setting-sub">Forward messages for others</div>
+          <div class="setting-sub">Forward messages between out-of-range devices</div>
         </div>
-        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        <label class="toggle"><input type="checkbox" id="tgRelay" data-pref="relay"><span class="toggle-track"></span></label>
       </div>
       <div class="setting-row">
         <div class="setting-icon blue">🔒</div>
         <div class="setting-info">
           <div class="setting-name">End-to-End Encryption</div>
-          <div class="setting-sub">Encrypt all mesh messages</div>
+          <div class="setting-sub">Private chats are encrypted (always on)</div>
         </div>
-        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
+        <label class="toggle"><input type="checkbox" id="tgE2EE" data-pref="e2ee" disabled><span class="toggle-track"></span></label>
       </div>
       <div class="setting-row">
         <div class="setting-icon green">📍</div>
         <div class="setting-info">
           <div class="setting-name">Share Location</div>
-          <div class="setting-sub">Broadcast GPS to mesh</div>
+          <div class="setting-sub">Attach GPS to your SOS &amp; messages</div>
         </div>
-        <label class="toggle"><input type="checkbox" checked><span class="toggle-track"></span></label>
-      </div>
-      <div class="setting-row">
-        <div class="setting-icon amber">⚡</div>
-        <div class="setting-info">
-          <div class="setting-name">Power Save Mode</div>
-          <div class="setting-sub">Reduce mesh ping rate</div>
-        </div>
-        <label class="toggle"><input type="checkbox"><span class="toggle-track"></span></label>
+        <label class="toggle"><input type="checkbox" id="tgShareLoc" data-pref="share_loc"><span class="toggle-track"></span></label>
       </div>
     </div>
 
-    <!-- Battery -->
+    <!-- Battery (real device battery) -->
     <div class="battery-card">
-      <div class="bat-title">System Power</div>
+      <div class="bat-title">Device Power</div>
       <div class="bat-row">
-        <span class="bat-label">Device</span>
-        <div class="bat-track"><div class="bat-fill green" style="width:94%"></div></div>
-        <span class="bat-val">94%</span>
+        <span class="bat-label" id="batLabel">Battery</span>
+        <div class="bat-track"><div class="bat-fill green" id="batFill" style="width:0%"></div></div>
+        <span class="bat-val" id="batVal">--</span>
       </div>
-      <div class="bat-row">
-        <span class="bat-label">Mesh Radio</span>
-        <div class="bat-track"><div class="bat-fill amber" style="width:45%"></div></div>
-        <span class="bat-val">45%</span>
-      </div>
-      <div class="bat-row">
-        <span class="bat-label">GPS Module</span>
-        <div class="bat-track"><div class="bat-fill green" style="width:87%"></div></div>
-        <span class="bat-val">87%</span>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.5;" id="batHint">
+        Bluetooth mesh uses very little power — runs for hours on a low battery.
       </div>
     </div>
 
-    <div class="version-text">RESQ v2.1.0 · Build 20250313 · Offline Mode</div>
+    <!-- Danger zone -->
+    <div class="settings-group">
+      <div class="settings-group-title">Account</div>
+      <div class="setting-row" onclick="clearAllData()" style="cursor:pointer;">
+        <div class="setting-icon red">🗑️</div>
+        <div class="setting-info">
+          <div class="setting-name" style="color:var(--red);">Clear All Data &amp; Sign Out</div>
+          <div class="setting-sub">Erase profile, messages, resources &amp; keys</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="version-text" id="versionText">RESQ v2.2.0 · Bluetooth Mesh · Offline Mode</div>
   </div>
 
   <div class="bottom-nav">
@@ -420,50 +384,112 @@
     }
   };
 
-  // Pre-fill stored server IP
-  const stored = localStorage.getItem('resq_server_ip') || '';
-  const input  = document.getElementById('serverIpInput');
-  if (input && stored) input.value = stored.replace(/^https?:\/\//, '');
-
-  function applyServerIp() {
-    const val = (input ? input.value.trim() : '');
-    if (!val) return;
-    const url = val.startsWith('http') ? val : 'http://' + val;
-    if (window.RESQ_Mesh) {
-      RESQ_Mesh.setServerUrl(url);
-    } else {
-      localStorage.setItem('resq_server_ip', url);
-    }
-    const sub = document.getElementById('meshConnStatus');
-    if (sub) sub.textContent = 'Connecting to ' + val + '…';
+  // ── Preference toggles — persist to localStorage + take effect ─────────────
+  const TOGGLE_DEFAULTS = { relay: true, e2ee: true, share_loc: true, sos_alerts: true, vibrate: true };
+  function loadToggles() {
+    document.querySelectorAll('input[data-pref]').forEach(function(input) {
+      const key = 'resq_pref_' + input.dataset.pref;
+      const stored = localStorage.getItem(key);
+      const val = stored === null ? TOGGLE_DEFAULTS[input.dataset.pref] : stored === '1';
+      input.checked = val;
+      if (!input.disabled) {
+        input.addEventListener('change', function() {
+          localStorage.setItem(key, input.checked ? '1' : '0');
+          showSaved();
+        });
+      }
+    });
   }
-  window.applyServerIp = applyServerIp;
+  function showSaved() {
+    let t = document.getElementById('prefSavedToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'prefSavedToast';
+      t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;font-size:12px;font-weight:600;z-index:99;background:rgba(0,230,118,.9);color:#000;';
+      document.body.appendChild(t);
+    }
+    t.textContent = '✓ Saved';
+    t.style.opacity = '1';
+    clearTimeout(window._prefT);
+    window._prefT = setTimeout(function(){ t.style.opacity = '0'; }, 1500);
+  }
 
-  // Allow Enter key in IP input
-  if (input) input.addEventListener('keypress', e => { if (e.key === 'Enter') applyServerIp(); });
+  // ── Real device battery ─────────────────────────────────────────────────────
+  function wireBattery() {
+    if (!navigator.getBattery) {
+      const v = document.getElementById('batVal'); if (v) v.textContent = 'N/A';
+      return;
+    }
+    navigator.getBattery().then(function(bat) {
+      function upd() {
+        const pct = Math.round(bat.level * 100);
+        const fill = document.getElementById('batFill');
+        const val  = document.getElementById('batVal');
+        const lbl  = document.getElementById('batLabel');
+        if (fill) {
+          fill.style.width = pct + '%';
+          fill.className = 'bat-fill ' + (pct > 50 ? 'green' : pct > 20 ? 'amber' : 'red');
+          if (pct <= 20) fill.style.background = 'var(--red)';
+        }
+        if (val) val.textContent = pct + '%';
+        if (lbl) lbl.textContent = bat.charging ? 'Battery ⚡ Charging' : 'Battery';
+      }
+      upd();
+      bat.addEventListener('levelchange', upd);
+      bat.addEventListener('chargingchange', upd);
+    }).catch(function(){
+      const v = document.getElementById('batVal'); if (v) v.textContent = 'N/A';
+    });
+  }
 
+  // ── Clear all data + sign out ───────────────────────────────────────────────
+  window.clearAllData = function() {
+    if (!confirm('Clear ALL data and sign out?\n\nThis erases your profile, messages, resources, contacts and encryption keys on THIS phone. Cannot be undone.')) return;
+    try { localStorage.clear(); } catch (_) {}
+    location.href = '/login/index.html';
+  };
+
+  // ── Real network status (Bluetooth mesh / radio / cellular / GPS) ──────────
+  function setDot(id, color) {
+    const d = document.getElementById(id);
+    if (d) d.className = 'net-dot ' + color;
+  }
   function updateNetStatus(s) {
-    const meshEl   = document.getElementById('netMeshStatus');
-    const statusEl = document.getElementById('meshConnStatus');
-    const nodesEl  = document.getElementById('meshNodes'); // dashboard elem not here, skip
-
+    s = s || {};
+    const meshEl = document.getElementById('netMeshStatus');
+    const connected = s.connected || (s.active);
+    const nodes = s.nodeCount || 0;
     if (meshEl) {
-      meshEl.textContent = s.connected
-        ? 'ACTIVE · ' + (s.nodeCount || 0) + ' nodes'
-        : 'SEARCHING…';
-      meshEl.style.color = s.connected ? 'var(--green)' : 'var(--amber)';
-    }
-    if (statusEl) {
-      statusEl.textContent = s.connected
-        ? 'Connected · ' + (s.nodeCount || 0) + ' node' + (s.nodeCount !== 1 ? 's' : '') + ' on mesh'
-        : 'Not connected — enter server IP above';
+      meshEl.textContent = connected ? 'ACTIVE · ' + nodes + ' nearby' : 'Scanning…';
+      meshEl.style.color = connected ? 'var(--green)' : 'var(--amber)';
+      setDot('dotMesh', connected ? 'green' : 'amber');
     }
 
-    // Update GPS display from location.js cache
+    // Bluetooth radio
+    const btEl = document.getElementById('netBluetooth');
+    const btReady = !!(window.RESQ_BTMesh);
+    if (btEl) {
+      btEl.textContent = btReady ? 'ON' : 'Initialising…';
+      btEl.style.color = btReady ? 'var(--green)' : 'var(--amber)';
+      setDot('dotBt', btReady ? 'green' : 'amber');
+    }
+
+    // Cellular / SMS
+    const smsEl = document.getElementById('netInternet');
+    const smsReady = !!(window.RESQ_SMS && window.RESQ_SMS.available);
+    if (smsEl) {
+      smsEl.textContent = smsReady ? 'SMS Ready' : (navigator.onLine ? 'Online' : 'No signal');
+      smsEl.style.color = smsReady || navigator.onLine ? 'var(--green)' : 'var(--red)';
+      setDot('dotSms', smsReady || navigator.onLine ? 'green' : 'red');
+    }
+
+    // GPS
     const gpsEl = document.getElementById('netGps');
-    if (gpsEl && window.RESQ_Location) {
-      const loc = RESQ_Location.getLast();
-      gpsEl.textContent = loc ? '±' + loc.accuracy + 'm accuracy' : 'Acquiring…';
+    if (gpsEl) {
+      const loc = window.RESQ_Location && RESQ_Location.getLast ? RESQ_Location.getLast() : null;
+      gpsEl.textContent = loc ? '±' + Math.round(loc.accuracy) + 'm' : 'Acquiring…';
+      gpsEl.style.color = loc ? 'var(--green)' : 'var(--amber)';
+      setDot('dotGps', loc ? 'green' : 'amber');
     }
   }
 
@@ -517,11 +543,21 @@
   window.editProfile = editProfile;
 
   function wireMesh() {
-    renderProfile(); // always render profile immediately
+    renderProfile();    // profile from localStorage (no mesh needed)
+    loadToggles();      // restore + wire preference switches
+    wireBattery();      // real device battery
+    updateNetStatus({}); // initial paint
+
     const mesh = window.RESQ_BTMesh || window.RESQ_Mesh;
-    if (!mesh) { setTimeout(wireMesh, 300); return; }
-    mesh.on('status', updateNetStatus);
-    updateNetStatus({ connected: mesh.isConnected(), nodeCount: mesh.getNodes().length });
+    if (mesh && mesh.on) {
+      mesh.on('status', updateNetStatus);
+      updateNetStatus({ connected: mesh.isConnected(), nodeCount: mesh.getNodes().length });
+    }
+    // Poll every 3s so Bluetooth/GPS/SMS rows stay live even before mesh status fires
+    setInterval(function() {
+      const m = window.RESQ_BTMesh || window.RESQ_Mesh;
+      updateNetStatus(m && m.isConnected ? { connected: m.isConnected(), nodeCount: m.getNodes().length } : {});
+    }, 3000);
   }
 
   if (document.readyState === 'loading') {

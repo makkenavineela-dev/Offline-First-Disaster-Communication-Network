@@ -122,8 +122,11 @@
     if (!bar) {
       bar = document.createElement('div');
       bar.id = 'resqConnBar';
+      // padding-top respects the phone's notch/status-bar (safe-area-inset-top)
+      // so the bar is never hidden behind the system status bar.
       bar.style.cssText = `
-        padding:6px 16px; display:flex; align-items:center; justify-content:center;
+        padding:max(6px,env(safe-area-inset-top)) 16px 6px;
+        display:flex; align-items:center; justify-content:center;
         gap:6px; flex-shrink:0; transition:background 0.4s,border-color 0.4s;
         border-bottom:1px solid; position:relative; z-index:50;`;
 

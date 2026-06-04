@@ -175,7 +175,7 @@
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--gray3);
     display: flex; align-items: center; justify-content: space-around;
-    padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 20;
+    padding-bottom:max(16px,env(safe-area-inset-bottom)); z-index: 20;
   }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
   .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
@@ -414,6 +414,10 @@
     const alertType = typeEl ? typeEl.textContent.trim() : 'General';
     const message   = document.querySelector('.msg-textarea').value.trim() || ('Emergency SOS: ' + alertType);
 
+    // Respect the "Share Location" preference from Settings (default on).
+    const shareLoc = localStorage.getItem('resq_pref_share_loc') !== '0';
+    const coords   = shareLoc ? currentCoords : null;
+
     // Show SOS in local history immediately
     renderSOSItem({
       id:        'my-' + Date.now(),
@@ -421,8 +425,8 @@
       fromPhone: localStorage.getItem('resq_mobile') || null,
       alertType,
       message,
-      lat:       currentCoords ? currentCoords.lat : null,
-      lng:       currentCoords ? currentCoords.lng : null,
+      lat:       coords ? coords.lat : null,
+      lng:       coords ? coords.lng : null,
       timestamp: Date.now(),
       _mine:     true,
     });
@@ -432,22 +436,22 @@
     // CHANNEL 1: Bluetooth Mesh — broadcasts to EVERYONE nearby. The SOS appears
     // in every device's Messages and fires their SOS banner. No network needed.
     if (mesh && mesh.sendSOS) {
-      mesh.sendSOS(alertType, message, currentCoords);
+      mesh.sendSOS(alertType, message, coords);
     }
 
     // CHANNEL 2: SMS to saved emergency contacts (cellular — reaches people
     // who are NOT on the mesh / out of Bluetooth range).
-    const smsSent = sendSMSAlert(alertType, message, currentCoords);
+    const smsSent = sendSMSAlert(alertType, message, coords);
 
     // CHANNEL 3: BLE SOS beacon — last-resort low-level broadcast, ~100m.
     if (window.RESQ_BLE && window.RESQ_BLE.broadcastSOS) {
-      RESQ_BLE.broadcastSOS(alertType, currentCoords, 5 * 60 * 1000);
+      RESQ_BLE.broadcastSOS(alertType, coords, 5 * 60 * 1000);
     }
 
     const meshOn = mesh && mesh.isConnected && mesh.isConnected();
     if (!meshOn && smsSent === 0) {
       // Nothing got out — queue for retry
-      enqueueSOSPayload({ type: 'sos', alertType, message, lat: currentCoords?.lat, lng: currentCoords?.lng });
+      enqueueSOSPayload({ type: 'sos', alertType, message, lat: coords?.lat, lng: coords?.lng });
     }
 
     // Return a delivery summary for the confirmation UI
