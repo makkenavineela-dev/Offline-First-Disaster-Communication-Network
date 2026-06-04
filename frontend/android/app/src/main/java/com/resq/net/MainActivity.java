@@ -11,6 +11,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(WifiDirectPlugin.class);
         registerPlugin(BleSosPlugin.class);
         registerPlugin(BluetoothMeshPlugin.class);
+        registerPlugin(LocalNotifPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

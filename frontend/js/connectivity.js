@@ -170,8 +170,23 @@
     _updateBar();
   }
 
+  // ── Disable text-selection / copy popup on tap (app-like feel) ─────────────
+  // Tapping icons/labels was triggering the native text-selection "Copy" menu.
+  // Disable selection everywhere EXCEPT real text inputs.
+  function _injectNoSelectStyle() {
+    if (document.getElementById('resqNoSelect')) return;
+    const st = document.createElement('style');
+    st.id = 'resqNoSelect';
+    st.textContent =
+      'html,body,*{ -webkit-user-select:none; user-select:none;' +
+      ' -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent; }' +
+      'input,textarea,[contenteditable="true"]{ -webkit-user-select:text; user-select:text; }';
+    document.head.appendChild(st);
+  }
+
   // ── Init ───────────────────────────────────────────────────────────────────
   function _init() {
+    _injectNoSelectStyle();
     _poll();
     setInterval(_poll, POLL_MS);
 

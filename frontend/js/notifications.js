@@ -112,15 +112,27 @@
     while (stack.children.length > 4) stack.firstChild.remove();
   }
 
-  // ── System notification (Web Notifications API) ────────────────────────────
+  // ── System notification (phone notification tray) ──────────────────────────
+  function _notifPlugin() {
+    return (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotif)
+      ? Capacitor.Plugins.LocalNotif : null;
+  }
+
   function systemNotify(title, body, urgent) {
+    // 1) Native Android system-tray notification (real phone notification)
+    const p = _notifPlugin();
+    if (p) {
+      p.notify({ title: title, body: body, urgent: !!urgent }).catch(function(){});
+      return;
+    }
+    // 2) Web Notifications fallback (browser / PWA)
     try {
       if (!('Notification' in window)) return;
       if (Notification.permission === 'granted') {
         new Notification(title, { body, tag: 'resq', renotify: true });
       } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission().then((p) => {
-          if (p === 'granted') new Notification(title, { body });
+        Notification.requestPermission().then((perm) => {
+          if (perm === 'granted') new Notification(title, { body });
         });
       }
     } catch (_) {}
@@ -180,12 +192,17 @@
       RESQ_Notify.resource(payload.resource.ownerName, payload.resource.name);
     });
 
-    // Proactively request system-notification permission once
-    try {
-      if ('Notification' in window && Notification.permission === 'default') {
-        setTimeout(() => Notification.requestPermission().catch(() => {}), 4000);
-      }
-    } catch (_) {}
+    // Proactively request notification permission (native first, then web)
+    const p = _notifPlugin();
+    if (p && p.requestPermission) {
+      setTimeout(() => p.requestPermission().catch(() => {}), 2000);
+    } else {
+      try {
+        if ('Notification' in window && Notification.permission === 'default') {
+          setTimeout(() => Notification.requestPermission().catch(() => {}), 4000);
+        }
+      } catch (_) {}
+    }
   }
 
   if (document.readyState === 'loading') {
