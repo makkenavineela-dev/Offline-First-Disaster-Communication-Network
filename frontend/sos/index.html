@@ -427,33 +427,31 @@
       _mine:     true,
     });
 
-    // LAYER 1: SMS via cellular (works without WiFi)
-    const smsSent = sendSMSAlert(alertType, message, currentCoords);
+    const mesh = window.RESQ_BTMesh || window.RESQ_Mesh;
 
-    // LAYER 2: Mesh over WiFi if server reachable
-    if (window.RESQ_Mesh) RESQ_Mesh.sendSOS(alertType, message, currentCoords);
-
-    // LAYER 3: WiFi Direct — no router, device-to-device
-    if (window.RESQ_WifiDirect && RESQ_WifiDirect.isConnected()) {
-      const name = localStorage.getItem('resq_name') || 'Unknown';
-      RESQ_WifiDirect.sendMessage(`🆘 SOS ${alertType}: ${message}`, name);
+    // CHANNEL 1: Bluetooth Mesh — broadcasts to EVERYONE nearby. The SOS appears
+    // in every device's Messages and fires their SOS banner. No network needed.
+    if (mesh && mesh.sendSOS) {
+      mesh.sendSOS(alertType, message, currentCoords);
     }
 
-    // LAYER 4: BLE beacon — last resort, zero network, ~100m range
-    if (window.RESQ_BLE) {
+    // CHANNEL 2: SMS to saved emergency contacts (cellular — reaches people
+    // who are NOT on the mesh / out of Bluetooth range).
+    const smsSent = sendSMSAlert(alertType, message, currentCoords);
+
+    // CHANNEL 3: BLE SOS beacon — last-resort low-level broadcast, ~100m.
+    if (window.RESQ_BLE && window.RESQ_BLE.broadcastSOS) {
       RESQ_BLE.broadcastSOS(alertType, currentCoords, 5 * 60 * 1000);
     }
 
-    // Show delivery status to user
-    const anyChannel = smsSent > 0 || (window.RESQ_Mesh && RESQ_Mesh.isConnected()) ||
-                       (window.RESQ_WifiDirect && RESQ_WifiDirect.isConnected()) ||
-                       (window.RESQ_BLE && RESQ_BLE.isAvailable());
-    if (!anyChannel) {
-      // SOS queued in localStorage — will send when any channel becomes available
+    const meshOn = mesh && mesh.isConnected && mesh.isConnected();
+    if (!meshOn && smsSent === 0) {
+      // Nothing got out — queue for retry
       enqueueSOSPayload({ type: 'sos', alertType, message, lat: currentCoords?.lat, lng: currentCoords?.lng });
     }
 
-    return smsSent;
+    // Return a delivery summary for the confirmation UI
+    return { smsSent, meshOn: !!meshOn, peers: mesh && mesh.getNodes ? mesh.getNodes().length : 0 };
   }
 
   // Use Pointer Events to avoid the touch+mouse double-fire on Android.
@@ -529,25 +527,20 @@
       const alertType = typeEl ? typeEl.textContent.trim() : 'General';
       const message   = document.querySelector('.msg-textarea').value.trim() || ('Emergency SOS: ' + alertType);
 
-      // Broadcast via SMS (primary) + mesh if WiFi available (bonus)
-      const smsSentTo = await broadcastSOS();
+      // Broadcast over Bluetooth mesh (everyone nearby) + SMS (saved contacts)
+      const result = await broadcastSOS();
 
       // Build delivery channel summary
-      const meshOk = window.RESQ_Mesh && RESQ_Mesh.isConnected();
-      const wdOk   = window.RESQ_WifiDirect && RESQ_WifiDirect.isConnected();
-      const bleOk  = window.RESQ_BLE && RESQ_BLE.isAdvertising();
       const channels = [];
-      if (smsSentTo > 0) channels.push(`SMS→${smsSentTo}`);
-      if (meshOk)        channels.push('Mesh');
-      if (wdOk)          channels.push('WiFiDirect');
-      if (bleOk)         channels.push('BLE');
+      if (result.meshOn) channels.push(`Mesh→${result.peers} nearby`);
+      if (result.smsSent > 0) channels.push(`SMS→${result.smsSent} contact${result.smsSent !== 1 ? 's' : ''}`);
 
       if (channels.length) {
         btn.querySelector('.sos-btn-text').textContent = 'SENT!';
         btn.querySelector('.sos-btn-sub').textContent  = channels.join(' · ');
       } else {
         btn.querySelector('.sos-btn-text').textContent = 'QUEUED';
-        btn.querySelector('.sos-btn-sub').textContent  = 'Saved — sends when signal returns';
+        btn.querySelector('.sos-btn-sub').textContent  = 'Saved — sends when in range';
       }
 
       setTimeout(() => {
@@ -638,6 +631,9 @@
 <script src="../store.js"></script>
 <script src="../sms-bridge.js"></script>
 <script src="/js/resq-auth.js"></script>
+<script src="../js/crypto-e2ee.js"></script>
+<script src="../js/bluetooth-mesh.js"></script>
+<script src="../js/mesh-boot.js"></script>
 <script src="../js/connectivity.js"></script>
 <script src="../js/ble-sos.js"></script>
 </body>

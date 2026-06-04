@@ -276,24 +276,23 @@ html, body { height: 100%; background: var(--black); font-family: 'Barlow', sans
 </div>
 
 <script>
-// ── Config ──────────────────────────────────────────────────────────────────
-const SERVER = (() => {
-  const s = localStorage.getItem('resq_server_ip');
-  if (s) return s;
-  const h = window.location.hostname;
-  if (h && h !== 'localhost' && h !== '127.0.0.1' && h !== '10.0.0.2') return 'http://' + h + ':5000';
-  return 'http://localhost:5000';
-})();
+// ── Offline-first storage (NO backend — works fully offline) ─────────────────
+const STORE_KEY = 'resq_resources';
 
-function authHeaders() {
-  const t = localStorage.getItem('resq_token');
-  return { 'Content-Type': 'application/json', ...(t ? { Authorization: 'Bearer ' + t } : {}) };
+const MY_ID    = localStorage.getItem('resq_uid')    || ('me_' + Math.random().toString(36).slice(2,7));
+const MY_NAME  = localStorage.getItem('resq_name')   || 'Me';
+const MY_PHONE = localStorage.getItem('resq_mobile') || null;
+
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
+  catch (_) { return []; }
+}
+function saveStore(list) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (_) {}
 }
 
-const MY_ID = localStorage.getItem('resq_uid') || '';
-
 // ── State ───────────────────────────────────────────────────────────────────
-let _resources      = [];
+let _resources      = loadStore();
 let _currentTab     = 'all';
 let _editingId      = null;
 let _selectedStatus = 'OK';
@@ -329,21 +328,9 @@ function escHtml(s) {
     ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
-// ── Load from API ───────────────────────────────────────────────────────────
-async function loadResources() {
-  try {
-    const res = await fetch(SERVER + '/api/resources/', {
-      headers: authHeaders(),
-      signal: AbortSignal.timeout(7000),
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    _resources = await res.json();
-    localStorage.setItem('resq_res_cache', JSON.stringify(_resources));
-  } catch (e) {
-    try { _resources = JSON.parse(localStorage.getItem('resq_res_cache') || '[]'); } catch(_) {}
-    if (_resources.length === 0) showToast('Server unreachable — add resources to sync later', 'warn');
-    else showToast('Offline — showing cached resources', 'warn');
-  }
+// ── Load (fully local — instant, no network) ─────────────────────────────────
+function loadResources() {
+  _resources = loadStore();
   render();
 }
 
@@ -354,7 +341,10 @@ function visible() {
   return _resources;
 }
 
-function ownId(r) { return r.ownerId && typeof r.ownerId === 'object' ? r.ownerId._id : r.ownerId; }
+function ownId(r) {
+  if (r.ownerId && typeof r.ownerId === 'object') return r.ownerId._id;
+  return r.ownerId;
+}
 
 function render() {
   // Update summary bar
@@ -389,8 +379,8 @@ function buildCard(r) {
   const qty = r.quantity || 0;
   const pct = Math.min(100, qty > 0 ? (qty / Math.max(qty * 2, 100)) * 100 : 0);
   const barColor = r.status === 'CRITICAL' ? 'var(--red)' : r.status === 'LOW' ? 'var(--amber)' : 'var(--green)';
-  const ownerName  = r.ownerId && r.ownerId.name  ? r.ownerId.name  : (isMine ? 'You' : 'Unknown');
-  const ownerPhone = r.ownerId && r.ownerId.phone ? ' · ' + r.ownerId.phone : '';
+  const ownerName  = isMine ? 'You' : (r.ownerName || 'Network user');
+  const ownerPhone = r.ownerPhone ? ' · ' + r.ownerPhone : '';
 
   const el = document.createElement('div');
   el.className = 'res-card' + (isMine ? ' mine' : '');
@@ -474,8 +464,8 @@ function pickStatus(s) {
   });
 }
 
-// ── Submit (add or update) ───────────────────────────────────────────────────
-async function submitResource() {
+// ── Submit (add or update) — saves locally + broadcasts over mesh ────────────
+function submitResource() {
   const name = document.getElementById('fName').value.trim();
   const type = document.getElementById('fType').value;
   const qty  = parseFloat(document.getElementById('fQty').value) || 0;
@@ -483,68 +473,108 @@ async function submitResource() {
 
   if (!name) { showToast('Enter a resource name', 'warn'); return; }
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = _editingId ? 'Saving…' : 'Adding…';
+  const now = Date.now();
+  let resource;
 
-  const body = JSON.stringify({ name, type, quantity: qty, unit, status: _selectedStatus, isPublic: true });
-
-  try {
-    const url    = SERVER + '/api/resources/' + (_editingId ? _editingId : '');
-    const method = _editingId ? 'PUT' : 'POST';
-    const res    = await fetch(url, { method, headers: authHeaders(), body, signal: AbortSignal.timeout(7000) });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || ('Server error ' + res.status));
-    }
-
-    closeOverlay();
-    showToast(_editingId ? name + ' updated' : qty + ' ' + unit + ' of ' + name + ' added');
-    await loadResources();
-  } catch (e) {
-    showToast(e.message || 'Failed — check connection', 'err');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = _editingId ? 'SAVE CHANGES' : 'ADD RESOURCE';
+  if (_editingId) {
+    const idx = _resources.findIndex(x => x._id === _editingId);
+    if (idx < 0) { showToast('Not found', 'err'); return; }
+    resource = { ..._resources[idx], name, type, quantity: qty, unit, status: _selectedStatus, updatedAt: now };
+    _resources[idx] = resource;
+  } else {
+    resource = {
+      _id:       'res_' + MY_ID + '_' + now,
+      name, type, quantity: qty, unit, status: _selectedStatus,
+      ownerId:   MY_ID,
+      ownerName: MY_NAME,
+      ownerPhone: MY_PHONE,
+      updatedAt: now,
+    };
+    _resources.unshift(resource);
   }
+
+  saveStore(_resources);
+  closeOverlay();
+  render();
+  showToast(_editingId ? name + ' updated' : qty + ' ' + unit + ' of ' + name + ' added');
+
+  // Broadcast the change over the BT mesh so every nearby device updates
+  broadcastResourceChange('upsert', resource);
+
+  _editingId = null;
 }
 
-// ── Delete ────────────────────────────────────────────────────────────────────
-async function confirmDelete(id) {
+// ── Delete — removes locally + broadcasts deletion over mesh ─────────────────
+function confirmDelete(id) {
   const r = _resources.find(x => x._id === id);
   if (!r) return;
   if (!confirm('Delete "' + r.name + '"?\n\nThis cannot be undone.')) return;
 
-  try {
-    const res = await fetch(SERVER + '/api/resources/' + id, {
-      method: 'DELETE', headers: authHeaders(), signal: AbortSignal.timeout(7000),
-    });
-    if (!res.ok) throw new Error('Server error');
-    showToast(r.name + ' deleted');
-    await loadResources();
-  } catch (_) {
-    showToast('Could not delete — check connection', 'err');
+  _resources = _resources.filter(x => x._id !== id);
+  saveStore(_resources);
+  render();
+  showToast(r.name + ' deleted');
+
+  broadcastResourceChange('delete', { _id: id });
+}
+
+// ── Request (broadcasts a chat message over mesh) ────────────────────────────
+function requestResource(name) {
+  const mesh = window.RESQ_BTMesh || window.RESQ_Mesh;
+  if (mesh && mesh.sendBroadcast) {
+    mesh.sendBroadcast('📢 RESOURCE REQUEST: I need ' + name + ' — please reply if you can share.');
+    showToast('Request broadcast to mesh');
+  } else {
+    showToast('Mesh starting — try again in a moment', 'warn');
   }
 }
 
-// ── Request (broadcasts over mesh) ───────────────────────────────────────────
-function requestResource(name) {
-  if (window.RESQ_Mesh) {
-    RESQ_Mesh.sendMessage('all',
-      '📢 RESOURCE REQUEST: I need ' + name + ' — please reply if you can share.',
-      'broadcast');
-    showToast('Request broadcast to mesh');
-  } else {
-    showToast('Mesh not connected', 'warn');
+// ── Mesh broadcast + receive (keeps every device's list in sync) ─────────────
+function broadcastResourceChange(action, resource) {
+  const mesh = window.RESQ_BTMesh || window.RESQ_Mesh;
+  if (mesh && mesh.broadcastResource) {
+    mesh.broadcastResource({ action, resource });
+  }
+}
+
+function onMeshResource(payload) {
+  if (!payload || !payload.action) return;
+
+  if (payload.action === 'upsert' && payload.resource) {
+    const incoming = payload.resource;
+    if (!incoming._id) return;
+    const idx = _resources.findIndex(x => x._id === incoming._id);
+    if (idx >= 0) {
+      // Last-write-wins by updatedAt
+      if ((incoming.updatedAt || 0) >= (_resources[idx].updatedAt || 0)) {
+        _resources[idx] = incoming;
+      }
+    } else {
+      _resources.unshift(incoming);
+    }
+    saveStore(_resources);
+    render();
+    showToast('📦 ' + (incoming.ownerName || 'Someone') + ' shared ' + incoming.name);
+  } else if (payload.action === 'delete' && payload.resource && payload.resource._id) {
+    const before = _resources.length;
+    _resources = _resources.filter(x => x._id !== payload.resource._id);
+    if (_resources.length !== before) { saveStore(_resources); render(); }
   }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
+function wireMeshResources() {
+  const mesh = window.RESQ_BTMesh || window.RESQ_Mesh;
+  if (!mesh || !mesh.on) { setTimeout(wireMeshResources, 300); return; }
+  mesh.on('resource', onMeshResource);
+}
+
 loadResources();
-// If token was fetched async by resq-auth.js, reload resources once it arrives
-window.addEventListener('resq:token-ready', () => loadResources());
+wireMeshResources();
 </script>
+<script src="../js/crypto-e2ee.js"></script>
+<script src="../js/bluetooth-mesh.js"></script>
+<script src="../js/mesh-boot.js"></script>
 <script src="../js/connectivity.js"></script>
 <script src="../js/ble-sos.js"></script>
 </body>
