@@ -91,6 +91,42 @@ public class BluetoothMeshPlugin extends Plugin {
         if (bm != null) btAdapter = bm.getAdapter();
     }
 
+    // ── Permission request (explicit, callable from JS before start) ───────────
+    @PluginMethod
+    public void requestPermissions(PluginCall call) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (getPermissionState("bleAdv")  != PermissionState.GRANTED ||
+                getPermissionState("bleScan") != PermissionState.GRANTED ||
+                getPermissionState("bleConn") != PermissionState.GRANTED) {
+                requestAllPermissions(call, "onPermsRequested");
+                return;
+            }
+        } else {
+            if (getPermissionState("loc") != PermissionState.GRANTED) {
+                requestPermissionForAlias("loc", call, "onPermsRequested");
+                return;
+            }
+        }
+        JSObject r = new JSObject();
+        r.put("granted", true);
+        call.resolve(r);
+    }
+
+    @PermissionCallback
+    private void onPermsRequested(PluginCall call) {
+        boolean granted;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            granted = getPermissionState("bleAdv")  == PermissionState.GRANTED &&
+                      getPermissionState("bleScan") == PermissionState.GRANTED &&
+                      getPermissionState("bleConn") == PermissionState.GRANTED;
+        } else {
+            granted = getPermissionState("loc") == PermissionState.GRANTED;
+        }
+        JSObject r = new JSObject();
+        r.put("granted", granted);
+        call.resolve(r);
+    }
+
     // ── Start / Stop ──────────────────────────────────────────────────────────
     @PluginMethod
     public void start(PluginCall call) {
@@ -104,18 +140,35 @@ public class BluetoothMeshPlugin extends Plugin {
             } catch (Exception ignored) {}
         }
 
+        // Idempotent: if already running, just update identity and return success.
+        // This lets every page call start() safely without restarting the radio.
+        if (active) {
+            JSObject r = new JSObject();
+            r.put("active", true);
+            r.put("alreadyRunning", true);
+            call.resolve(r);
+            return;
+        }
+
         if (!checkBle(call)) return;
 
-        startGattServer();
-        startAdvertising();
-        startScanning();
-        active = true;
+        try {
+            startGattServer();
+            startAdvertising();
+            startScanning();
+            active = true;
+        } catch (Exception e) {
+            call.reject("BLE start failed: " + e.getMessage());
+            return;
+        }
 
         // Periodic sync every 15 s — connect to known peers and exchange queued messages
         main.postDelayed(this::syncAllPeers, 5000);
 
         notifyStatus();
-        call.resolve();
+        JSObject r = new JSObject();
+        r.put("active", true);
+        call.resolve(r);
     }
 
     @PluginMethod
@@ -579,8 +632,40 @@ public class BluetoothMeshPlugin extends Plugin {
 
     @PermissionCallback
     private void onBlePermission(PluginCall call) {
-        if (checkBle(call)) start(call);
-        else call.reject("Bluetooth permissions denied");
+        // Check state DIRECTLY to avoid infinite recursion (checkBle would
+        // re-request permissions → onBlePermission → checkBle → ... StackOverflow).
+        boolean granted;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            granted = getPermissionState("bleAdv")  == PermissionState.GRANTED &&
+                      getPermissionState("bleScan") == PermissionState.GRANTED &&
+                      getPermissionState("bleConn") == PermissionState.GRANTED;
+        } else {
+            granted = getPermissionState("loc") == PermissionState.GRANTED;
+        }
+
+        if (!granted) {
+            call.reject("Bluetooth permissions denied");
+            return;
+        }
+
+        // Granted — proceed with start ONCE (Bluetooth enabled check still applies)
+        if (btAdapter == null || !btAdapter.isEnabled()) {
+            call.reject("Bluetooth is disabled");
+            return;
+        }
+        try {
+            startGattServer();
+            startAdvertising();
+            startScanning();
+            active = true;
+            main.postDelayed(this::syncAllPeers, 5000);
+            notifyStatus();
+            JSObject r = new JSObject();
+            r.put("active", true);
+            call.resolve(r);
+        } catch (Exception e) {
+            call.reject("BLE start failed: " + e.getMessage());
+        }
     }
 
     @Override

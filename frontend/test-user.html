@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESQ — Test Second User</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#080808;font-family:'Barlow',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.card{background:#141414;border:1px solid #2A2A2A;border-radius:20px;padding:32px;width:340px;display:flex;flex-direction:column;gap:16px;}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:#F5F5F0;letter-spacing:3px;text-align:center;}
+.logo span{color:#2979FF;}
+.sub{font-size:12px;color:#666;text-align:center;line-height:1.6;}
+.label{font-size:10px;font-weight:700;letter-spacing:2px;color:#666;text-transform:uppercase;}
+input{background:#1E1E1E;border:1px solid #2A2A2A;border-radius:12px;padding:12px 16px;color:#F5F5F0;font-family:'Barlow',sans-serif;font-size:15px;outline:none;width:100%;}
+input:focus{border-color:#2979FF;}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.preset{background:#1E1E1E;border:1px solid #2A2A2A;border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all 0.15s;}
+.preset:hover{border-color:#2979FF;background:rgba(41,121,255,0.08);}
+.preset .pname{font-size:13px;font-weight:600;color:#F5F5F0;}
+.preset .prole{font-size:10px;color:#666;margin-top:2px;}
+.btn{background:#2979FF;color:#fff;border:none;border-radius:12px;padding:14px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:2px;cursor:pointer;width:100%;}
+.btn:hover{background:#1565C0;}
+.note{font-size:11px;color:#444;text-align:center;line-height:1.6;padding:10px;background:#0A0A0A;border-radius:10px;border:1px solid #1E1E1E;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">RE<span>S</span>Q</div>
+  <div class="sub">Open this as a <strong style="color:#2979FF">second user</strong> to test real-time BT Mesh messaging between two tabs.</div>
+
+  <div class="label">Quick Presets</div>
+  <div class="presets">
+    <div class="preset" onclick="setUser('Ahmed Khan','First Responder')">
+      <div class="pname">Ahmed Khan</div>
+      <div class="prole">First Responder</div>
+    </div>
+    <div class="preset" onclick="setUser('Priya Sharma','Medical')">
+      <div class="pname">Priya Sharma</div>
+      <div class="prole">Medical</div>
+    </div>
+    <div class="preset" onclick="setUser('Ravi Mehta','Coordinator')">
+      <div class="pname">Ravi Mehta</div>
+      <div class="prole">Coordinator</div>
+    </div>
+    <div class="preset" onclick="setUser('Sara Ali','Civilian')">
+      <div class="pname">Sara Ali</div>
+      <div class="prole">Civilian</div>
+    </div>
+  </div>
+
+  <div class="label">Or Enter Custom Name</div>
+  <input id="nameInput" type="text" placeholder="e.g. John Rescue" maxlength="30">
+
+  <button class="btn" onclick="launch()">OPEN AS THIS USER →</button>
+
+  <div class="note">
+    💡 This sets a <strong style="color:#F5F5F0">separate identity</strong> in sessionStorage so both tabs can coexist.<br>
+    Messages flow via <strong style="color:#2979FF">BroadcastChannel</strong> — real-time, no server needed.
+  </div>
+</div>
+
+<script>
+function setUser(name, role) {
+  document.getElementById('nameInput').value = name;
+  window._role = role;
+}
+
+function launch() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) { alert('Enter a name first'); return; }
+  const role   = window._role || 'Civilian';
+  const uid    = 'browser_' + name.toLowerCase().replace(/\s+/g,'_') + '_' + Math.random().toString(36).slice(2,6);
+  const mobile = '+91' + Math.floor(7000000000 + Math.random() * 1999999999);
+
+  // Store in sessionStorage so it doesn't overwrite the main tab's localStorage
+  // Then the messaging page reads from sessionStorage first via a small override
+  const params = new URLSearchParams({
+    uid, name, role, mobile, test: '1'
+  });
+  window.open('/messaging/index.html?' + params.toString(), '_blank');
+}
+</script>
+</body>
+</html>

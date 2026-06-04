@@ -269,15 +269,26 @@ public class BleSosPlugin extends Plugin {
 
     @PermissionCallback
     private void onBlePermission(PluginCall call) {
-        if (checkBleReady(call)) {
-            // Re-invoke the original method
-            String method = call.getMethodName();
-            if ("startSosBeacon".equals(method)) startSosBeacon(call);
-            else if ("startScanning".equals(method)) startScanning(call);
-            else call.resolve();
+        // Check state DIRECTLY — do NOT call checkBleReady (it would re-request
+        // permissions and cause infinite recursion → StackOverflowError).
+        boolean granted;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            granted = getPermissionState("bleAdvertise") == PermissionState.GRANTED &&
+                      getPermissionState("bleScan")      == PermissionState.GRANTED;
         } else {
-            call.reject("Bluetooth permissions denied");
+            granted = getPermissionState("location") == PermissionState.GRANTED;
         }
+
+        if (!granted) {
+            call.reject("Bluetooth permissions denied");
+            return;
+        }
+
+        // Permissions granted — re-invoke the original method ONCE
+        String method = call.getMethodName();
+        if ("startSosBeacon".equals(method)) startSosBeacon(call);
+        else if ("startScanning".equals(method)) startScanning(call);
+        else call.resolve();
     }
 
     @Override

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'resq-offline-v13';
+const CACHE_NAME = 'resq-offline-v14';
 const TILE_CACHE_NAME = 'resq-map-tiles';
 const FONT_CACHE_NAME = 'resq-fonts';
 
@@ -103,14 +103,39 @@ self.addEventListener('fetch', event => {
     .replace(/\/$/, '') || '/';
   const normalizedUrl = url.origin + normalizedPath;
 
+  // ── NETWORK-FIRST for HTML pages and JS/CSS ──────────────────────────────
+  // In a Capacitor app the "network" is the bundled localhost assets, which are
+  // always fresh after an APK update. Network-first ensures code changes apply
+  // immediately while still falling back to cache when genuinely offline.
+  const isPage   = event.request.mode === 'navigate';
+  const isScript = url.pathname.endsWith('.js') || url.pathname.endsWith('.css');
+
+  if (isPage || isScript) {
+    event.respondWith(
+      fetch(event.request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200) {
+          const copy = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(normalizedUrl, copy));
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Offline — serve from cache
+        return caches.match(event.request)
+          .then(r => r || caches.match(normalizedUrl))
+          .then(r => r || (isPage ? caches.match('/splash/index.html') : null))
+          .then(r => r || new Response('Offline', { status: 503 }));
+      })
+    );
+    return;
+  }
+
+  // ── CACHE-FIRST for everything else (images, icons, static assets) ───────
   event.respondWith(
-    // Try matching the original request first, then the normalized URL path
     caches.match(event.request).then(cachedResponse => {
       if (cachedResponse) return cachedResponse;
       return caches.match(normalizedUrl);
     }).then(cachedResponse => {
       if (cachedResponse) return cachedResponse;
-
       return fetch(event.request).then(networkResponse => {
         if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
@@ -120,17 +145,6 @@ self.addEventListener('fetch', event => {
         }
         return networkResponse;
       }).catch(() => {
-        // FAILSAFE Fallback (L-05)
-        if (event.request.mode === 'navigate') {
-          const url = new URL(event.request.url);
-          // Try to serve the exact page first, then fall back to splash
-          return caches.match(event.request)
-            .then(r => r || caches.match(url.pathname))
-            .then(r => r || caches.match('/splash/index.html'))
-            .then(r => r || caches.match('./splash/index.html'))
-            .then(r => r || fetch(event.request));
-        }
-        // Graceful 503 for non-navigation assets that failed and aren't cached
         return new Response('Offline: Resource not available', {
           status: 503,
           statusText: 'Service Unavailable (Offline)'

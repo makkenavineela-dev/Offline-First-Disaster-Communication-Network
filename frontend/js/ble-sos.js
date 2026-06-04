@@ -151,12 +151,15 @@
     });
   }
 
-  // ── Auto-start scanning on load ───────────────────────────────────────────
+  // ── Init — wire native events only ────────────────────────────────────────
+  // NOTE: We do NOT auto-start scanning here. BluetoothMesh (bluetooth-mesh.js)
+  // is the single owner of the BLE radio — it handles peer discovery, messaging
+  // AND SOS broadcasts. Running a second BLE scanner here would fight for the
+  // radio and double-request permissions. SOS beacons are sent via the mesh
+  // broadcast instead. RESQ_BLE.broadcastSOS() can still be called explicitly.
   function _init() {
     if (!isNative) return;
     _wireNative();
-    // Start scanning for nearby SOS beacons immediately
-    RESQ_BLE.startScanning();
   }
 
   window.RESQ_BLE = RESQ_BLE;
