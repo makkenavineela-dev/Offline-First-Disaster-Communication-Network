@@ -48,24 +48,27 @@ html,body{height:100%;background:#080808;font-family:'Barlow',sans-serif;}
 .tm{text-align:right;flex-shrink:0;}
 .tt{font-size:10px;color:var(--muted);}
 .ud{width:8px;height:8px;border-radius:50%;background:var(--blue);margin:4px auto 0;}
-.cbar{position:absolute;bottom:76px;left:0;right:0;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-top:1px solid var(--gray3);padding:10px 16px;display:flex;gap:10px;align-items:flex-end;z-index:15;}
+.cbar{position:absolute;bottom:calc(56px + max(8px,env(safe-area-inset-bottom)));left:0;right:0;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-top:1px solid var(--gray3);padding:10px 16px;display:flex;gap:10px;align-items:flex-end;z-index:15;transition:bottom .2s ease;}
+body.cbar-focus .cbar{bottom:0;}
+body.cbar-focus .bnav{transform:translateY(110%);}
 .ci{flex:1;background:var(--gray2);border:1px solid var(--gray3);border-radius:14px;padding:10px 14px;color:var(--white);font-family:'Barlow',sans-serif;font-size:14px;outline:none;resize:none;min-height:42px;max-height:100px;}
 .ci::placeholder{color:var(--muted);}
 .sb{width:42px;height:42px;border-radius:12px;background:var(--blue);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .sb svg{width:20px;height:20px;fill:#fff;}
-.bnav{position:absolute;bottom:0;left:0;right:0;height:76px;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-top:1px solid var(--gray3);display:flex;align-items:center;justify-content:space-around;padding-bottom:max(52px,calc(env(safe-area-inset-bottom) + 26px));z-index:20;}
-.ni{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-decoration:none;flex:1;padding:8px 0;}
-.ni svg{width:22px;height:22px;fill:var(--muted);}
-.nl{font-size:10px;color:var(--muted);}
+.bnav{position:absolute;bottom:0;left:0;right:0;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-top:1px solid var(--gray3);display:flex;align-items:stretch;padding-bottom:max(8px,env(safe-area-inset-bottom));z-index:20;transition:transform .2s ease;}
+.ni{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-decoration:none;padding:10px 2px;}
+.ni svg{width:22px;height:22px;fill:var(--muted);transition:fill .15s;flex-shrink:0;}
+.nl{font-size:10px;line-height:1;color:var(--muted);letter-spacing:.3px;transition:color .15s;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ni.active svg{fill:var(--red);}
 .ni.active .nl{color:var(--red);}
+.ni.active::before{content:'';position:absolute;top:0;left:50%;width:26px;height:3px;transform:translateX(-50%);background:var(--red);border-radius:0 0 3px 3px;}
 .emp{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;gap:12px;text-align:center;}
 .emp .ic{font-size:40px;opacity:0.25;}
 .emp .et{font-size:14px;font-weight:600;color:var(--muted);}
 .emp .es{font-size:12px;color:var(--muted);max-width:240px;line-height:1.6;}
-.co{position:absolute;inset:0;background:var(--black);z-index:50;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.25,0.8,0.25,1);}
-.co.open{transform:translateX(0);}
-.ch{padding:max(44px,env(safe-area-inset-top)) 16px 12px;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--gray3);display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.co{position:absolute;top:0;left:0;right:0;height:100%;background:var(--black);z-index:50;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.25,0.8,0.25,1),visibility 0s linear 0.3s;visibility:hidden;}
+.co.open{transform:translateX(0);visibility:visible;transition:transform 0.3s cubic-bezier(0.25,0.8,0.25,1);}
+.ch{padding:max(8px,env(safe-area-inset-top)) 16px 12px;background:rgba(10,10,10,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--gray3);display:flex;align-items:center;gap:12px;flex-shrink:0;}
 .cb{width:36px;height:36px;border-radius:10px;background:var(--gray2);border:1px solid var(--gray3);display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .cb svg{width:18px;height:18px;fill:#fff;}
 .cpa{width:40px;height:40px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;}
@@ -76,7 +79,7 @@ html,body{height:100%;background:#080808;font-family:'Barlow',sans-serif;}
 .en{display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(206,147,216,0.08);border-bottom:1px solid rgba(206,147,216,0.15);flex-shrink:0;}
 .en svg{width:12px;height:12px;fill:var(--purple);flex-shrink:0;}
 .en span{font-size:10px;color:var(--purple);font-weight:500;}
-.cm{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:14px;scrollbar-width:none;}
+.cm{flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:20px 16px;display:flex;flex-direction:column;gap:14px;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .cm::-webkit-scrollbar{display:none;}
 .bub{max-width:80%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4;color:#fff;}
 .bub.recv{background:var(--gray2);align-self:flex-start;border-bottom-left-radius:4px;border:1px solid var(--gray3);}
@@ -88,7 +91,9 @@ html,body{height:100%;background:#080808;font-family:'Barlow',sans-serif;}
 .qr::-webkit-scrollbar{display:none;}
 .qb{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;background:var(--gray2);border:1px solid var(--gray3);color:var(--white);cursor:pointer;flex-shrink:0;}
 .qb.red{background:rgba(255,31,31,0.1);border-color:rgba(255,31,31,0.3);color:var(--red);}
-.cc{padding:10px 16px 20px;background:rgba(10,10,10,0.95);border-top:1px solid var(--gray3);display:flex;align-items:flex-end;gap:10px;flex-shrink:0;}
+.cc{padding:10px 16px max(14px,env(safe-area-inset-bottom));background:rgba(10,10,10,0.95);border-top:1px solid var(--gray3);display:flex;align-items:flex-end;gap:10px;flex-shrink:0;}
+/* When the keyboard is up, sit the input directly on it (no safe-area gap) */
+.co.kb-open .cc{padding-bottom:8px;}
 </style>
 <link rel="manifest" href="/manifest.json">
 </head>
@@ -204,6 +209,61 @@ var _tab='nearby',_peer=null,_un=0;
 var ini=function(n){return(n||'??').trim().split(/\s+/).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();};
 var ago=function(ts){var d=Math.floor((Date.now()-ts)/1000);return d<60?d+'s':d<3600?Math.floor(d/60)+'m':Math.floor(d/3600)+'h';};
 var esc=function(s){return(s||'').toString().replace(/</g,'&lt;');};
+
+// ── Chat layout + Android keyboard handling (WhatsApp-like) ──────────────────
+// Uses the VisualViewport API so the message input and quick-action chips always
+// sit directly above the on-screen keyboard — no overlap, no gap — regardless of
+// the WebView soft-input mode. Also keeps the latest message in view.
+function _activeChatOverlay(){
+  var c=document.getElementById('chatOv');
+  if(c&&c.classList.contains('open'))return {co:c,msg:'cmsg'};
+  var s=document.getElementById('smsChat');
+  if(s&&s.classList.contains('open'))return {co:s,msg:'smsThread'};
+  return null;
+}
+function scrollChatToBottom(){
+  var a=_activeChatOverlay();if(!a)return;
+  var area=document.getElementById(a.msg);
+  if(area)requestAnimationFrame(function(){area.scrollTop=area.scrollHeight;});
+}
+function _syncChatViewport(){
+  var vv=window.visualViewport;
+  ['chatOv','smsChat'].forEach(function(id){
+    var el=document.getElementById(id);if(!el)return;
+    if(el.classList.contains('open')&&vv){
+      el.style.height=vv.height+'px';
+      el.style.top=vv.offsetTop+'px';
+    }else{el.style.height='';el.style.top='';}
+  });
+  var a=_activeChatOverlay();
+  var kbOpen=vv?((window.innerHeight-vv.height)>120):false;
+  if(a)a.co.classList.toggle('kb-open',kbOpen);
+  // Broadcast composer: pin it directly above the keyboard while typing,
+  // regardless of whether the WebView itself resizes.
+  var cbar=document.getElementById('cbar');
+  if(cbar){
+    if(document.body.classList.contains('cbar-focus')&&vv){
+      cbar.style.bottom=Math.max(0,window.innerHeight-vv.height-vv.offsetTop)+'px';
+    }else{cbar.style.bottom='';}
+  }
+  scrollChatToBottom();
+}
+function _openChatLayout(){
+  // Wait for the freshly-opened overlay to lay out, then size it + scroll down.
+  requestAnimationFrame(_syncChatViewport);
+}
+(function(){
+  var vv=window.visualViewport;
+  if(vv){vv.addEventListener('resize',_syncChatViewport);vv.addEventListener('scroll',_syncChatViewport);}
+  window.addEventListener('orientationchange',function(){setTimeout(_syncChatViewport,250);});
+  // Broadcast composer: while typing, hide the bottom nav and pin the input
+  // directly above the keyboard (WhatsApp-style).
+  var ci=document.getElementById('cinput');
+  if(ci){
+    ci.addEventListener('focus',function(){document.body.classList.add('cbar-focus');setTimeout(_syncChatViewport,60);});
+    ci.addEventListener('blur',function(){document.body.classList.remove('cbar-focus');setTimeout(_syncChatViewport,60);});
+  }
+})();
 
 // ── Read-receipt helpers ───────────────────────────────────────────────────
 // Key: stable contact key (name-based), Value: timestamp of last-read message
@@ -365,9 +425,9 @@ function openSmsChat(name,phone){
   if(!hist.length){var d=document.createElement('div');d.className='bub sys';d.innerHTML='Start of SMS conversation — sent over cellular 📱';thread.appendChild(d);}
   else hist.forEach(function(m){smsBubble(m.text,m.out?'sent':'recv',m.ts);});
   document.getElementById('smsChat').classList.add('open');
-  document.getElementById('smsInput').focus();
+  _openChatLayout();
 }
-function closeSmsChat(){document.getElementById('smsChat').classList.remove('open');_smsPeer=null;}
+function closeSmsChat(){var el=document.getElementById('smsChat');el.classList.remove('open','kb-open');el.style.height='';el.style.top='';_smsPeer=null;}
 function smsBubble(text,cls,ts){
   var area=document.getElementById('smsThread');
   var t=new Date(ts||Date.now()).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
@@ -376,13 +436,22 @@ function smsBubble(text,cls,ts){
   d.innerHTML=esc(text)+'<span class="bt">'+t+'</span>';
   area.appendChild(d);area.scrollTop=area.scrollHeight;
 }
-function smsSendChat(){
+async function smsSendChat(){
   var inp=document.getElementById('smsInput'),text=(inp.value||'').trim();
   if(!text||!_smsPeer)return;inp.value='';
   smsBubble(text,'sent',Date.now());
-  var hist=smsHistory(_smsPeer.phone);hist.push({text:text,out:true,ts:Date.now()});smsSaveHist(_smsPeer.phone,hist);
-  if(window.RESQ_SMS&&RESQ_SMS.available){RESQ_SMS.sendDirect(_smsPeer.phone,text);toast('SMS sent','ok');}
-  else{var a=document.createElement('a');a.href='sms:'+encodeURIComponent(_smsPeer.phone)+'?body='+encodeURIComponent(text);a.click();}
+  var phone=_smsPeer.phone;
+  var hist=smsHistory(phone);hist.push({text:text,out:true,ts:Date.now()});smsSaveHist(phone,hist);
+  function openSmsApp(){var a=document.createElement('a');a.href='sms:'+encodeURIComponent(phone)+'?body='+encodeURIComponent(text);a.click();}
+  // Only send directly if the SMS permission is ALREADY granted — never trigger
+  // Android's restricted-permission ("App was denied access") prompt. Otherwise
+  // open the phone's SMS app pre-filled so the message still goes out.
+  if(window.RESQ_SMS&&RESQ_SMS.available&&RESQ_SMS.hasSendPermission&&await RESQ_SMS.hasSendPermission()){
+    var r=await RESQ_SMS.sendDirect(phone,text);
+    if(r&&r.success){toast('SMS sent','ok');return;}
+  }
+  toast('Opening SMS app…','ok');
+  openSmsApp();
 }
 function smsQuick(text){var inp=document.getElementById('smsInput');inp.value=text;smsSendChat();}
 function smsShareLoc(){
@@ -526,7 +595,7 @@ function oc(uid,name,hk){
   else thread.forEach(function(m){ bub(m.content,m.from===myId?'sent':'recv',m.timestamp); });
 
   document.getElementById('chatOv').classList.add('open');
-  document.getElementById('minput').focus();
+  _openChatLayout();
 }
 
 function _recomputeUnread(){
@@ -538,7 +607,7 @@ function _recomputeUnread(){
   var count=0;threads.forEach(function(msg){if(_isUnread(msg))count++;});
   _un=count;bdg();
 }
-function closeChat(){document.getElementById('chatOv').classList.remove('open');_peer=null;window.__resqActivePeer=null;}
+function closeChat(){var el=document.getElementById('chatOv');el.classList.remove('open','kb-open');el.style.height='';el.style.top='';_peer=null;window.__resqActivePeer=null;}
 function bub(text,cls,ts){
   var area=document.getElementById('cmsg');
   var t=new Date(ts||Date.now()).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});

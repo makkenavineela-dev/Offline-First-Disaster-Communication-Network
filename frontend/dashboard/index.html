@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>RESQ — Dashboard</title>
 <link rel="stylesheet" href="../fonts/fonts.css">
 <style>
@@ -276,26 +276,43 @@
   /* Bottom nav */
   .bottom-nav {
     position: absolute; bottom: 0; left: 0; right: 0;
-    height: 76px; background: rgba(10,10,10,0.95);
+    background: rgba(10,10,10,0.95);
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--gray3);
-    display: flex; align-items: center; justify-content: space-around;
-    padding-bottom: 8px;
+    display: flex; align-items: stretch;
+    /* Reserve the Android system nav-bar (gesture / 3-button) zone below the nav.
+       8px floor keeps breathing room when the inset reports 0 (gesture nav). */
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
     z-index: 20;
   }
   .nav-item {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    cursor: pointer; text-decoration: none; flex: 1;
-    padding: 8px 0;
+    position: relative;
+    flex: 1 1 0; min-width: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    padding: 10px 2px;
+    cursor: pointer; text-decoration: none;
   }
-  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); transition: fill 0.15s; }
-  .nav-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.5px; transition: color 0.15s; }
+  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); transition: fill 0.15s; flex-shrink: 0; }
+  .nav-label {
+    font-size: 10px; line-height: 1; color: var(--text-muted);
+    letter-spacing: 0.3px; transition: color 0.15s;
+    max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   .nav-item.active svg { fill: var(--red); }
   .nav-item.active .nav-label { color: var(--red); }
+  /* Centered selection indicator for the active tab (Material-style) */
+  .nav-item.active::before {
+    content: ''; position: absolute; top: 0; left: 50%;
+    width: 26px; height: 3px; transform: translateX(-50%);
+    background: var(--red); border-radius: 0 0 3px 3px;
+  }
 
   /* Help Center JS/CSS */
   .help-fab {
-    position: absolute; bottom: 90px; right: 20px;
+    position: absolute; right: 20px;
+    /* Sit above the nav (≈56px content) + the system-bar safe-area zone */
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 76px);
     width: 50px; height: 50px; border-radius: 25px;
     background: var(--blue); box-shadow: 0 4px 15px rgba(41,121,255,0.4);
     display: flex; align-items: center; justify-content: center;

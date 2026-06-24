@@ -50,7 +50,8 @@
 
     /**
      * Broadcast an SOS beacon via BLE.
-     * Repeats every 5 seconds for durationMs (default 5 minutes).
+     * Starts a continuous advertisement (the native layer keeps re-broadcasting)
+     * and auto-stops after durationMs (default 5 minutes).
      */
     async broadcastSOS(alertType, coords, durationMs) {
       const p = _getPlugin();

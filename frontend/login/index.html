@@ -286,6 +286,7 @@
   }
 </style>
 <link rel="manifest" href="/manifest.json">
+<script src="/js/ui-dialog.js"></script>
 </head>
 <body>
 <div class="phone-frame">
@@ -729,8 +730,10 @@
   }
 
   // ── Emergency bypass ────────────────────────────────────────────────────
-  document.getElementById('otpEmergencyBypass').addEventListener('click', () => {
-    if (!confirm('Skip verification?\n\nUse this only in actual emergencies when SMS is unavailable. Your number will not be verified.')) return;
+  document.getElementById('otpEmergencyBypass').addEventListener('click', async () => {
+    const ok = await RESQ_UI.confirm('Use this only in real emergencies when SMS is unavailable. Your number will not be verified.',
+      { title: 'Skip verification?', confirmText: 'Skip & continue', danger: true });
+    if (!ok) return;
     STATE.channel = 'bypass';
     persistUserAndActivate();
   });

@@ -171,19 +171,22 @@
   /* Bottom nav */
   .bottom-nav {
     position: absolute; bottom: 0; left: 0; right: 0;
-    height: 76px; background: rgba(10,10,10,0.95);
+    background: rgba(10,10,10,0.95);
     backdrop-filter: blur(20px);
     border-top: 1px solid var(--gray3);
-    display: flex; align-items: center; justify-content: space-around;
-    padding-bottom:max(52px,calc(env(safe-area-inset-bottom) + 26px)); z-index: 20;
+    display: flex; align-items: stretch;
+    padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 20;
   }
-  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
-  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
-  .nav-label { font-size: 10px; color: var(--text-muted); }
+  .nav-item { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; text-decoration: none; padding: 10px 2px; }
+  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); transition: fill .15s; flex-shrink: 0; }
+  .nav-label { font-size: 10px; line-height: 1; color: var(--text-muted); letter-spacing: .3px; transition: color .15s; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .nav-item.active svg { fill: var(--amber); }
   .nav-item.active .nav-label { color: var(--amber); }
   .nav-item.sos-active svg { fill: var(--red); }
   .nav-item.sos-active .nav-label { color: var(--red); }
+  .nav-item.active::before, .nav-item.sos-active::before { content: ''; position: absolute; top: 0; left: 50%; width: 26px; height: 3px; transform: translateX(-50%); border-radius: 0 0 3px 3px; }
+  .nav-item.active::before { background: var(--amber); }
+  .nav-item.sos-active::before { background: var(--red); }
 
   /* SOS Confirmation Modal */
   .confirm-modal {
@@ -205,6 +208,7 @@
   .btn-no { background: var(--gray2); color: var(--white); border: 1px solid var(--gray3); }
 </style>
   <link rel="manifest" href="/manifest.json">
+  <script src="/js/ui-dialog.js"></script>
 </head>
 <body>
 <div class="phone">
@@ -492,7 +496,7 @@
     const contacts  = [...new Set([...emergency, ...known])].filter(Boolean);
 
     if (!contacts.length) {
-      alert('No contacts saved. Add contacts in Settings first.');
+      if (window.RESQ_UI) RESQ_UI.toast('No contacts saved — add them in Settings', 'warn');
       return 0;
     }
 
@@ -505,7 +509,7 @@
     const text = `[RESQ] SOS from ${name}\nType: ${alertType}\n${message}\n${locPart}\nTime: ${new Date().toLocaleTimeString()}`;
 
     // Use RESQ_SMS bridge if available (programmatic send), else URI intent
-    if (window.RESQ_SMS && RESQ_SMS.available) {
+    if (window.RESQ_SMS && RESQ_SMS.available && RESQ_SMS.canSendDirect) {
       contacts.forEach(phone => RESQ_SMS.sendDirect(phone, text));
     } else {
       const uri = `sms:${contacts.join(';')}?body=${encodeURIComponent(text)}`;

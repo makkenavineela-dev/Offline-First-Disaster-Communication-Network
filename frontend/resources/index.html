@@ -157,18 +157,20 @@ html, body { height: 100%; background: var(--black); font-family: 'Barlow', sans
 /* bottom nav */
 .bottom-nav {
   position: absolute; bottom: 0; left: 0; right: 0;
-  height: 72px; background: rgba(10,10,10,0.96); backdrop-filter: blur(20px);
+  background: rgba(10,10,10,0.96); backdrop-filter: blur(20px);
   border-top: 1px solid var(--gray3);
-  display: flex; align-items: center; justify-content: space-around;
-  padding-bottom:max(52px,calc(env(safe-area-inset-bottom) + 26px)); z-index: 20;
+  display: flex; align-items: stretch;
+  padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 20;
 }
-.nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
-.nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
-.nav-label { font-size: 10px; color: var(--text-muted); }
+.nav-item { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; text-decoration: none; padding: 10px 2px; }
+.nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); transition: fill .15s; flex-shrink: 0; }
+.nav-label { font-size: 10px; line-height: 1; color: var(--text-muted); letter-spacing: .3px; transition: color .15s; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .nav-item.active svg { fill: var(--green); }
 .nav-item.active .nav-label { color: var(--green); }
+.nav-item.active::before { content: ''; position: absolute; top: 0; left: 50%; width: 26px; height: 3px; transform: translateX(-50%); background: var(--green); border-radius: 0 0 3px 3px; }
 </style>
 <link rel="manifest" href="/manifest.json">
+<script src="/js/ui-dialog.js"></script>
 <script src="/js/resq-auth.js"></script>
 </head>
 <body>
@@ -401,11 +403,22 @@ function buildCard(r) {
     </div>
     <div class="res-actions">
       ${isMine
-        ? `<button class="res-btn edit"   onclick="openEditOverlay('${r._id}')">✏️ Edit</button>
-           <button class="res-btn delete" onclick="confirmDelete('${r._id}')">🗑 Delete</button>`
-        : `<button class="res-btn request" onclick="requestResource('${escHtml(r.name)}')">📢 Request</button>`
+        ? `<button class="res-btn edit">✏️ Edit</button>
+           <button class="res-btn delete">🗑 Delete</button>`
+        : `<button class="res-btn request">📢 Request</button>`
       }
     </div>`;
+
+  // Wire actions WITHOUT inline onclick. Interpolating resource fields (name,
+  // _id) into an onclick string is an XSS vector — resources arrive over the
+  // mesh from other devices, so a crafted name could break out of the string
+  // and run code. Closures over the real object are injection-proof.
+  const editBtn = el.querySelector('.res-btn.edit');
+  if (editBtn) editBtn.addEventListener('click', () => openEditOverlay(r._id));
+  const delBtn = el.querySelector('.res-btn.delete');
+  if (delBtn) delBtn.addEventListener('click', () => confirmDelete(r._id));
+  const reqBtn = el.querySelector('.res-btn.request');
+  if (reqBtn) reqBtn.addEventListener('click', () => requestResource(r.name));
   return el;
 }
 
@@ -505,10 +518,12 @@ function submitResource() {
 }
 
 // ── Delete — removes locally + broadcasts deletion over mesh ─────────────────
-function confirmDelete(id) {
+async function confirmDelete(id) {
   const r = _resources.find(x => x._id === id);
   if (!r) return;
-  if (!confirm('Delete "' + r.name + '"?\n\nThis cannot be undone.')) return;
+  const ok = await RESQ_UI.confirm('Delete "' + r.name + '"? This cannot be undone.',
+    { title: 'Delete resource', confirmText: 'Delete', danger: true });
+  if (!ok) return;
 
   _resources = _resources.filter(x => x._id !== id);
   saveStore(_resources);

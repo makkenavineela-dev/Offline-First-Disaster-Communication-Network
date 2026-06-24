@@ -120,8 +120,13 @@
     else if (type === 'pubkey') {
       if (window.RESQ_Crypto && payload.userId && payload.publicKey) {
         await RESQ_Crypto.importPeerKey(payload.userId, payload.publicKey);
-        // Update hasKey flag on peer cards
-        _fireBTMesh('nodes', _peerList());
+        // Mark the peer encryption-ready and refresh the peer list UI.
+        // (Previously called an undefined _peerList() which threw.)
+        if (window.RESQ_BTMesh) {
+          const peer = RESQ_BTMesh.getPeers().find(p => p.userId === payload.userId);
+          if (peer) peer.hasKey = true;
+          _fireBTMesh('nodes', RESQ_BTMesh.getPeers());
+        }
       }
     }
 

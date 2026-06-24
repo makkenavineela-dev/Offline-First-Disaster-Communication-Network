@@ -120,6 +120,17 @@
   }
   .toggle input:checked + .toggle-track { background: var(--green); }
   .toggle input:checked + .toggle-track::after { transform: translateX(20px); }
+  /* Permission Allow / Granted buttons */
+  .perm-btn {
+    flex-shrink: 0; padding: 7px 16px; border-radius: 20px;
+    font-size: 12px; font-weight: 700; border: 1px solid; cursor: pointer;
+    font-family: 'Barlow', sans-serif;
+    background: rgba(41,121,255,0.14); border-color: rgba(41,121,255,0.45); color: var(--blue);
+    transition: transform 0.1s;
+  }
+  .perm-btn:active { transform: scale(0.95); }
+  .perm-btn.granted { background: rgba(0,230,118,0.14); border-color: rgba(0,230,118,0.45); color: var(--green); cursor: default; }
+  .perm-btn.unavailable { background: var(--gray3); border-color: var(--gray3); color: var(--text-muted); cursor: default; }
 
   /* Select dropdown */
   .select-wrapper { position: relative; display: flex; align-items: center; }
@@ -152,18 +163,20 @@
   /* Bottom nav */
   .bottom-nav {
     position: absolute; bottom: 0; left: 0; right: 0;
-    height: 76px; background: rgba(10,10,10,0.95);
+    background: rgba(10,10,10,0.95);
     backdrop-filter: blur(20px); border-top: 1px solid var(--gray3);
-    display: flex; align-items: center; justify-content: space-around;
-    padding-bottom:max(52px,calc(env(safe-area-inset-bottom) + 26px)); z-index: 20;
+    display: flex; align-items: stretch;
+    padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 20;
   }
-  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; text-decoration: none; flex: 1; padding: 8px 0; }
-  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); }
-  .nav-label { font-size: 10px; color: var(--text-muted); }
+  .nav-item { position: relative; flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; text-decoration: none; padding: 10px 2px; }
+  .nav-item svg { width: 22px; height: 22px; fill: var(--text-muted); transition: fill .15s; flex-shrink: 0; }
+  .nav-label { font-size: 10px; line-height: 1; color: var(--text-muted); letter-spacing: .3px; transition: color .15s; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .nav-item.active svg { fill: var(--red); }
   .nav-item.active .nav-label { color: var(--red); }
+  .nav-item.active::before { content: ''; position: absolute; top: 0; left: 50%; width: 26px; height: 3px; transform: translateX(-50%); background: var(--red); border-radius: 0 0 3px 3px; }
 </style>
   <link rel="manifest" href="/manifest.json">
+<script src="/js/ui-dialog.js"></script>
 <script src="/js/resq-auth.js"></script>
 </head>
 <body>
@@ -307,6 +320,16 @@
       </div>
     </div>
 
+    <!-- App permissions — grant the runtime permissions the app uses -->
+    <div class="settings-group">
+      <div class="settings-group-title">App Permissions</div>
+      <div id="permList"></div>
+      <div style="font-size:11px;color:var(--text-muted);padding:8px 14px 2px;line-height:1.5;">
+        Tap <strong>Allow</strong> to grant. If a permission stays blocked, enable it in
+        Android Settings → Apps → RESQ → Permissions.
+      </div>
+    </div>
+
     <!-- Battery (real device battery) -->
     <div class="battery-card">
       <div class="bat-title">Device Power</div>
@@ -414,6 +437,64 @@
     window._prefT = setTimeout(function(){ t.style.opacity = '0'; }, 1500);
   }
 
+  // ── App permission buttons (Location / Bluetooth / Notifications / Contacts / SMS) ─
+  const APP_PERMS = [
+    { icon:'📍', color:'green', name:'Location',      sub:'GPS for your position, SOS & map',      plugin:'Geolocation',   aliases:['location'] },
+    { icon:'📶', color:'blue',  name:'Bluetooth',     sub:'Find & message nearby devices (mesh)',  plugin:'BluetoothMesh', aliases:['bleScan','bleConn'] },
+    { icon:'🔔', color:'amber', name:'Notifications', sub:'Alert you to SOS & messages',           plugin:'LocalNotif',    aliases:['notif'] },
+    { icon:'👤', color:'blue',  name:'Contacts',      sub:'Pick people to text over SMS',          plugin:'Contacts',      aliases:['contacts'] },
+    { icon:'💬', color:'amber', name:'SMS',           sub:'Send SOS over cellular',                plugin:'SmsBridge',     aliases:['sendSms'] },
+  ];
+  function _permPlugin(p) {
+    return (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins[p]) ? Capacitor.Plugins[p] : null;
+  }
+  async function _permStatus(cfg) {
+    const pl = _permPlugin(cfg.plugin);
+    if (!pl || !pl.checkPermissions) return 'unavailable';
+    try {
+      const st = await pl.checkPermissions();
+      const vals = cfg.aliases.map(function(a){ return st[a]; });
+      return vals.every(function(v){ return v === 'granted'; }) ? 'granted' : 'denied';
+    } catch (_) { return 'unavailable'; }
+  }
+  function _renderPermBtn(btn, status) {
+    btn.classList.remove('granted', 'unavailable');
+    if (status === 'granted')          { btn.textContent = 'Granted ✓'; btn.classList.add('granted'); }
+    else if (status === 'unavailable') { btn.textContent = 'N/A';       btn.classList.add('unavailable'); }
+    else                               { btn.textContent = 'Allow'; }
+  }
+  async function _refreshPerm(cfg, btn) { _renderPermBtn(btn, await _permStatus(cfg)); }
+  async function _requestPerm(cfg, btn) {
+    const pl = _permPlugin(cfg.plugin);
+    if (!pl) return;
+    btn.textContent = '…';
+    try {
+      if (pl.requestPermissions)     await pl.requestPermissions();
+      else if (pl.requestPermission) await pl.requestPermission();
+    } catch (_) {}
+    await _refreshPerm(cfg, btn);
+  }
+  function buildPermissions() {
+    const list = document.getElementById('permList');
+    if (!list) return;
+    list.innerHTML = '';
+    APP_PERMS.forEach(function (cfg) {
+      const row = document.createElement('div');
+      row.className = 'setting-row';
+      row.innerHTML =
+        '<div class="setting-icon ' + cfg.color + '">' + cfg.icon + '</div>' +
+        '<div class="setting-info"><div class="setting-name">' + cfg.name + '</div>' +
+        '<div class="setting-sub">' + cfg.sub + '</div></div>' +
+        '<button class="perm-btn" type="button">Allow</button>';
+      const btn = row.querySelector('.perm-btn');
+      btn.addEventListener('click', function () {
+        if (!btn.classList.contains('granted') && !btn.classList.contains('unavailable')) _requestPerm(cfg, btn);
+      });
+      list.appendChild(row);
+      _refreshPerm(cfg, btn);
+    });
+  }
+
   // ── Real device battery ─────────────────────────────────────────────────────
   function wireBattery() {
     if (!navigator.getBattery) {
@@ -443,8 +524,10 @@
   }
 
   // ── Clear all data + sign out ───────────────────────────────────────────────
-  window.clearAllData = function() {
-    if (!confirm('Clear ALL data and sign out?\n\nThis erases your profile, messages, resources, contacts and encryption keys on THIS phone. Cannot be undone.')) return;
+  window.clearAllData = async function() {
+    const ok = await RESQ_UI.confirm('This erases your profile, messages, resources, contacts and encryption keys on THIS phone. Cannot be undone.',
+      { title: 'Clear all data & sign out?', confirmText: 'Clear & sign out', danger: true });
+    if (!ok) return;
     try { localStorage.clear(); } catch (_) {}
     location.href = '/login/index.html';
   };
@@ -545,6 +628,7 @@
   function wireMesh() {
     renderProfile();    // profile from localStorage (no mesh needed)
     loadToggles();      // restore + wire preference switches
+    buildPermissions(); // render the real permission Allow/Granted buttons
     wireBattery();      // real device battery
     updateNetStatus({}); // initial paint
 

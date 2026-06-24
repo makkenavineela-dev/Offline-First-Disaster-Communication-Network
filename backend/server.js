@@ -7,12 +7,13 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
+// express-mongo-sanitize is replaced by inline sanitizer below (incompatible with Express 5 read-only req.query)
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const path = require('path');
 const compression = require('compression');
 const initSocket = require('./src/socket/socketHandler');
+const PeerGossip = require('./src/socket/peerGossip');
  
 // Route Imports
 const authRoutes = require('./src/routes/authRoutes');
@@ -57,7 +58,32 @@ const io = new SocketIO(httpServer, {
   // Prefer WebSocket; fall back to polling for captive-portal environments.
   transports: ['websocket', 'polling'],
 });
-initSocket(io);
+
+// ─── Peer Gossip (backend-to-backend mesh hopping) ────────────────────────────
+// Multiple backends can form a backbone so messages cross WiFi zones.
+// Configure with: RESQ_NODE_ID=node-a  RESQ_PEERS=http://192.168.1.20:5000,http://...
+const nodeId = process.env.RESQ_NODE_ID || `node-${Math.random().toString(36).slice(2, 8)}`;
+const gossip = new PeerGossip(nodeId);
+
+const peerUrls = (process.env.RESQ_PEERS || '')
+  .split(',')
+  .map((u) => u.trim())
+  .filter(Boolean);
+
+for (const url of peerUrls) {
+  gossip.connectToPeer(url);
+}
+
+if (peerUrls.length > 0) {
+  logger.info(`🌐 Gossip node "${nodeId}" — connecting to ${peerUrls.length} peer backend(s)`);
+} else {
+  logger.info(`🌐 Gossip node "${nodeId}" — standalone (no peers configured)`);
+}
+
+// Expose gossip on the app so admin routes can read peer status / add peers
+app.set('gossip', gossip);
+
+initSocket(io, gossip);
 
 // ─── Compression ──────────────────────────────────────────────────────────────
 app.use(compression());
@@ -95,8 +121,26 @@ app.use(
 );
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
  
-// NoSQL injection sanitisation (removes $ and . from keys in req.body/query/params)
-app.use(mongoSanitize());
+// NoSQL injection sanitisation — strips $ and . from keys in req.body/query/params.
+// express-mongo-sanitize is not used because it tries to reassign req.query,
+// which is a read-only getter in Express 5. We sanitise in-place instead.
+app.use((req, _res, next) => {
+  const stripKeys = (obj) => {
+    if (!obj || typeof obj !== 'object') return;
+    for (const key of Object.keys(obj)) {
+      if (/[.$]/.test(key)) {
+        delete obj[key];
+      } else {
+        stripKeys(obj[key]);
+      }
+    }
+  };
+  stripKeys(req.body);
+  stripKeys(req.params);
+  // Sanitise query properties in-place (cannot reassign req.query in Express 5)
+  if (req.query && typeof req.query === 'object') stripKeys(req.query);
+  next();
+});
  
 // ── XSS Sanitisation ─────────────────────────────────────────────────────────
 // xss-clean is deprecated and incompatible with Express 5 because it attempts

@@ -70,6 +70,21 @@
     }
   }
 
+  // ── Permission check (NEVER prompts) ───────────────────────────────────
+  // On sideloaded builds Android blocks the SMS "restricted permission", and
+  // calling sendSms() pops the scary "App was denied access" dialog. So we
+  // only attempt a direct send when the permission is ALREADY granted; the
+  // cached flag lets sync callers (SOS) decide without an async round-trip.
+  let _canSendDirect = false;
+  async function hasSendPermission() {
+    if (!isNative) return false;
+    try {
+      const st = await Capacitor.Plugins.SmsBridge.checkPermissions();
+      _canSendDirect = !!st && st.sendSms === 'granted';
+      return _canSendDirect;
+    } catch (_) { return false; }
+  }
+
   // Unified send used by OTP / messaging UI. Tries programmatic first,
   // falls back to URI intent so callers don't have to branch themselves.
   async function send(phone, message) {
@@ -126,6 +141,8 @@
     sendDirect,
     sendBroadcast,
     sendToNumber,
+    hasSendPermission,
+    get canSendDirect() { return _canSendDirect; },
 
     // receiving
     onReceive,
@@ -135,6 +152,9 @@
   // Auto-start the receiver and bridge incoming SMS to the mesh layer so
   // they appear in the messaging UI alongside mesh messages.
   if (isNative) {
+    // Cache the SMS permission state up-front (no prompt) so send paths can
+    // decide whether to send directly or open the SMS app.
+    hasSendPermission();
     document.addEventListener('DOMContentLoaded', () => {
       onReceive((sms) => {
         window.dispatchEvent(new CustomEvent('resq:sms:incoming', { detail: sms }));
